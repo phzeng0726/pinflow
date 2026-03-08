@@ -1,0 +1,532 @@
+basePath: /api/v1
+definitions:
+  dto.CreateBoardRequest:
+    properties:
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  dto.CreateCardRequest:
+    properties:
+      description:
+        maxLength: 2000
+        type: string
+      title:
+        maxLength: 200
+        minLength: 1
+        type: string
+    required:
+    - title
+    type: object
+  dto.CreateColumnRequest:
+    properties:
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  dto.MoveCardRequest:
+    properties:
+      column_id:
+        type: integer
+      position:
+        type: number
+    required:
+    - column_id
+    - position
+    type: object
+  dto.PinnedCardResponse:
+    properties:
+      column_id:
+        type: integer
+      column_name:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+    type: object
+  dto.UpdateBoardRequest:
+    properties:
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  dto.UpdateCardRequest:
+    properties:
+      description:
+        maxLength: 2000
+        type: string
+      title:
+        maxLength: 200
+        minLength: 1
+        type: string
+    required:
+    - title
+    type: object
+  dto.UpdateColumnRequest:
+    properties:
+      auto_pin:
+        type: boolean
+      name:
+        type: string
+      position:
+        type: number
+    type: object
+  model.Board:
+    properties:
+      columns:
+        items:
+          $ref: '#/definitions/model.Column'
+        type: array
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.Card:
+    properties:
+      column_id:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_pinned:
+        type: boolean
+      position:
+        type: number
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.Column:
+    properties:
+      auto_pin:
+        type: boolean
+      board_id:
+        type: integer
+      cards:
+        items:
+          $ref: '#/definitions/model.Card'
+        type: array
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      position:
+        type: number
+      updated_at:
+        type: string
+    type: object
+host: localhost:34115
+info:
+  contact: {}
+  description: Kanban board with pin mode API
+  title: Pinflow API
+  version: "1.0"
+paths:
+  /boards:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Board'
+            type: array
+      summary: List all boards
+      tags:
+      - boards
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Board name
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateBoardRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Board'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a board
+      tags:
+      - boards
+  /boards/{id}:
+    delete:
+      parameters:
+      - description: Board ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a board
+      tags:
+      - boards
+    get:
+      parameters:
+      - description: Board ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Board'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get a board by ID
+      tags:
+      - boards
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Board ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Board data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateBoardRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Board'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a board
+      tags:
+      - boards
+  /boards/{id}/columns:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Board ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Column data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateColumnRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Column'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a column in a board
+      tags:
+      - columns
+  /cards/{id}:
+    delete:
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a card
+      tags:
+      - cards
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Card data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateCardRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Card'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a card's title and description
+      tags:
+      - cards
+  /cards/{id}/move:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Move data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MoveCardRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Card'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Move a card to another column or reorder
+      tags:
+      - cards
+  /cards/{id}/pin:
+    patch:
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Card'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Toggle pin status of a card
+      tags:
+      - cards
+  /cards/pinned:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PinnedCardResponse'
+            type: array
+      summary: Get all pinned cards
+      tags:
+      - cards
+  /columns/{id}:
+    delete:
+      parameters:
+      - description: Column ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a column
+      tags:
+      - columns
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Column ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Column update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateColumnRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Column'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a column (rename, auto_pin, position)
+      tags:
+      - columns
+  /columns/{id}/cards:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Column ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Card data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCardRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Card'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a card in a column
+      tags:
+      - cards
+swagger: "2.0"

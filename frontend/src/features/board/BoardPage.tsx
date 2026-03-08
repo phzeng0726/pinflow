@@ -12,14 +12,13 @@ import {
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { ArrowLeft, Moon, Pin, Plus, Sun } from 'lucide-react'
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { useBoard } from '../../hooks/useBoards'
 import { useCreateCard, useDeleteCard, useMoveCard, usePinnedCards, useTogglePin, useUpdateCard } from '../../hooks/useCards'
 import { useCreateColumn, useDeleteColumn, useUpdateColumn } from '../../hooks/useColumns'
 import { midPosition } from '../../lib/utils'
-import { usePinStore } from '../../stores/pinStore'
 import { useThemeStore } from '../../stores/themeStore'
 import type { Card, Column } from '../../types'
 import { AddCardForm } from './AddCardForm'
@@ -32,7 +31,6 @@ export function BoardPage() {
   const navigate = useNavigate()
   const { data: board, isLoading } = useBoard(id)
   const { data: pinned = [] } = usePinnedCards()
-  const openPin = usePinStore(s => s.open)
   const { theme, toggle: toggleTheme } = useThemeStore()
 
   const createColumn = useCreateColumn(id)
@@ -43,6 +41,20 @@ export function BoardPage() {
   const togglePin = useTogglePin(id)
   const updateCard = useUpdateCard(id)
   const deleteCard = useDeleteCard(id)
+
+  const [pinPopoverOpen, setPinPopoverOpen] = useState(false)
+  const pinPopoverRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!pinPopoverOpen) return
+    const handler = (e: MouseEvent) => {
+      if (pinPopoverRef.current && !pinPopoverRef.current.contains(e.target as Node)) {
+        setPinPopoverOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [pinPopoverOpen])
 
   const [addingColumn, setAddingColumn] = useState(false)
   const [newColumnName, setNewColumnName] = useState('')
@@ -139,20 +151,57 @@ export function BoardPage() {
           >
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-1.5 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
-            onClick={openPin}
-          >
-            <Pin className="w-3.5 h-3.5" />
-            釘選任務
-            {pinned.length > 0 && (
-              <span className="bg-blue-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
-                {pinned.length}
-              </span>
+          <div className="relative" ref={pinPopoverRef}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1.5 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+              onClick={() => setPinPopoverOpen(v => !v)}
+            >
+              <Pin className="w-3.5 h-3.5" />
+              釘選任務
+              {pinned.length > 0 && (
+                <span className="bg-blue-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+                  {pinned.length}
+                </span>
+              )}
+            </Button>
+
+            {pinPopoverOpen && (
+              <div className="absolute right-0 top-full mt-1 w-64 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow-lg z-50 overflow-hidden">
+                {pinned.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-6 text-gray-400 dark:text-gray-500">
+                    <Pin className="w-5 h-5 mb-1 opacity-30" />
+                    <p className="text-xs">尚無釘選任務</p>
+                  </div>
+                ) : (
+                  <ul className="py-1 max-h-64 overflow-y-auto">
+                    {pinned.map(card => (
+                      <li key={card.id} className="px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
+                        <Pin className="w-3 h-3 text-blue-500 shrink-0" />
+                        <span className="text-sm text-gray-800 dark:text-gray-200 flex-1 truncate">{card.title}</span>
+                        {card.column_name && (
+                          <span className="text-xs bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-300 px-1.5 py-0.5 rounded shrink-0">
+                            {card.column_name}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {(window as any).electronAPI?.isElectron && (
+                  <div className="border-t dark:border-gray-700 px-3 py-2">
+                    <button
+                      className="w-full text-xs text-blue-600 dark:text-blue-400 hover:underline text-left"
+                      onClick={() => { (window as any).electronAPI.togglePinWindow(); setPinPopoverOpen(false) }}
+                    >
+                      浮動視窗
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
-          </Button>
+          </div>
         </div>
       </div>
 

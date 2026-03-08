@@ -102,6 +102,7 @@ function createPinWindow() {
     pinWindow.loadURL(`file://${indexPath}#/pin`)
   }
 
+  pinWindow.setAlwaysOnTop(true, 'screen-saver')
   pinWindow.on('closed', () => { pinWindow = null })
 }
 
@@ -146,6 +147,7 @@ function togglePinWindow() {
 // ── IPC ───────────────────────────────────────────────────────────────────────
 
 ipcMain.on('toggle-pin-window', () => togglePinWindow())
+ipcMain.on('hide-pin-window', () => { if (pinWindow && pinWindow.isVisible()) { pinWindow.hide(); updateTrayMenu() } })
 
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 
@@ -159,7 +161,6 @@ app.whenReady().then(async () => {
   }
 
   createMainWindow()
-  createPinWindow()
   createTray()
 })
 

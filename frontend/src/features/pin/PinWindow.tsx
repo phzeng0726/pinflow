@@ -1,17 +1,30 @@
-import { Pin, Minus, X } from 'lucide-react'
+import { Pin, X } from 'lucide-react'
+import type React from 'react'
+import { useEffect } from 'react'
 import { usePinnedCards, useTogglePinFromPin } from '../../hooks/useCards'
 import { usePinStore } from '../../stores/pinStore'
 import { PinnedCardItem } from './PinnedCardItem'
 
 export function PinWindow() {
   const { data: cards = [] } = usePinnedCards()
-  const { isMinimized, close, toggleMinimize } = usePinStore()
+  const { close } = usePinStore()
   const togglePin = useTogglePinFromPin()
 
+  useEffect(() => {
+    const targets = [document.documentElement, document.body, document.getElementById('root')]
+    targets.forEach(el => { if (el) el.style.background = 'transparent' })
+    return () => {
+      targets.forEach(el => { if (el) el.style.background = '' })
+    }
+  }, [])
+
   return (
-    <div className="flex flex-col h-screen bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm select-none">
+    <div className="flex flex-col h-screen bg-white/70 dark:bg-gray-900/90 select-none rounded-2xl overflow-hidden shadow-2xl">
       {/* Title bar */}
-      <div className="flex items-center justify-between px-3 py-2 bg-blue-600 dark:bg-blue-700 text-white shrink-0 cursor-move">
+      <div
+        className="flex items-center justify-between px-3 py-3 bg-blue-600/80 dark:bg-blue-700/80 text-white shrink-0 cursor-move"
+        style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+      >
         <div className="flex items-center gap-1.5">
           <Pin className="w-3.5 h-3.5 fill-white" />
           <span className="text-sm font-semibold">
@@ -23,35 +36,37 @@ export function PinWindow() {
             )}
           </span>
         </div>
-        <div className="flex items-center gap-1">
-          <button onClick={toggleMinimize} className="hover:bg-white/20 rounded p-0.5 transition-colors">
-            <Minus className="w-3.5 h-3.5" />
-          </button>
-          <button onClick={close} className="hover:bg-white/20 rounded p-0.5 transition-colors">
+        <div className="flex items-center gap-1" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
+          <button
+            onClick={() => {
+              const api = (window as any).electronAPI
+              if (api?.hidePinWindow) api.hidePinWindow()
+              else close()
+            }}
+            className="hover:bg-white/20 rounded p-0.5 transition-colors"
+          >
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
       {/* Card list */}
-      {!isMinimized && (
-        <div className="flex-1 overflow-y-auto p-2 space-y-2">
-          {cards.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-24 text-gray-400 dark:text-gray-500">
-              <Pin className="w-6 h-6 mb-1 opacity-30" />
-              <p className="text-xs">尚無釘選任務</p>
-            </div>
-          ) : (
-            cards.map(card => (
-              <PinnedCardItem
-                key={card.id}
-                card={card}
-                onUnpin={(id) => togglePin.mutate(id)}
-              />
-            ))
-          )}
-        </div>
-      )}
+      <div className="flex-1 overflow-y-auto p-2 space-y-2">
+        {cards.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-24 text-gray-400 dark:text-gray-500">
+            <Pin className="w-6 h-6 mb-1 opacity-30" />
+            <p className="text-xs">尚無釘選任務</p>
+          </div>
+        ) : (
+          cards.map(card => (
+            <PinnedCardItem
+              key={card.id}
+              card={card}
+              onUnpin={(id) => togglePin.mutate(id)}
+            />
+          ))
+        )}
+      </div>
     </div>
   )
 }

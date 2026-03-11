@@ -45,14 +45,36 @@ func (h *CardHandler) CreateCard(c *gin.Context) {
 	c.JSON(http.StatusCreated, card)
 }
 
+// GetCard godoc
+// @Summary     Get a card by ID with full details
+// @Tags        cards
+// @Produce     json
+// @Param       id path int true "Card ID"
+// @Success     200 {object} dto.CardResponse
+// @Failure     404 {object} map[string]string
+// @Router      /cards/{id} [get]
+func (h *CardHandler) GetCard(c *gin.Context) {
+	id, err := parseUintParam(c, "id")
+	if err != nil {
+		return
+	}
+	card, err := h.svc.GetCardDetail(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "card not found"})
+		return
+	}
+	c.JSON(http.StatusOK, card)
+}
+
 // UpdateCard godoc
-// @Summary     Update a card's title and description
+// @Summary     Update a card's title, description, and schedule
 // @Tags        cards
 // @Accept      json
 // @Produce     json
 // @Param       id path int true "Card ID"
 // @Param       body body dto.UpdateCardRequest true "Card data"
 // @Success     200 {object} model.Card
+// @Failure     400 {object} map[string]string
 // @Failure     404 {object} map[string]string
 // @Failure     422 {object} map[string]string
 // @Router      /cards/{id} [patch]
@@ -66,8 +88,12 @@ func (h *CardHandler) UpdateCard(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	card, err := h.svc.UpdateCard(id, req.Title, req.Description)
+	card, err := h.svc.UpdateCard(id, req.Title, req.Description, req.StartTime, req.EndTime)
 	if err != nil {
+		if err.Error() == "end_time must be after start_time" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}

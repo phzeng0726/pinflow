@@ -16,7 +16,10 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("failed to open test db: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Board{}, &model.Column{}, &model.Card{}); err != nil {
+	if err := db.AutoMigrate(
+		&model.Board{}, &model.Column{}, &model.Card{},
+		&model.Tag{}, &model.Checklist{}, &model.ChecklistItem{},
+	); err != nil {
 		t.Fatalf("failed to migrate: %v", err)
 	}
 	return db

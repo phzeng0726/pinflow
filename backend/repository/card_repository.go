@@ -9,6 +9,7 @@ import (
 type CardRepository interface {
 	Create(card *model.Card) error
 	FindByID(id uint) (*model.Card, error)
+	FindDetail(id uint) (*model.Card, error)
 	FindByColumnID(columnID uint) ([]model.Card, error)
 	MaxPositionByColumn(columnID uint) (float64, error)
 	Update(card *model.Card) error
@@ -33,6 +34,23 @@ func (r *cardRepository) Create(card *model.Card) error {
 func (r *cardRepository) FindByID(id uint) (*model.Card, error) {
 	var card model.Card
 	err := r.db.First(&card, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &card, nil
+}
+
+func (r *cardRepository) FindDetail(id uint) (*model.Card, error) {
+	var card model.Card
+	err := r.db.
+		Preload("Tags").
+		Preload("Checklists", func(db *gorm.DB) *gorm.DB {
+			return db.Order("id asc")
+		}).
+		Preload("Checklists.Items", func(db *gorm.DB) *gorm.DB {
+			return db.Order("position asc")
+		}).
+		First(&card, id).Error
 	if err != nil {
 		return nil, err
 	}

@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Pin, PinOff, Trash2, GripVertical, Pencil, Check, X } from 'lucide-react'
+import { Pin, PinOff, Trash2, GripVertical, Pencil, Check, X, ExternalLink, Calendar, CheckSquare } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import type { Card } from '../../types'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Textarea } from '../../components/ui/textarea'
+import { CardDetailDialog } from '../card/CardDetailDialog'
 
 interface CardItemProps {
   card: Card
@@ -20,6 +21,7 @@ export function CardItem({ card, columnAutoPin, onTogglePin, onDelete, onUpdate 
   const [editing, setEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(card.title)
   const [editDesc, setEditDesc] = useState(card.description)
+  const [showDetail, setShowDetail] = useState(false)
 
   // Whole card is draggable — attributes & listeners go on the outer div
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -44,6 +46,12 @@ export function CardItem({ card, columnAutoPin, onTogglePin, onDelete, onUpdate 
     setEditDesc(card.description)
     setEditing(false)
   }
+
+  const tags = card.tags ?? []
+  const checklists = card.checklists ?? []
+  const hasSchedule = !!card.start_time || !!card.end_time
+  const totalItems = checklists.reduce((n, cl) => n + (cl.total_count ?? 0), 0)
+  const completedItems = checklists.reduce((n, cl) => n + (cl.completed_count ?? 0), 0)
 
   if (editing) {
     return (
@@ -75,58 +83,106 @@ export function CardItem({ card, columnAutoPin, onTogglePin, onDelete, onUpdate 
   }
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      // 整張卡片可拖曳，加 select-none 避免反白文字
-      {...attributes}
-      {...listeners}
-      className={cn(
-        'bg-white dark:bg-gray-700 rounded-lg border dark:border-gray-600 p-3 shadow-sm',
-        'group relative select-none',
-        'cursor-grab active:cursor-grabbing',
-        card.is_pinned && 'border-l-4 border-l-blue-500'
-      )}
-    >
-      <div className="flex items-start gap-2">
-        {/* 視覺提示，不再掛 listeners */}
-        <GripVertical className="w-4 h-4 mt-0.5 text-gray-300 dark:text-gray-500 shrink-0" />
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-sm text-gray-900 dark:text-gray-100 leading-snug">{card.title}</p>
-          {card.description && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{card.description}</p>
-          )}
-        </div>
-        {/* 按鈕需要 stopPropagation 避免觸發拖曳事件 */}
-        <div
-          className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-          onPointerDown={e => e.stopPropagation()}
-        >
-          <button
-            onClick={e => { e.stopPropagation(); setEditing(true) }}
-            className="text-gray-400 hover:text-blue-500 p-0.5"
-          >
-            <Pencil className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={e => { e.stopPropagation(); onTogglePin(card.id) }}
-            className={cn(
-              'p-0.5',
-              card.is_pinned ? 'text-blue-500 opacity-100' : 'text-gray-400 hover:text-blue-500',
-              columnAutoPin && 'cursor-default'
+    <>
+      <div
+        ref={setNodeRef}
+        style={style}
+        // 整張卡片可拖曳，加 select-none 避免反白文字
+        {...attributes}
+        {...listeners}
+        className={cn(
+          'bg-white dark:bg-gray-700 rounded-lg border dark:border-gray-600 p-3 shadow-sm',
+          'group relative select-none',
+          'cursor-grab active:cursor-grabbing',
+          card.is_pinned && 'border-l-4 border-l-blue-500'
+        )}
+      >
+        <div className="flex items-start gap-2">
+          {/* 視覺提示，不再掛 listeners */}
+          <GripVertical className="w-4 h-4 mt-0.5 text-gray-300 dark:text-gray-500 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-sm text-gray-900 dark:text-gray-100 leading-snug">{card.title}</p>
+            {card.description && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{card.description}</p>
             )}
-            title={card.is_pinned ? '取消釘選' : '釘選'}
+            {/* Tags */}
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {tags.slice(0, 3).map(tag => (
+                  <span
+                    key={tag.id}
+                    className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded text-xs"
+                  >
+                    {tag.name}
+                  </span>
+                ))}
+                {tags.length > 3 && (
+                  <span className="text-xs text-gray-400">+{tags.length - 3}</span>
+                )}
+              </div>
+            )}
+            {/* Schedule / Checklist indicators */}
+            {(hasSchedule || totalItems > 0) && (
+              <div className="flex items-center gap-2 mt-1.5">
+                {hasSchedule && (
+                  <span className="flex items-center gap-0.5 text-xs text-gray-400">
+                    <Calendar className="w-3 h-3" />
+                    {card.start_time ? new Date(card.start_time).toLocaleDateString() : ''}
+                  </span>
+                )}
+                {totalItems > 0 && (
+                  <span className={cn(
+                    'flex items-center gap-0.5 text-xs',
+                    completedItems === totalItems ? 'text-green-500' : 'text-gray-400'
+                  )}>
+                    <CheckSquare className="w-3 h-3" />
+                    {completedItems}/{totalItems}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+          {/* 按鈕需要 stopPropagation 避免觸發拖曳事件 */}
+          <div
+            className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+            onPointerDown={e => e.stopPropagation()}
           >
-            {card.is_pinned ? <Pin className="w-3.5 h-3.5" /> : <PinOff className="w-3.5 h-3.5" />}
-          </button>
-          <button
-            onClick={e => { e.stopPropagation(); onDelete(card.id) }}
-            className="text-gray-400 hover:text-red-500 p-0.5"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+            <button
+              onClick={e => { e.stopPropagation(); setShowDetail(true) }}
+              className="text-gray-400 hover:text-blue-500 p-0.5"
+              title="詳細資訊"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={e => { e.stopPropagation(); setEditing(true) }}
+              className="text-gray-400 hover:text-blue-500 p-0.5"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={e => { e.stopPropagation(); onTogglePin(card.id) }}
+              className={cn(
+                'p-0.5',
+                card.is_pinned ? 'text-blue-500 opacity-100' : 'text-gray-400 hover:text-blue-500',
+                columnAutoPin && 'cursor-default'
+              )}
+              title={card.is_pinned ? '取消釘選' : '釘選'}
+            >
+              {card.is_pinned ? <Pin className="w-3.5 h-3.5" /> : <PinOff className="w-3.5 h-3.5" />}
+            </button>
+            <button
+              onClick={e => { e.stopPropagation(); onDelete(card.id) }}
+              className="text-gray-400 hover:text-red-500 p-0.5"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+      {showDetail && (
+        <CardDetailDialog cardId={card.id} onClose={() => setShowDetail(false)} />
+      )}
+    </>
   )
 }

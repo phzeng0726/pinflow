@@ -11,12 +11,22 @@ import (
 
 // RouterDeps holds handler dependencies (used in tests).
 type RouterDeps struct {
-	BoardH  *BoardHandler
-	ColumnH *ColumnHandler
-	CardH   *CardHandler
+	BoardH         *BoardHandler
+	ColumnH        *ColumnHandler
+	CardH          *CardHandler
+	TagH           *TagHandler
+	ChecklistH     *ChecklistHandler
+	ChecklistItemH *ChecklistItemHandler
 }
 
-func NewRouter(boardH *BoardHandler, columnH *ColumnHandler, cardH *CardHandler) *gin.Engine {
+func NewRouter(
+	boardH *BoardHandler,
+	columnH *ColumnHandler,
+	cardH *CardHandler,
+	tagH *TagHandler,
+	checklistH *ChecklistHandler,
+	checklistItemH *ChecklistItemHandler,
+) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
@@ -54,10 +64,33 @@ func NewRouter(boardH *BoardHandler, columnH *ColumnHandler, cardH *CardHandler)
 		cards := v1.Group("/cards")
 		{
 			cards.GET("/pinned", cardH.GetPinnedCards)
+			cards.GET("/:id", cardH.GetCard)
 			cards.PATCH("/:id", cardH.UpdateCard)
 			cards.PATCH("/:id/move", cardH.MoveCard)
 			cards.PATCH("/:id/pin", cardH.TogglePin)
 			cards.DELETE("/:id", cardH.DeleteCard)
+			cards.POST("/:id/tags", tagH.AttachTag)
+			cards.DELETE("/:id/tags/:tagId", tagH.DetachTag)
+			cards.GET("/:id/checklists", checklistH.ListChecklists)
+			cards.POST("/:id/checklists", checklistH.CreateChecklist)
+		}
+
+		tags := v1.Group("/tags")
+		{
+			tags.GET("", tagH.ListTags)
+			tags.POST("", tagH.CreateTag)
+		}
+
+		checklists := v1.Group("/checklists")
+		{
+			checklists.DELETE("/:id", checklistH.DeleteChecklist)
+			checklists.POST("/:id/items", checklistItemH.CreateItem)
+		}
+
+		checklistItems := v1.Group("/checklist-items")
+		{
+			checklistItems.PATCH("/:id", checklistItemH.UpdateItem)
+			checklistItems.DELETE("/:id", checklistItemH.DeleteItem)
 		}
 	}
 

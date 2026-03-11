@@ -17,6 +17,28 @@ export interface Column {
   updated_at: string
 }
 
+export interface Tag {
+  id: number
+  name: string
+}
+
+export interface ChecklistItem {
+  id: number
+  checklist_id: number
+  text: string
+  completed: boolean
+  position: number
+}
+
+export interface Checklist {
+  id: number
+  card_id: number
+  title: string
+  items: ChecklistItem[]
+  completed_count: number
+  total_count: number
+}
+
 export interface Card {
   id: number
   column_id: number
@@ -24,6 +46,10 @@ export interface Card {
   description: string
   position: number
   is_pinned: boolean
+  start_time: string | null
+  end_time: string | null
+  tags: Tag[]
+  checklists: Checklist[]
   created_at: string
   updated_at: string
 }

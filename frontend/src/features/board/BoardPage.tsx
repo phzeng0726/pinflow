@@ -15,9 +15,10 @@ import { ArrowLeft, Moon, Pin, Plus, Sun } from 'lucide-react'
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
-import { useBoard } from '../../hooks/useBoards'
-import { useCreateCard, useDeleteCard, useMoveCard, usePinnedCards, useTogglePin, useUpdateCard } from '../../hooks/useCards'
-import { useCreateColumn, useDeleteColumn, useUpdateColumn } from '../../hooks/useColumns'
+import { useBoard } from '../../hooks/board/queries/useBoards'
+import { usePinnedCards } from '../../hooks/card/queries/useCards'
+import { useCardMutations } from '../../hooks/card/mutations/useCardMutations'
+import { useColumnMutations } from '../../hooks/column/mutations/useColumnMutations'
 import { midPosition } from '../../lib/utils'
 import { useThemeStore } from '../../stores/themeStore'
 import type { Card, Column } from '../../types'
@@ -33,14 +34,8 @@ export function BoardPage() {
   const { data: pinned = [] } = usePinnedCards()
   const { theme, toggle: toggleTheme } = useThemeStore()
 
-  const createColumn = useCreateColumn(id)
-  const updateColumn = useUpdateColumn(id)
-  const deleteColumn = useDeleteColumn(id)
-  const createCard = useCreateCard(id)
-  const moveCard = useMoveCard(id)
-  const togglePin = useTogglePin(id)
-  const updateCard = useUpdateCard(id)
-  const deleteCard = useDeleteCard(id)
+  const { createColumn, updateColumn, deleteColumn } = useColumnMutations(id)
+  const { createCard, moveCard, togglePin, updateCard, deleteCard } = useCardMutations(id)
 
   const [pinPopoverOpen, setPinPopoverOpen] = useState(false)
   const pinPopoverRef = useRef<HTMLDivElement>(null)

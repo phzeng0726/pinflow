@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Plus, Trash2, LayoutDashboard, Sun, Moon } from 'lucide-react'
-import { useBoards, useCreateBoard, useDeleteBoard } from '../../hooks/useBoards'
+import { useBoards } from '../../hooks/board/queries/useBoards'
+import { useBoardMutations } from '../../hooks/board/mutations/useBoardMutations'
 import { useThemeStore } from '../../stores/themeStore'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 
 export function BoardListPage() {
   const { data: boards = [], isLoading } = useBoards()
-  const createBoard = useCreateBoard()
-  const deleteBoard = useDeleteBoard()
+  const { createBoard, deleteBoard } = useBoardMutations()
   const navigate = useNavigate()
   const { theme, toggle: toggleTheme } = useThemeStore()
   const [newName, setNewName] = useState('')

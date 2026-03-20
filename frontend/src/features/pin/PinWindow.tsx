@@ -1,14 +1,15 @@
 import { Pin, X } from 'lucide-react'
 import type React from 'react'
 import { useEffect } from 'react'
-import { usePinnedCards, useTogglePinFromPin } from '../../hooks/useCards'
+import { usePinnedCards } from '../../hooks/card/queries/useCards'
+import { useCardMutations } from '../../hooks/card/mutations/useCardMutations'
 import { usePinStore } from '../../stores/pinStore'
 import { PinnedCardItem } from './PinnedCardItem'
 
 export function PinWindow() {
   const { data: cards = [] } = usePinnedCards()
   const { close } = usePinStore()
-  const togglePin = useTogglePinFromPin()
+  const { togglePinFromPin: togglePin } = useCardMutations()
 
   useEffect(() => {
     const targets = [document.documentElement, document.body, document.getElementById('root')]

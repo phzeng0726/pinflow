@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { X } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
-import { useBoards, useBoard } from '../../hooks/useBoards'
-import { useDuplicateCard } from '../../hooks/useCards'
+import { useBoards, useBoard } from '../../hooks/board/queries/useBoards'
+import { useCardMutations } from '../../hooks/card/mutations/useCardMutations'
 import type { Card } from '../../types'
 
 interface DuplicateCardDialogProps {
@@ -27,7 +27,7 @@ export function DuplicateCardDialog({ card, boardId, onClose }: DuplicateCardDia
 
   const { data: boards = [] } = useBoards()
   const { data: selectedBoard } = useBoard(selectedBoardId)
-  const duplicate = useDuplicateCard()
+  const { duplicateCard: duplicate } = useCardMutations()
 
   const columns = selectedBoard?.columns ?? []
   const targetColumn = columns.find(c => c.id === selectedColumnId)

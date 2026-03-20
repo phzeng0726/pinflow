@@ -1,19 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { X, Tag as TagIcon, Calendar, CheckSquare, Trash2, Plus, Check } from 'lucide-react'
-import { getCard, updateCard } from '../../lib/api'
-import { useTags, useCreateTag, useAttachTag, useDetachTag } from '../../hooks/useTags'
-import {
-  useCreateChecklist,
-  useCreateChecklistItem,
-  useDeleteChecklist,
-  useDeleteChecklistItem,
-  useUpdateChecklistItem,
-} from '../../hooks/useChecklists'
-import type { Card } from '../../types'
-import { cn } from '../../lib/utils'
+import { Calendar, Check, CheckSquare, Plus, Tag as TagIcon, Trash2, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
+import { useTagMutations } from '../../hooks/tag/mutations/useTagMutations'
+import { useTags } from '../../hooks/tag/queries/useTags'
+import { useChecklistMutations } from '../../hooks/checklist/mutations/useChecklistMutations'
+import { getCard, updateCard } from '../../lib/api'
+import { cn } from '../../lib/utils'
+import type { Card } from '../../types'
 
 interface CardDetailDialogProps {
   cardId: number
@@ -108,9 +103,7 @@ function TagSection({ card }: { card: Card }) {
   const [input, setInput] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const { data: allTags = [] } = useTags()
-  const createTag = useCreateTag()
-  const attachTag = useAttachTag(card.id)
-  const detachTag = useDetachTag(card.id)
+  const { createTag, attachTag, detachTag } = useTagMutations()
   const inputRef = useRef<HTMLInputElement>(null)
 
   const cardTagIds = new Set(card.tags?.map(t => t.id) ?? [])
@@ -120,7 +113,7 @@ function TagSection({ card }: { card: Card }) {
 
   const handleAddTag = async (name: string) => {
     const tag = await createTag.mutateAsync(name)
-    await attachTag.mutateAsync(tag.id)
+    await attachTag.mutateAsync({ cardId: card.id, tagId: tag.id })
     setInput('')
     setShowSuggestions(false)
   }
@@ -146,7 +139,7 @@ function TagSection({ card }: { card: Card }) {
           >
             {tag.name}
             <button
-              onClick={() => detachTag.mutate(tag.id)}
+              onClick={() => detachTag.mutate({ cardId: card.id, tagId: tag.id })}
               className="hover:text-red-500 ml-0.5"
             >
               <X className="w-3 h-3" />
@@ -171,7 +164,7 @@ function TagSection({ card }: { card: Card }) {
               <button
                 key={tag.id}
                 className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600"
-                onMouseDown={() => { attachTag.mutate(tag.id); setInput(''); setShowSuggestions(false) }}
+                onMouseDown={() => { attachTag.mutate({ cardId: card.id, tagId: tag.id }); setInput(''); setShowSuggestions(false) }}
               >
                 {tag.name}
               </button>
@@ -254,7 +247,7 @@ function ScheduleSection({ card, qc }: { card: Card; qc: ReturnType<typeof useQu
 function ChecklistSection({ card }: { card: Card }) {
   const [newTitle, setNewTitle] = useState('')
   const [showNewForm, setShowNewForm] = useState(false)
-  const createChecklist = useCreateChecklist(card.id)
+  const { createChecklist } = useChecklistMutations(card.id)
 
   const handleCreate = async () => {
     if (!newTitle.trim()) return
@@ -305,10 +298,7 @@ function ChecklistBlock({ checklist, cardId }: { checklist: import('../../types'
   const [editingItemId, setEditingItemId] = useState<number | null>(null)
   const [editText, setEditText] = useState('')
 
-  const deleteChecklist = useDeleteChecklist(cardId)
-  const createItem = useCreateChecklistItem(cardId)
-  const updateItem = useUpdateChecklistItem(cardId)
-  const deleteItem = useDeleteChecklistItem(cardId)
+  const { deleteChecklist, createChecklistItem: createItem, updateChecklistItem: updateItem, deleteChecklistItem: deleteItem } = useChecklistMutations(cardId)
 
   const completedCount = checklist.items?.filter(i => i.completed).length ?? 0
   const total = checklist.items?.length ?? 0

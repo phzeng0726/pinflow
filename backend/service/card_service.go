@@ -18,15 +18,31 @@ type CardService interface {
 	TogglePin(id uint) (*model.Card, error)
 	GetPinnedCards() ([]dto.PinnedCardResponse, error)
 	DeleteCard(id uint) error
+	DuplicateCard(id uint, req dto.DuplicateCardRequest) (*dto.CardResponse, error)
 }
 
 type cardService struct {
-	cardRepo   repository.CardRepository
-	columnRepo repository.ColumnRepository
+	cardRepo          repository.CardRepository
+	columnRepo        repository.ColumnRepository
+	tagRepo           repository.TagRepository
+	checklistRepo     repository.ChecklistRepository
+	checklistItemRepo repository.ChecklistItemRepository
 }
 
-func NewCardService(cardRepo repository.CardRepository, columnRepo repository.ColumnRepository) CardService {
-	return &cardService{cardRepo: cardRepo, columnRepo: columnRepo}
+func NewCardService(
+	cardRepo repository.CardRepository,
+	columnRepo repository.ColumnRepository,
+	tagRepo repository.TagRepository,
+	checklistRepo repository.ChecklistRepository,
+	checklistItemRepo repository.ChecklistItemRepository,
+) CardService {
+	return &cardService{
+		cardRepo:          cardRepo,
+		columnRepo:        columnRepo,
+		tagRepo:           tagRepo,
+		checklistRepo:     checklistRepo,
+		checklistItemRepo: checklistItemRepo,
+	}
 }
 
 func (s *cardService) CreateCard(columnID uint, title, description string) (*model.Card, error) {
@@ -193,4 +209,86 @@ func (s *cardService) DeleteCard(id uint) error {
 		return err
 	}
 	return s.cardRepo.Delete(id)
+}
+
+func (s *cardService) DuplicateCard(id uint, req dto.DuplicateCardRequest) (*dto.CardResponse, error) {
+	src, err := s.cardRepo.FindDetail(id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate position in target column
+	targetCards, err := s.cardRepo.FindByColumnID(req.TargetColumnID)
+	if err != nil {
+		return nil, err
+	}
+	var position float64
+	if req.PositionIndex <= 0 || req.PositionIndex > len(targetCards) {
+		// Append to end
+		if len(targetCards) == 0 {
+			position = 1.0
+		} else {
+			position = targetCards[len(targetCards)-1].Position + 1.0
+		}
+	} else {
+		// Insert at 1-based index
+		var before float64
+		if req.PositionIndex > 1 {
+			before = targetCards[req.PositionIndex-2].Position
+		}
+		after := targetCards[req.PositionIndex-1].Position
+		position = (before + after) / 2.0
+	}
+
+	newCard := &model.Card{
+		ColumnID:    req.TargetColumnID,
+		Title:       strings.TrimSpace(req.Title),
+		Description: src.Description,
+		Position:    position,
+	}
+	if req.CopySchedule {
+		newCard.StartTime = src.StartTime
+		newCard.EndTime = src.EndTime
+	}
+	if err := s.cardRepo.Create(newCard); err != nil {
+		return nil, err
+	}
+
+	if req.CopyTags {
+		for _, tag := range src.Tags {
+			if err := s.tagRepo.AttachToCard(newCard.ID, tag.ID); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if req.CopyChecklists {
+		for _, cl := range src.Checklists {
+			newCL := &model.Checklist{
+				CardID: newCard.ID,
+				Title:  cl.Title,
+			}
+			if err := s.checklistRepo.Create(newCL); err != nil {
+				return nil, err
+			}
+			for _, item := range cl.Items {
+				newItem := &model.ChecklistItem{
+					ChecklistID: newCL.ID,
+					Text:        item.Text,
+					Completed:   false,
+					Position:    item.Position,
+				}
+				if err := s.checklistItemRepo.Create(newItem); err != nil {
+					return nil, err
+				}
+			}
+		}
+	}
+
+	detail, err := s.cardRepo.FindDetail(newCard.ID)
+	if err != nil {
+		return nil, err
+	}
+	resp := ToCardResponse(detail)
+	return &resp, nil
 }

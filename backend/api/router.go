@@ -69,6 +69,7 @@ func NewRouter(
 			cards.PATCH("/:id/move", cardH.MoveCard)
 			cards.PATCH("/:id/pin", cardH.TogglePin)
 			cards.DELETE("/:id", cardH.DeleteCard)
+			cards.POST("/:id/duplicate", cardH.DuplicateCard)
 			cards.POST("/:id/tags", tagH.AttachTag)
 			cards.DELETE("/:id/tags/:tagId", tagH.DetachTag)
 			cards.GET("/:id/checklists", checklistH.ListChecklists)

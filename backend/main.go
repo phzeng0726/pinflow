@@ -40,7 +40,7 @@ func main() {
 
 	boardSvc := service.NewBoardService(boardRepo)
 	columnSvc := service.NewColumnService(boardRepo, columnRepo)
-	cardSvc := service.NewCardService(cardRepo, columnRepo)
+	cardSvc := service.NewCardService(cardRepo, columnRepo, tagRepo, checklistRepo, checklistItemRepo)
 	tagSvc := service.NewTagService(tagRepo, cardRepo)
 	checklistSvc := service.NewChecklistService(checklistRepo, checklistItemRepo, cardRepo)
 

@@ -24,7 +24,7 @@ func setupRouter(t *testing.T) *api.RouterDeps {
 	itemRepo := repository.NewChecklistItemRepository(db)
 	boardSvc := service.NewBoardService(boardRepo)
 	colSvc := service.NewColumnService(boardRepo, colRepo)
-	cardSvc := service.NewCardService(cardRepo, colRepo)
+	cardSvc := service.NewCardService(cardRepo, colRepo, tagRepo, clRepo, itemRepo)
 	tagSvc := service.NewTagService(tagRepo, cardRepo)
 	clSvc := service.NewChecklistService(clRepo, itemRepo, cardRepo)
 	boardH := api.NewBoardHandler(boardSvc)

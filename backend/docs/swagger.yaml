@@ -127,6 +127,25 @@ definitions:
     required:
     - name
     type: object
+  dto.DuplicateCardRequest:
+    properties:
+      copy_checklists:
+        type: boolean
+      copy_schedule:
+        type: boolean
+      copy_tags:
+        type: boolean
+      position_index:
+        description: 1-based; 0 = append to end
+        type: integer
+      target_column_id:
+        type: integer
+      title:
+        type: string
+    required:
+    - target_column_id
+    - title
+    type: object
   dto.MoveCardRequest:
     properties:
       column_id:
@@ -602,6 +621,44 @@ paths:
       summary: Create a checklist on a card
       tags:
       - checklists
+  /cards/{id}/duplicate:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Duplicate data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.DuplicateCardRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.CardResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Duplicate a card
+      tags:
+      - cards
   /cards/{id}/move:
     patch:
       consumes:

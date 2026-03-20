@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as api from '../lib/api'
+import type { DuplicateCardRequest } from '../types'
 import { boardKeys } from './useBoards'
 
 export const pinnedKeys = { all: ['pinned'] as const }
@@ -62,6 +63,18 @@ export function useDeleteCard(boardId: number) {
     mutationFn: (id: number) => api.deleteCard(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: boardKeys.detail(boardId) })
+      qc.invalidateQueries({ queryKey: pinnedKeys.all })
+    },
+  })
+}
+
+export function useDuplicateCard() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: DuplicateCardRequest }) =>
+      api.duplicateCard(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: boardKeys.all })
       qc.invalidateQueries({ queryKey: pinnedKeys.all })
     },
   })

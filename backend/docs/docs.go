@@ -488,6 +488,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/cards/{id}/duplicate": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cards"
+                ],
+                "summary": "Duplicate a card",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Card ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Duplicate data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.DuplicateCardRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CardResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/cards/{id}/move": {
             "patch": {
                 "consumes": [
@@ -1220,6 +1278,34 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 100,
                     "minLength": 1
+                }
+            }
+        },
+        "dto.DuplicateCardRequest": {
+            "type": "object",
+            "required": [
+                "target_column_id",
+                "title"
+            ],
+            "properties": {
+                "copy_checklists": {
+                    "type": "boolean"
+                },
+                "copy_schedule": {
+                    "type": "boolean"
+                },
+                "copy_tags": {
+                    "type": "boolean"
+                },
+                "position_index": {
+                    "description": "1-based; 0 = append to end",
+                    "type": "integer"
+                },
+                "target_column_id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         },

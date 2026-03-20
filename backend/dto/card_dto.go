@@ -27,6 +27,15 @@ type PinnedCardResponse struct {
 	ColumnName  string `json:"column_name"`
 }
 
+type DuplicateCardRequest struct {
+	Title          string `json:"title" binding:"required"`
+	TargetColumnID uint   `json:"target_column_id" binding:"required"`
+	PositionIndex  int    `json:"position_index"` // 1-based; 0 = append to end
+	CopyTags       bool   `json:"copy_tags"`
+	CopyChecklists bool   `json:"copy_checklists"`
+	CopySchedule   bool   `json:"copy_schedule"`
+}
+
 type CardResponse struct {
 	ID          uint                `json:"id"`
 	ColumnID    uint                `json:"column_id"`

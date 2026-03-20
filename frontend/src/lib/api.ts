@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { Board, Card, Checklist, ChecklistItem, Column, PinnedCard, Tag } from '../types'
+import type { Board, Card, Checklist, ChecklistItem, Column, DuplicateCardRequest, PinnedCard, Tag } from '../types'
 
 // In Electron production mode, window.electronAPI is injected by preload.js.
 // There's no Vite proxy, so we must use the absolute backend URL.
@@ -44,6 +44,8 @@ export const moveCard = (id: number, columnId: number, position: number) =>
 export const togglePin = (id: number) => api.patch<Card>(`/cards/${id}/pin`).then(r => r.data)
 export const deleteCard = (id: number) => api.delete(`/cards/${id}`)
 export const getPinnedCards = () => api.get<PinnedCard[]>('/cards/pinned').then(r => r.data)
+export const duplicateCard = (id: number, data: DuplicateCardRequest) =>
+  api.post<Card>(`/cards/${id}/duplicate`, data).then(r => r.data)
 
 // Tags
 export const listTags = () => api.get<Tag[]>('/tags').then(r => r.data)

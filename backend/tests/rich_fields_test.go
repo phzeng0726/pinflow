@@ -92,7 +92,7 @@ func TestCardService_UpdateCard_ScheduleValidation(t *testing.T) {
 	cardRepo := repository.NewCardRepository(db)
 	colRepo := repository.NewColumnRepository(db)
 	boardRepo := repository.NewBoardRepository(db)
-	svc := service.NewCardService(cardRepo, colRepo)
+	svc := service.NewCardService(cardRepo, colRepo, repository.NewTagRepository(db), repository.NewChecklistRepository(db), repository.NewChecklistItemRepository(db))
 
 	board := &model.Board{Name: "B"}
 	_ = boardRepo.Create(board)
@@ -115,7 +115,7 @@ func TestCardService_UpdateCard_ScheduleSet(t *testing.T) {
 	cardRepo := repository.NewCardRepository(db)
 	colRepo := repository.NewColumnRepository(db)
 	boardRepo := repository.NewBoardRepository(db)
-	svc := service.NewCardService(cardRepo, colRepo)
+	svc := service.NewCardService(cardRepo, colRepo, repository.NewTagRepository(db), repository.NewChecklistRepository(db), repository.NewChecklistItemRepository(db))
 
 	board := &model.Board{Name: "B"}
 	_ = boardRepo.Create(board)

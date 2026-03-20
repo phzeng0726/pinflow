@@ -86,7 +86,7 @@ func TestCardService_CreateCard_AutoPin(t *testing.T) {
 	cardRepo := repository.NewCardRepository(db)
 	boardSvc := service.NewBoardService(boardRepo)
 	colSvc := service.NewColumnService(boardRepo, colRepo)
-	cardSvc := service.NewCardService(cardRepo, colRepo)
+	cardSvc := service.NewCardService(cardRepo, colRepo, repository.NewTagRepository(db), repository.NewChecklistRepository(db), repository.NewChecklistItemRepository(db))
 
 	board, _ := boardSvc.CreateBoard("B")
 	col, _ := colSvc.CreateColumn(board.ID, "InProgress")
@@ -110,7 +110,7 @@ func TestCardService_MoveCard_TriggersAutoPin(t *testing.T) {
 	cardRepo := repository.NewCardRepository(db)
 	boardSvc := service.NewBoardService(boardRepo)
 	colSvc := service.NewColumnService(boardRepo, colRepo)
-	cardSvc := service.NewCardService(cardRepo, colRepo)
+	cardSvc := service.NewCardService(cardRepo, colRepo, repository.NewTagRepository(db), repository.NewChecklistRepository(db), repository.NewChecklistItemRepository(db))
 
 	board, _ := boardSvc.CreateBoard("B")
 	todoCol, _ := colSvc.CreateColumn(board.ID, "Todo")
@@ -140,7 +140,7 @@ func TestCardService_TogglePin(t *testing.T) {
 	cardRepo := repository.NewCardRepository(db)
 	boardSvc := service.NewBoardService(boardRepo)
 	colSvc := service.NewColumnService(boardRepo, colRepo)
-	cardSvc := service.NewCardService(cardRepo, colRepo)
+	cardSvc := service.NewCardService(cardRepo, colRepo, repository.NewTagRepository(db), repository.NewChecklistRepository(db), repository.NewChecklistItemRepository(db))
 
 	board, _ := boardSvc.CreateBoard("B")
 	col, _ := colSvc.CreateColumn(board.ID, "Todo")
@@ -171,7 +171,7 @@ func TestCardService_GetPinnedCards(t *testing.T) {
 	cardRepo := repository.NewCardRepository(db)
 	boardSvc := service.NewBoardService(boardRepo)
 	colSvc := service.NewColumnService(boardRepo, colRepo)
-	cardSvc := service.NewCardService(cardRepo, colRepo)
+	cardSvc := service.NewCardService(cardRepo, colRepo, repository.NewTagRepository(db), repository.NewChecklistRepository(db), repository.NewChecklistItemRepository(db))
 
 	board, _ := boardSvc.CreateBoard("B")
 	col, _ := colSvc.CreateColumn(board.ID, "Todo")

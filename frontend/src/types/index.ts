@@ -54,6 +54,15 @@ export interface Card {
   updated_at: string
 }
 
+export interface DuplicateCardRequest {
+  title: string
+  target_column_id: number
+  position_index: number
+  copy_tags: boolean
+  copy_checklists: boolean
+  copy_schedule: boolean
+}
+
 export interface PinnedCard {
   id: number
   title: string

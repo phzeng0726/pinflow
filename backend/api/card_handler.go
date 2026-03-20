@@ -168,6 +168,35 @@ func (h *CardHandler) DeleteCard(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// DuplicateCard godoc
+// @Summary     Duplicate a card
+// @Tags        cards
+// @Accept      json
+// @Produce     json
+// @Param       id path int true "Card ID"
+// @Param       body body dto.DuplicateCardRequest true "Duplicate data"
+// @Success     201 {object} dto.CardResponse
+// @Failure     404 {object} map[string]string
+// @Failure     422 {object} map[string]string
+// @Router      /cards/{id}/duplicate [post]
+func (h *CardHandler) DuplicateCard(c *gin.Context) {
+	id, err := parseUintParam(c, "id")
+	if err != nil {
+		return
+	}
+	var req dto.DuplicateCardRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+	card, err := h.svc.DuplicateCard(id, req)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, card)
+}
+
 // GetPinnedCards godoc
 // @Summary     Get all pinned cards
 // @Tags        cards

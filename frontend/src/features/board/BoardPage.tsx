@@ -1,18 +1,11 @@
 import {
   DndContext,
   DragOverlay,
-  PointerSensor,
   useDroppable,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragOverEvent,
-  type DragStartEvent,
 } from '@dnd-kit/core'
 import { SortableContext, horizontalListSortingStrategy, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { ArrowLeft, Moon, Pin, Plus, Sun } from 'lucide-react'
 import { Fragment, useEffect, useRef, useState } from 'react'
@@ -22,13 +15,13 @@ import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip'
 import { useBoard } from '../../hooks/board/queries/useBoards'
+import { useBoardDnd } from '../../hooks/board/useBoardDnd'
 import { useCardMutations } from '../../hooks/card/mutations/useCardMutations'
 import { usePinnedCards } from '../../hooks/card/queries/useCards'
 import { useColumnMutations } from '../../hooks/column/mutations/useColumnMutations'
 import { columnSchema } from '../../lib/schemas'
-import { midPosition } from '../../lib/utils'
 import { useThemeStore } from '../../stores/themeStore'
-import type { Board, Card, Column } from '../../types'
+import type { Column } from '../../types'
 import { PinWindow } from '../pin/PinWindow'
 import { AddCardForm } from './AddCardForm'
 import { CardItem } from './CardItem'
@@ -40,7 +33,6 @@ export function BoardPage() {
   const { boardId } = useParams({ from: '/boards/$boardId' })
   const id = Number(boardId)
   const navigate = useNavigate()
-  const qc = useQueryClient()
   const { data: board, isLoading } = useBoard(id)
   const { data: pinned = [] } = usePinnedCards()
   const { theme, toggle: toggleTheme } = useThemeStore()
@@ -63,116 +55,22 @@ export function BoardPage() {
   }, [pinPopoverOpen])
 
   const [addingColumn, setAddingColumn] = useState(false)
-  const [activeCard, setActiveCard] = useState<Card | null>(null)
 
   const { register: registerCol, handleSubmit: handleSubmitCol, reset: resetCol } = useForm<ColumnForm>({
     resolver: zodResolver(columnSchema),
   })
-  const [activeCardDndId, setActiveCardDndId] = useState<string | null>(null)
-  const [activeColumn, setActiveColumn] = useState<Column | null>(null)
-  const [overId, setOverId] = useState<string | null>(null)
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+  const columns = [...(board?.columns ?? [])].sort((a, b) => a.position - b.position)
+
+  const { sensors, activeCard, activeCardDndId, activeColumn, overId, handleDragStart, handleDragOver, handleDragEnd } = useBoardDnd({
+    boardId: id,
+    columns,
+    updateColumnMutate: updateColumn.mutate,
+    moveCardMutate: moveCard.mutate,
+  })
 
   if (isLoading) return <div className="flex items-center justify-center h-screen">Loading...</div>
   if (!board) return <div className="flex items-center justify-center h-screen">看板不存在</div>
-
-  const columns = [...(board.columns ?? [])].sort((a, b) => a.position - b.position)
-
-  const handleDragStart = (e: DragStartEvent) => {
-    const data = e.active.data.current
-    if (data?.type === 'card') {
-      setActiveCard(data.card)
-      setActiveCardDndId(`card-${data.card.id}`)
-    } else if (data?.type === 'column') {
-      setActiveColumn(data.column)
-    }
-  }
-
-  const handleDragOver = (e: DragOverEvent) => {
-    setOverId(e.over ? String(e.over.id) : null)
-  }
-
-  const handleDragEnd = (e: DragEndEvent) => {
-    setActiveCard(null)
-    setActiveCardDndId(null)
-    setActiveColumn(null)
-    setOverId(null)
-
-    const { active, over } = e
-    if (!over || active.id === over.id) return
-
-    const activeData = active.data.current
-
-    // Column reorder
-    if (activeData?.type === 'column') {
-      const draggedCol: Column = activeData.column
-      const overIdStr = String(over.id)
-      if (!overIdStr.startsWith('col-')) return
-      const overColId = Number(overIdStr.replace('col-', ''))
-      if (draggedCol.id === overColId) return
-      const sorted = [...columns].sort((a, b) => a.position - b.position)
-      const activeIdx = sorted.findIndex(c => c.id === draggedCol.id)
-      const overIdx = sorted.findIndex(c => c.id === overColId)
-
-      const isMovingRight = activeIdx < overIdx
-
-      const targetIdx = isMovingRight ? overIdx + 1 : overIdx
-
-      const before = sorted[targetIdx - 1]?.position ?? null
-      const after = sorted[targetIdx]?.position ?? null
-
-      const position = midPosition(before, after)
-
-      // Synchronously update cache BEFORE calling mutate
-      // This prevents flicker: when dnd-kit resets transforms, React
-      // re-renders with the already-correct column order from cache
-      const boardKey = ['boards', id] as const
-      const prev = qc.getQueryData<Board>(boardKey)
-      if (prev?.columns) {
-        qc.setQueryData<Board>(boardKey, {
-          ...prev,
-          columns: prev.columns.map(col =>
-            col.id === draggedCol.id ? { ...col, position } : col,
-          ),
-        })
-      }
-
-      updateColumn.mutate({ id: draggedCol.id, data: { position } })
-      return
-    }
-
-    if (activeData?.type !== 'card') return
-
-    const dragged: Card = activeData.card
-    const overIdStr = String(over.id)
-
-    let targetColumnId: number
-    let targetCards: Card[]
-
-    if (overIdStr.startsWith('card-')) {
-      const overCardId = Number(overIdStr.replace('card-', ''))
-      const overCol = columns.find(c => c.cards?.some(card => card.id === overCardId))
-      if (!overCol) return
-      targetColumnId = overCol.id
-      targetCards = overCol.cards ?? []
-    } else if (overIdStr.startsWith('column-drop-')) {
-      targetColumnId = Number(overIdStr.replace('column-drop-', ''))
-      const col = columns.find(c => c.id === targetColumnId)
-      targetCards = col?.cards ?? []
-    } else {
-      return
-    }
-
-    const overCardId = overIdStr.startsWith('card-') ? Number(overIdStr.replace('card-', '')) : null
-    const sorted = [...targetCards].sort((a, b) => a.position - b.position)
-    const overIdx = overCardId ? sorted.findIndex(c => c.id === overCardId) : sorted.length
-    const before = sorted[overIdx - 1]?.position ?? null
-    const after = sorted[overIdx]?.position ?? null
-    const position = midPosition(before, after)
-
-    moveCard.mutate({ id: dragged.id, columnId: targetColumnId, position })
-  }
 
   const handleAddColumn = async (data: ColumnForm) => {
     await createColumn.mutateAsync(data.name)

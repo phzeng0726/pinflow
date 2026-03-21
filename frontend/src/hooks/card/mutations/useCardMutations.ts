@@ -25,7 +25,10 @@ export function useCardMutations(boardId = 0) {
     onSuccess: async () => {
       await Promise.all([invalidateBoard(), invalidatePinned()])
     },
-    onError: () => toast.error('移動卡片失敗'),
+    onError: async () => {
+      await invalidateBoard()
+      toast.error('移動卡片失敗')
+    },
   })
 
   const togglePin = useMutation({

@@ -33,7 +33,6 @@ import { useColumnMutations } from '../../hooks/column/mutations/useColumnMutati
 import { columnSchema } from '../../lib/schemas'
 import { useThemeStore } from '../../stores/themeStore'
 import type { Card, Column } from '../../types'
-import { PinWindow } from '../pin/PinWindow'
 import { AddCardForm } from './AddCardForm'
 import { CardItem } from './CardItem'
 import { ColumnHeader } from './ColumnHeader'
@@ -102,10 +101,6 @@ export function BoardPage() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
-      <div className="fixed bottom-4 right-4 w-72 max-h-[70vh] shadow-2xl rounded-xl overflow-hidden border z-50">
-        <PinWindow />
-      </div>
-
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-4 py-3 flex items-center gap-4 shrink-0">
         <Tooltip>

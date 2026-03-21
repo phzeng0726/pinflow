@@ -149,6 +149,19 @@ function togglePinWindow() {
 ipcMain.on('toggle-pin-window', () => togglePinWindow())
 ipcMain.on('hide-pin-window', () => { if (pinWindow && pinWindow.isVisible()) { pinWindow.hide(); updateTrayMenu() } })
 
+// 接收來自任一視窗的 React Query 資料刷新指令，並廣播給其他視窗
+ipcMain.on('broadcast-query-invalidation', (event, queryKey) => {
+  // 取得所有開啟的視窗
+  const windows = BrowserWindow.getAllWindows()
+  windows.forEach(win => {
+    // 排除發送指令的來源視窗，只通知「其他」視窗進行畫面跟資料的刷新
+    // 確保主視窗操作會同步到小視窗，反之亦然
+    if (win.webContents !== event.sender) {
+      win.webContents.send('query-invalidation', queryKey)
+    }
+  })
+})
+
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 
 app.whenReady().then(async () => {

@@ -3,6 +3,16 @@ import { CSS } from '@dnd-kit/utilities'
 import { Calendar, Check, CheckSquare, Copy, Pencil, Pin, PinOff, Trash2, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../../components/ui/alert-dialog'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import {
@@ -218,33 +228,6 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Inline delete confirmation */}
-        {showDeleteConfirm && (
-          <div
-            className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md"
-            onPointerDown={e => e.stopPropagation()}
-          >
-            <p className="text-xs text-red-700 dark:text-red-300 mb-2">確定刪除此卡片？</p>
-            <div className="flex gap-1">
-              <Button
-                size="sm"
-                variant="destructive"
-                className="h-6 text-xs px-2"
-                onClick={(e) => { e.stopPropagation(); onDelete(card.id); setShowDeleteConfirm(false) }}
-              >
-                確定
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-6 text-xs px-2"
-                onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false) }}
-              >
-                取消
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Backdrop panels that expose only the card area */}
@@ -275,6 +258,24 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
           onClose={() => setShowDuplicate(false)}
         />
       )}
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={(open) => { if (!open) setShowDeleteConfirm(false) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>刪除卡片</AlertDialogTitle>
+            <AlertDialogDescription>確定要刪除「{card.title}」？此操作無法復原。</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-500 hover:bg-red-600"
+              onClick={() => { onDelete(card.id); setShowDeleteConfirm(false) }}
+            >
+              刪除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

@@ -10,9 +10,10 @@ interface UseBoardDndParams {
   columns: Column[]
   updateColumnMutate: (args: { id: number; data: { position: number } }) => void
   moveCardMutate: (args: { id: number; columnId: number; position: number }) => void
+  onMoveOutAutoPin?: (card: Card) => void
 }
 
-export function useBoardDnd({ boardId, columns, updateColumnMutate, moveCardMutate }: UseBoardDndParams) {
+export function useBoardDnd({ boardId, columns, updateColumnMutate, moveCardMutate, onMoveOutAutoPin }: UseBoardDndParams) {
   const qc = useQueryClient()
   const [activeCard, setActiveCard] = useState<Card | null>(null)
   const [activeCardDndId, setActiveCardDndId] = useState<string | null>(null)
@@ -121,6 +122,13 @@ export function useBoardDnd({ boardId, columns, updateColumnMutate, moveCardMuta
     }))
 
     moveCardMutate({ id: dragged.id, columnId: targetColumnId, position })
+
+    if (onMoveOutAutoPin && targetColumnId !== dragged.column_id) {
+      const sourceCol = columns.find(c => c.id === dragged.column_id)
+      if (sourceCol?.auto_pin && dragged.is_pinned) {
+        onMoveOutAutoPin(dragged)
+      }
+    }
   }
 
   return { sensors, activeCard, activeCardDndId, activeColumn, overId, handleDragStart, handleDragOver, handleDragEnd }

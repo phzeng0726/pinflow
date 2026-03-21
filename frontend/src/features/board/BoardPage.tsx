@@ -12,6 +12,16 @@ import { ArrowLeft, Moon, Pin, Plus, Sun } from 'lucide-react'
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import type { z } from 'zod'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../../components/ui/alert-dialog'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip'
@@ -22,7 +32,7 @@ import { usePinnedCards } from '../../hooks/card/queries/useCards'
 import { useColumnMutations } from '../../hooks/column/mutations/useColumnMutations'
 import { columnSchema } from '../../lib/schemas'
 import { useThemeStore } from '../../stores/themeStore'
-import type { Column } from '../../types'
+import type { Card, Column } from '../../types'
 import { PinWindow } from '../pin/PinWindow'
 import { AddCardForm } from './AddCardForm'
 import { CardItem } from './CardItem'
@@ -41,6 +51,15 @@ export function BoardPage() {
 
   const { createColumn, updateColumn, deleteColumn } = useColumnMutations(id)
   const { createCard, moveCard, togglePin, updateCard, deleteCard } = useCardMutations(id)
+
+  const [pendingUnpinCard, setPendingUnpinCard] = useState<Card | null>(null)
+
+  const handleMoveOutAutoPin = (card: Card) => setPendingUnpinCard(card)
+  const handleConfirmUnpin = () => {
+    if (!pendingUnpinCard) return
+    togglePin.mutate(pendingUnpinCard.id, { onSettled: () => setPendingUnpinCard(null) })
+  }
+  const handleDismissUnpin = () => setPendingUnpinCard(null)
 
   const [pinPopoverOpen, setPinPopoverOpen] = useState(false)
   const pinPopoverRef = useRef<HTMLDivElement>(null)
@@ -69,6 +88,7 @@ export function BoardPage() {
     columns,
     updateColumnMutate: updateColumn.mutate,
     moveCardMutate: moveCard.mutate,
+    onMoveOutAutoPin: handleMoveOutAutoPin,
   })
 
   if (isLoading) return <div className="flex items-center justify-center h-screen">Loading...</div>
@@ -174,6 +194,21 @@ export function BoardPage() {
           </div>
         </div>
       </div>
+
+      <AlertDialog open={!!pendingUnpinCard} onOpenChange={(open) => { if (!open) handleDismissUnpin() }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>移出自動釘選欄位</AlertDialogTitle>
+            <AlertDialogDescription>此卡片仍處於釘選狀態，是否同時取消釘選？</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>保持釘選</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmUnpin} disabled={togglePin.isPending}>
+              取消釘選
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Columns */}
       <div className="flex-1 overflow-x-auto p-4">

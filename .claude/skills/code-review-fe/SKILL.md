@@ -32,13 +32,13 @@ metadata:
 
 ```bash
 # 1. 優先檢查已暫存的變更
-git diff --cached --name-only -- frontend/
+git diff --cached --name-only -- frontend/ ':!frontend/dist/' ':!frontend/coverage/' ':!**/node_modules/**' ':!pnpm-lock.yaml'
 
 # 2. 若無暫存，檢查未暫存的變更
-git diff --name-only -- frontend/
+git diff --name-only -- frontend/ ':!frontend/dist/' ':!frontend/coverage/' ':!**/node_modules/**' ':!pnpm-lock.yaml'
 
 # 3. 若無未提交的變更，與 main 分支比較
-git diff main --name-only -- frontend/
+git diff main --name-only -- frontend/ ':!frontend/dist/' ':!frontend/coverage/' ':!**/node_modules/**' ':!pnpm-lock.yaml'
 ```
 
 使用第一個非空結果，並告知使用者選擇了哪個範圍。
@@ -53,7 +53,12 @@ git diff main --name-only -- frontend/
 2. 需要時讀取完整檔案內容以取得上下文
 3. 若檔案被重新命名或搬移，記錄新舊路徑
 
-跳過自動生成的檔案（`routeTree.gen.ts`、codegen 產生的 `*.d.ts` 等），除非看起來是手動編輯的。
+跳過以下檔案，除非看起來是手動編輯的：
+
+- **自動生成**：`routeTree.gen.ts`、codegen 產生的 `*.d.ts`
+- **建置產物**：`dist/`、`coverage/`、`*.min.js`、`*.min.css`
+- **套件相依**：`node_modules/`、`pnpm-lock.yaml`
+- **shadcn/ui 元件**：`src/components/ui/`（由 shadcn CLI 複製，非手寫程式碼）
 
 ### 3. 審查
 

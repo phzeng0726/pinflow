@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Check, MoreHorizontal, Pencil, Pin, Trash2, X } from 'lucide-react'
+import type { HTMLAttributes } from 'react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import type { z } from 'zod'
@@ -24,14 +25,15 @@ interface ColumnHeaderProps {
   onRename: (id: number, name: string) => void
   onToggleAutoPin: (id: number, current: boolean) => void
   onDelete: (id: number) => void
+  dragHandleProps?: HTMLAttributes<HTMLElement>
 }
 
 const COLUMN_COLORS = [
-  'bg-red-500', 'bg-orange-500', 'bg-sky-500',
-  'bg-green-500', 'bg-sky-500', 'bg-purple-500',
+  'bg-red-500', 'bg-orange-500', 'bg-blue-500',
+  'bg-green-500', 'bg-blue-500', 'bg-purple-500',
 ]
 
-export function ColumnHeader({ column, cardCount, onRename, onToggleAutoPin, onDelete }: ColumnHeaderProps) {
+export function ColumnHeader({ column, cardCount, onRename, onToggleAutoPin, onDelete, dragHandleProps }: ColumnHeaderProps) {
   const [editing, setEditing] = useState(false)
 
   const { register, handleSubmit, reset } = useForm<ColumnForm>({
@@ -48,7 +50,9 @@ export function ColumnHeader({ column, cardCount, onRename, onToggleAutoPin, onD
 
   return (
     <div className="flex items-center justify-between px-3 py-2">
-      <div className="flex items-center gap-2 flex-1 min-w-0 py-1">
+      <div
+        {...dragHandleProps}
+        className="flex items-center gap-1.5 flex-1 min-w-0 py-1">
         <span className={cn('w-2.5 h-2.5 rounded-full shrink-0', colorClass)} />
         {editing ? (
           <form onSubmit={handleSubmit(handleRename)} className="flex gap-1 flex-1">
@@ -74,7 +78,7 @@ export function ColumnHeader({ column, cardCount, onRename, onToggleAutoPin, onD
           <Tooltip>
             <TooltipTrigger asChild>
               <span>
-                <Pin className="w-3.5 h-3.5 text-sky-500 fill-sky-500" />
+                <Pin className="w-3.5 h-3.5 text-blue-500 fill-blue-500" />
               </span>
             </TooltipTrigger>
             <TooltipContent>自動釘選已開啟</TooltipContent>
@@ -92,7 +96,7 @@ export function ColumnHeader({ column, cardCount, onRename, onToggleAutoPin, onD
               重新命名
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => onToggleAutoPin(column.id, column.auto_pin)}>
-              <Pin className={cn('w-3.5 h-3.5', column.auto_pin ? 'text-sky-500' : 'text-gray-400')} />
+              <Pin className={cn('w-3.5 h-3.5', column.auto_pin ? 'text-blue-500' : 'text-gray-400')} />
               {column.auto_pin ? '關閉自動釘選' : '開啟自動釘選'}
             </DropdownMenuItem>
             <DropdownMenuSeparator />

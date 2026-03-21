@@ -41,6 +41,13 @@ func (r *boardRepository) FindByID(id uint) (*model.Board, error) {
 		Preload("Columns.Cards", func(db *gorm.DB) *gorm.DB {
 			return db.Order("position asc")
 		}).
+		Preload("Columns.Cards.Tags").
+		Preload("Columns.Cards.Checklists", func(db *gorm.DB) *gorm.DB {
+			return db.Order("id asc")
+		}).
+		Preload("Columns.Cards.Checklists.Items", func(db *gorm.DB) *gorm.DB {
+			return db.Order("position asc")
+		}).
 		First(&board, id).Error
 	if err != nil {
 		return nil, err

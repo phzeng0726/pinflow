@@ -31,6 +31,7 @@ function DialogContent({
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
+        aria-describedby={undefined}
         className={cn(
           'fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] bg-white dark:bg-gray-800 shadow-2xl rounded-xl duration-200',
           className

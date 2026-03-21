@@ -76,8 +76,8 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
   const tags = card.tags ?? []
   const checklists = card.checklists ?? []
   const hasSchedule = !!card.start_time || !!card.end_time
-  const totalItems = checklists.reduce((n, cl) => n + (cl.total_count ?? 0), 0)
-  const completedItems = checklists.reduce((n, cl) => n + (cl.completed_count ?? 0), 0)
+  const totalItems = checklists.reduce((n, cl) => n + (cl.total_count ?? cl.items?.length ?? 0), 0)
+  const completedItems = checklists.reduce((n, cl) => n + (cl.completed_count ?? cl.items?.filter(i => i.completed).length ?? 0), 0)
 
   return (
     <>
@@ -95,7 +95,7 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
         onContextMenu={(e) => { e.preventDefault(); openMenu() }}
         className={cn(
           'rounded-lg p-3 shadow-sm bg-white dark:bg-gray-700',
-          card.is_pinned ? 'border border-l-4 border-l-sky-500' : 'border dark:border-gray-600',
+          card.is_pinned ? 'border border-l-4 border-l-blue-500' : 'border dark:border-gray-600',
           'group relative select-none',
           'cursor-pointer active:cursor-grabbing',
           showEdit && 'ring-2 ring-blue-500 shadow-lg z-[9995]'
@@ -125,12 +125,8 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
         ) : (
           <div className="flex items-start gap-2">
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm text-gray-900 dark:text-gray-100 leading-snug">{card.title}</p>
-              {card.description && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{card.description}</p>
-              )}
               {tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-1.5">
+                <div className="flex flex-wrap gap-1 mb-1.5">
                   {tags.slice(0, 3).map(tag => (
                     <Badge
                       key={tag.id}
@@ -144,6 +140,10 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
                     <span className="text-xs text-gray-400">+{tags.length - 3}</span>
                   )}
                 </div>
+              )}
+              <p className="font-medium text-sm text-gray-900 dark:text-gray-100 leading-snug">{card.title}</p>
+              {card.description && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{card.description}</p>
               )}
               {(hasSchedule || totalItems > 0) && (
                 <div className="flex items-center gap-2 mt-1.5">
@@ -162,6 +162,7 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
                       {completedItems}/{totalItems}
                     </span>
                   )}
+                  <span className="text-xs text-gray-400">#{card.id}</span>
                 </div>
               )}
             </div>
@@ -200,7 +201,7 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
           >
             <DropdownMenuItem onSelect={() => { onTogglePin(card.id); setShowDropdown(false) }}>
               {card.is_pinned
-                ? <><PinOff className="w-3.5 h-3.5 text-sky-500" /> <span className="text-sky-500">取消釘選</span></>
+                ? <><PinOff className="w-3.5 h-3.5 text-blue-500" /> <span className="text-blue-500">取消釘選</span></>
                 : <><Pin className="w-3.5 h-3.5" /> 釘選</>
               }
             </DropdownMenuItem>

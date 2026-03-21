@@ -4,7 +4,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/too
 import type { PinnedCard } from '../../types'
 
 const COLUMN_COLORS = [
-  'border-red-400', 'border-orange-400', 'border-sky-400',
+  'border-red-400', 'border-orange-400', 'border-blue-400',
   'border-green-400', 'border-blue-400', 'border-purple-400',
 ]
 

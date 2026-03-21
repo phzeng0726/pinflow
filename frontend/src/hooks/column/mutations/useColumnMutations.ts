@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import * as api from '../../../lib/api'
 import { queryKeys } from '../../queryKeys'
 
@@ -8,18 +9,29 @@ export function useColumnMutations(boardId: number) {
 
   const create = useMutation({
     mutationFn: (name: string) => api.createColumn(boardId, name),
-    onSuccess: invalidate,
+    onSuccess: async () => {
+      await invalidate()
+      toast.success('欄位已建立')
+    },
+    onError: () => toast.error('建立欄位失敗'),
   })
 
   const update = useMutation({
     mutationFn: ({ id, data }: { id: number; data: { name?: string; auto_pin?: boolean; position?: number } }) =>
       api.updateColumn(id, data),
-    onSuccess: invalidate,
+    onError: () => toast.error('更新欄位失敗'),
+    onSettled: () => {
+      invalidate()
+    },
   })
 
   const remove = useMutation({
     mutationFn: (id: number) => api.deleteColumn(id),
-    onSuccess: invalidate,
+    onSuccess: async () => {
+      await invalidate()
+      toast.success('欄位已刪除')
+    },
+    onError: () => toast.error('刪除欄位失敗'),
   })
 
   return { createColumn: create, updateColumn: update, deleteColumn: remove }

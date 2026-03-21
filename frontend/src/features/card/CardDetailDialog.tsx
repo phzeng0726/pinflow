@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from '../../components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '../../components/ui/dialog'
 import { useCard } from '../../hooks/card/queries/useCards'
 import { CardDetailHeader } from './CardDetailHeader'
 import { ChecklistSection } from './ChecklistSection'
@@ -16,6 +16,7 @@ export function CardDetailDialog({ cardId, onClose }: CardDetailDialogProps) {
   return (
     <Dialog open={true} onOpenChange={(open) => { if (!open) onClose() }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
+        <DialogTitle className="sr-only">卡片詳情</DialogTitle>
         {isLoading || !card ? (
           <div className="p-8 text-gray-500 dark:text-gray-400">Loading...</div>
         ) : (

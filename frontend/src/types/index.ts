@@ -35,8 +35,8 @@ export interface Checklist {
   card_id: number
   title: string
   items: ChecklistItem[]
-  completed_count: number
-  total_count: number
+  completed_count?: number
+  total_count?: number
 }
 
 export interface Card {

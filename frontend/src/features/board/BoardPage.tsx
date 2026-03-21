@@ -9,8 +9,10 @@ import {
   type DragOverEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { SortableContext, horizontalListSortingStrategy, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { ArrowLeft, Moon, Pin, Plus, Sun } from 'lucide-react'
 import { Fragment, useEffect, useRef, useState } from 'react'
@@ -26,7 +28,8 @@ import { useColumnMutations } from '../../hooks/column/mutations/useColumnMutati
 import { columnSchema } from '../../lib/schemas'
 import { midPosition } from '../../lib/utils'
 import { useThemeStore } from '../../stores/themeStore'
-import type { Card, Column } from '../../types'
+import type { Board, Card, Column } from '../../types'
+import { PinWindow } from '../pin/PinWindow'
 import { AddCardForm } from './AddCardForm'
 import { CardItem } from './CardItem'
 import { ColumnHeader } from './ColumnHeader'
@@ -37,6 +40,7 @@ export function BoardPage() {
   const { boardId } = useParams({ from: '/boards/$boardId' })
   const id = Number(boardId)
   const navigate = useNavigate()
+  const qc = useQueryClient()
   const { data: board, isLoading } = useBoard(id)
   const { data: pinned = [] } = usePinnedCards()
   const { theme, toggle: toggleTheme } = useThemeStore()
@@ -65,6 +69,7 @@ export function BoardPage() {
     resolver: zodResolver(columnSchema),
   })
   const [activeCardDndId, setActiveCardDndId] = useState<string | null>(null)
+  const [activeColumn, setActiveColumn] = useState<Column | null>(null)
   const [overId, setOverId] = useState<string | null>(null)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
@@ -72,13 +77,15 @@ export function BoardPage() {
   if (isLoading) return <div className="flex items-center justify-center h-screen">Loading...</div>
   if (!board) return <div className="flex items-center justify-center h-screen">看板不存在</div>
 
-  const columns = board.columns ?? []
+  const columns = [...(board.columns ?? [])].sort((a, b) => a.position - b.position)
 
   const handleDragStart = (e: DragStartEvent) => {
     const data = e.active.data.current
     if (data?.type === 'card') {
       setActiveCard(data.card)
       setActiveCardDndId(`card-${data.card.id}`)
+    } else if (data?.type === 'column') {
+      setActiveColumn(data.column)
     }
   }
 
@@ -89,12 +96,52 @@ export function BoardPage() {
   const handleDragEnd = (e: DragEndEvent) => {
     setActiveCard(null)
     setActiveCardDndId(null)
+    setActiveColumn(null)
     setOverId(null)
 
     const { active, over } = e
     if (!over || active.id === over.id) return
 
     const activeData = active.data.current
+
+    // Column reorder
+    if (activeData?.type === 'column') {
+      const draggedCol: Column = activeData.column
+      const overIdStr = String(over.id)
+      if (!overIdStr.startsWith('col-')) return
+      const overColId = Number(overIdStr.replace('col-', ''))
+      if (draggedCol.id === overColId) return
+      const sorted = [...columns].sort((a, b) => a.position - b.position)
+      const activeIdx = sorted.findIndex(c => c.id === draggedCol.id)
+      const overIdx = sorted.findIndex(c => c.id === overColId)
+
+      const isMovingRight = activeIdx < overIdx
+
+      const targetIdx = isMovingRight ? overIdx + 1 : overIdx
+
+      const before = sorted[targetIdx - 1]?.position ?? null
+      const after = sorted[targetIdx]?.position ?? null
+
+      const position = midPosition(before, after)
+
+      // Synchronously update cache BEFORE calling mutate
+      // This prevents flicker: when dnd-kit resets transforms, React
+      // re-renders with the already-correct column order from cache
+      const boardKey = ['boards', id] as const
+      const prev = qc.getQueryData<Board>(boardKey)
+      if (prev?.columns) {
+        qc.setQueryData<Board>(boardKey, {
+          ...prev,
+          columns: prev.columns.map(col =>
+            col.id === draggedCol.id ? { ...col, position } : col,
+          ),
+        })
+      }
+
+      updateColumn.mutate({ id: draggedCol.id, data: { position } })
+      return
+    }
+
     if (activeData?.type !== 'card') return
 
     const dragged: Card = activeData.card
@@ -135,6 +182,10 @@ export function BoardPage() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
+      <div className="fixed bottom-4 right-4 w-72 max-h-[70vh] shadow-2xl rounded-xl overflow-hidden border z-50">
+        <PinWindow />
+      </div>
+
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-4 py-3 flex items-center gap-4 shrink-0">
         <Tooltip>
@@ -178,7 +229,7 @@ export function BoardPage() {
               <Pin className="w-3.5 h-3.5" />
               釘選任務
               {pinned.length > 0 && (
-                <span className="bg-sky-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+                <span className="bg-blue-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
                   {pinned.length}
                 </span>
               )}
@@ -195,7 +246,7 @@ export function BoardPage() {
                   <ul className="py-1 max-h-64 overflow-y-auto">
                     {pinned.map(card => (
                       <li key={card.id} className="px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
-                        <Pin className="w-3 h-3 text-sky-500 shrink-0" />
+                        <Pin className="w-3 h-3 text-blue-500 shrink-0" />
                         <span className="text-sm text-gray-800 dark:text-gray-200 flex-1 truncate">{card.title}</span>
                         {card.column_name && (
                           <span className="text-xs bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-300 px-1.5 py-0.5 rounded shrink-0">
@@ -232,54 +283,62 @@ export function BoardPage() {
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
-          <div className="flex gap-3 h-full items-start">
-            {columns.map(col => (
-              <ColumnView
-                key={col.id}
-                column={col}
-                overId={overId}
-                activeCardDndId={activeCardDndId}
-                onRename={(colId, name) => updateColumn.mutate({ id: colId, data: { name } })}
-                onToggleAutoPin={(colId, current) => updateColumn.mutate({ id: colId, data: { auto_pin: !current } })}
-                onDeleteColumn={(colId) => deleteColumn.mutate(colId)}
-                onAddCard={(colId, title, description) => createCard.mutate({ columnId: colId, title, description })}
-                onTogglePin={(cardId) => togglePin.mutate(cardId)}
-                onDeleteCard={(cardId) => deleteCard.mutate(cardId)}
-                onUpdateCard={(cardId, title, description) => updateCard.mutate({ id: cardId, title, description })}
-              />
-            ))}
+          <SortableContext items={columns.map(c => `col-${c.id}`)} strategy={horizontalListSortingStrategy}>
+            <div className="flex gap-3 h-full items-start">
+              {columns.map(col => (
+                <ColumnView
+                  key={col.id}
+                  column={col}
+                  overId={overId}
+                  activeCardDndId={activeCardDndId}
+                  onRename={(colId, name) => updateColumn.mutate({ id: colId, data: { name } })}
+                  onToggleAutoPin={(colId, current) => updateColumn.mutate({ id: colId, data: { auto_pin: !current } })}
+                  onDeleteColumn={(colId) => deleteColumn.mutate(colId)}
+                  onAddCard={(colId, title, description) => createCard.mutate({ columnId: colId, title, description })}
+                  onTogglePin={(cardId) => togglePin.mutate(cardId)}
+                  onDeleteCard={(cardId) => deleteCard.mutate(cardId)}
+                  onUpdateCard={(cardId, title, description) => updateCard.mutate({ id: cardId, title, description })}
+                />
+              ))}
 
-            {/* Add column */}
-            <div className="w-64 shrink-0">
-              {addingColumn ? (
-                <form onSubmit={handleSubmitCol(handleAddColumn)} className="bg-gray-200 dark:bg-gray-700 rounded-xl p-3 space-y-2">
-                  <Input
-                    placeholder="欄位名稱"
-                    {...registerCol('name')}
-                    autoFocus
-                    className="text-sm"
-                  />
-                  <div className="flex gap-1">
-                    <Button type="submit" size="sm" className="h-7 text-xs">新增</Button>
-                    <Button type="button" size="sm" variant="ghost" onClick={() => { resetCol(); setAddingColumn(false) }} className="h-7 text-xs">取消</Button>
-                  </div>
-                </form>
-              ) : (
-                <button
-                  onClick={() => setAddingColumn(true)}
-                  className="w-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 text-sm text-gray-400 dark:text-gray-500 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-500 dark:hover:text-gray-400 flex items-center justify-center gap-1 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  新增欄位
-                </button>
-              )}
+              {/* Add column */}
+              <div className="w-64 shrink-0">
+                {addingColumn ? (
+                  <form onSubmit={handleSubmitCol(handleAddColumn)} className="bg-gray-200 dark:bg-gray-700 rounded-xl p-3 space-y-2">
+                    <Input
+                      placeholder="欄位名稱"
+                      {...registerCol('name')}
+                      autoFocus
+                      className="text-sm"
+                    />
+                    <div className="flex gap-1">
+                      <Button type="submit" size="sm" className="h-7 text-xs">新增</Button>
+                      <Button type="button" size="sm" variant="ghost" onClick={() => { resetCol(); setAddingColumn(false) }} className="h-7 text-xs">取消</Button>
+                    </div>
+                  </form>
+                ) : (
+                  <button
+                    onClick={() => setAddingColumn(true)}
+                    className="w-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 text-sm text-gray-400 dark:text-gray-500 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-500 dark:hover:text-gray-400 flex items-center justify-center gap-1 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    新增欄位
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+          </SortableContext>
 
           <DragOverlay dropAnimation={null}>
             {activeCard && (
               <div className="bg-white dark:bg-gray-700 rounded-lg border dark:border-gray-600 shadow-2xl p-3 w-60 rotate-2 opacity-95 cursor-grabbing">
                 <p className="font-medium text-sm text-gray-900 dark:text-gray-100 select-none">{activeCard.title}</p>
+              </div>
+            )}
+            {activeColumn && (
+              <div className="w-64 bg-gray-200 dark:bg-gray-800 rounded-xl shadow-2xl opacity-90 rotate-1 cursor-grabbing p-3">
+                <p className="font-semibold text-sm text-gray-700 dark:text-gray-200">{activeColumn.name}</p>
+                <p className="text-xs text-gray-400 mt-1">{activeColumn.cards?.length ?? 0} 張卡片</p>
               </div>
             )}
           </DragOverlay>
@@ -324,21 +383,41 @@ function ColumnView({
   const cardIds = cards.map(c => `card-${c.id}`)
   const colDropId = `column-drop-${column.id}`
 
-  const { setNodeRef, isOver } = useDroppable({ id: colDropId })
+  const { setNodeRef: setDropRef, isOver } = useDroppable({ id: colDropId })
+
+  const {
+    attributes: colAttributes,
+    listeners: colListeners,
+    setNodeRef: setSortRef,
+    transform: colTransform,
+    isDragging: isColDragging,
+  } = useSortable({ id: `col-${column.id}`, data: { type: 'column', column } })
+
+  const colStyle = {
+    transform: CSS.Translate.toString(colTransform),
+    transition: undefined as string | undefined,
+    opacity: isColDragging ? 0.4 : 1,
+  }
 
   const isDragging = activeCardDndId !== null
 
   return (
-    <div className="w-64 shrink-0 bg-gray-200 dark:bg-gray-800 rounded-xl flex flex-col max-h-[calc(100vh-140px)]">
+    <div
+      ref={setSortRef}
+      style={colStyle}
+      {...colAttributes}
+      className="w-64 shrink-0 bg-gray-200 dark:bg-gray-800 rounded-xl flex flex-col max-h-[calc(100vh-140px)]"
+    >
       <ColumnHeader
         column={column}
         cardCount={cards.length}
         onRename={onRename}
         onToggleAutoPin={onToggleAutoPin}
         onDelete={onDeleteColumn}
+        dragHandleProps={colListeners}
       />
       <div
-        ref={setNodeRef}
+        ref={setDropRef}
         className={`flex-1 overflow-y-auto px-2 pb-2 min-h-[60px] rounded-lg transition-colors ${isOver && cards.length === 0 ? 'bg-blue-50 dark:bg-blue-900/20' : ''
           }`}
       >

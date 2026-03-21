@@ -49,7 +49,7 @@ export function useCardMutations(boardId = 0) {
     }) =>
       api.updateCard(id, title, description, startTime, endTime),
     onSuccess: async (_data, variables) => {
-      await Promise.all([invalidateBoardDetail(), invalidateCardDetail(variables.id)])
+      await Promise.all([invalidateBoardDetail(), invalidateCardDetail(variables.id), invalidatePinned(), invalidateBoardAll()])
       toast.success('卡片已更新')
     },
     onError: () => toast.error('更新卡片失敗'),

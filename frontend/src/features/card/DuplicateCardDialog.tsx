@@ -28,7 +28,7 @@ export function DuplicateCardDialog({ card, boardId, onClose }: DuplicateCardDia
   const hasSchedule = !!card.start_time || !!card.end_time
 
   const { data: boards = [] } = useBoards()
-  const { duplicateCard: duplicate } = useCardMutations()
+  const { duplicateCard: duplicate } = useCardMutations(boardId)
 
   const { register, handleSubmit, control, watch, setValue, formState: { errors } } = useForm<DuplicateCardForm>({
     resolver: zodResolver(duplicateCardSchema),

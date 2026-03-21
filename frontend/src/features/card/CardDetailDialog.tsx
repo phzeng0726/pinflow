@@ -6,11 +6,12 @@ import { ScheduleSection } from './ScheduleSection'
 import { TagSection } from './TagSection'
 
 interface CardDetailDialogProps {
+  boardId: number
   cardId: number
   onClose: () => void
 }
 
-export function CardDetailDialog({ cardId, onClose }: CardDetailDialogProps) {
+export function CardDetailDialog({ boardId, cardId, onClose }: CardDetailDialogProps) {
   const { data: card, isLoading } = useCardDetail(cardId)
 
   return (
@@ -21,9 +22,9 @@ export function CardDetailDialog({ cardId, onClose }: CardDetailDialogProps) {
           <div className="p-8 text-gray-500 dark:text-gray-400">Loading...</div>
         ) : (
           <>
-            <CardDetailHeader card={card} onClose={onClose} />
+            <CardDetailHeader boardId={boardId} card={card} onClose={onClose} />
             <div className="p-6 space-y-6">
-              <TagSection card={card} />
+              <TagSection boardId={boardId} card={card} />
               <ScheduleSection card={card} />
               <ChecklistSection card={card} />
             </div>

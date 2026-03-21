@@ -3,15 +3,19 @@ import { toast } from 'sonner'
 import * as api from '../../../lib/api'
 import { queryKeys } from '../../queryKeys'
 
-export function useChecklistMutations(cardId: number) {
+export function useChecklistMutations(boardId: number, cardId: number) {
   const qc = useQueryClient()
-  const invalidateBoardAll = () => qc.invalidateQueries({ queryKey: queryKeys.boards.all() })
+
+  const invalidateBoardDetail = () => qc.invalidateQueries({ queryKey: queryKeys.boards.detail(boardId) })
   const invalidateCardDetail = () => qc.invalidateQueries({ queryKey: queryKeys.cards.detail(cardId) })
 
   const createList = useMutation({
     mutationFn: (title: string) => api.createChecklist(cardId, title),
     onSuccess: async () => {
-      await Promise.all([invalidateCardDetail(), invalidateBoardAll()])
+      await Promise.all([
+        invalidateCardDetail(),
+        invalidateBoardDetail()
+      ])
       toast.success('清單已建立')
     },
     onError: () => toast.error('建立清單失敗'),
@@ -20,7 +24,10 @@ export function useChecklistMutations(cardId: number) {
   const deleteList = useMutation({
     mutationFn: (id: number) => api.deleteChecklist(id),
     onSuccess: async () => {
-      await Promise.all([invalidateCardDetail(), invalidateBoardAll()])
+      await Promise.all([
+        invalidateCardDetail(),
+        invalidateBoardDetail()
+      ])
       toast.success('清單已刪除')
     },
     onError: () => toast.error('刪除清單失敗'),
@@ -30,7 +37,10 @@ export function useChecklistMutations(cardId: number) {
     mutationFn: ({ checklistId, text }: { checklistId: number; text: string }) =>
       api.createChecklistItem(checklistId, text),
     onSuccess: async () => {
-      await Promise.all([invalidateCardDetail(), invalidateBoardAll()])
+      await Promise.all([
+        invalidateCardDetail(),
+        invalidateBoardDetail()
+      ])
     },
     onError: () => toast.error('新增項目失敗'),
   })
@@ -39,7 +49,10 @@ export function useChecklistMutations(cardId: number) {
     mutationFn: ({ id, data }: { id: number; data: { text?: string; completed?: boolean; position?: number } }) =>
       api.updateChecklistItem(id, data),
     onSuccess: async () => {
-      await Promise.all([invalidateCardDetail(), invalidateBoardAll()])
+      await Promise.all([
+        invalidateCardDetail(),
+        invalidateBoardDetail()
+      ])
     },
     onError: () => toast.error('更新項目失敗'),
   })
@@ -47,7 +60,10 @@ export function useChecklistMutations(cardId: number) {
   const deleteItem = useMutation({
     mutationFn: (id: number) => api.deleteChecklistItem(id),
     onSuccess: async () => {
-      await Promise.all([invalidateCardDetail(), invalidateBoardAll()])
+      await Promise.all([
+        invalidateCardDetail(),
+        invalidateBoardDetail()
+      ])
     },
     onError: () => toast.error('刪除項目失敗'),
   })

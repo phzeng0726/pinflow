@@ -1,23 +1,25 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Save, X } from 'lucide-react'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import type { z } from 'zod'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Textarea } from '../../components/ui/textarea'
 import { useCardMutations } from '../../hooks/card/mutations/useCardMutations'
 import { cardDetailSchema } from '../../lib/schemas'
 import type { Card } from '../../types'
-import type { z } from 'zod'
 
 type CardDetailForm = z.infer<typeof cardDetailSchema>
 
 interface CardDetailHeaderProps {
+  boardId: number
   card: Card
   onClose: () => void
 }
 
-export function CardDetailHeader({ card, onClose }: CardDetailHeaderProps) {
-  const { updateCard } = useCardMutations()
+export function CardDetailHeader({ boardId, card, onClose }: CardDetailHeaderProps) {
+  const { updateCard } = useCardMutations(boardId)
+
   const { register, handleSubmit, formState: { errors, isDirty, isSubmitting }, reset } = useForm<CardDetailForm>({
     resolver: zodResolver(cardDetailSchema),
     defaultValues: { title: card.title, desc: card.description },

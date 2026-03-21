@@ -146,6 +146,7 @@ queryKey: ['boards', id]
 #### Mutation Hooks（`mutations/`）
 
 - 同 domain 的 mutations 集中在一個 `use<Domain>Mutations()` hook
+- hook 可接收上層 context ID 作為參數，用來建構 invalidation helper（如 `useCardMutations(boardId)`、`useChecklistMutations(boardId, cardId)`）；無需 context 時則無參數（如 `useBoardMutations()`）
 - hook 內部取得 `useQueryClient()`，縮寫為 `qc`
 - **所有** `qc.invalidateQueries` 呼叫一律抽成頂部 helper，命名為 `invalidate<Domain><Scope>`，定義在 `const qc = useQueryClient()` 正下方
 - 禁止在 mutation callback（`onSuccess`、`onError`、`onSettled`）內直接呼叫 `qc.invalidateQueries`
@@ -180,22 +181,25 @@ onSuccess: (data) => {
 }
 ```
 
-- `onSuccess`：invalidate 快取 + toast 成功訊息
+- `onSuccess`：invalidate 快取 + 視需要 toast 成功訊息（高頻操作如移動卡片、背景更新如 checklist item 勾選，可省略成功 toast）
 - `onError`：toast 錯誤訊息，必要時也 invalidate 以回復 UI
+- `onSettled`：當無論成功或失敗都需 invalidate 時使用（如 column update 需確保 UI 同步）
 - toast 訊息使用繁體中文
 
 #### Mutation 命名慣例
 
 - hook 內部使用**簡化動詞**命名：`create`、`update`、`remove`
 - return 時加上 **domain 前綴**，組成語意化名稱：`createBoard`、`updateBoard`、`deleteBoard`
+- 若內部名稱本身已具有足夠語意（如 `togglePin`、`togglePinFromPin`），可直接 return 不需再加 domain 前綴
 
 ```ts
 // OK — 內部簡化，對外語意化
 const create = useMutation({ ... })
 const update = useMutation({ ... })
 const remove = useMutation({ ... })
+const togglePin = useMutation({ ... })  // 已具語意，不需改名
 
-return { createBoard: create, updateBoard: update, deleteBoard: remove }
+return { createBoard: create, updateBoard: update, deleteBoard: remove, togglePin }
 
 // NG — 內部就用完整名稱，冗長且重複
 const createBoard = useMutation({ ... })

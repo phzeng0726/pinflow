@@ -204,7 +204,11 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
       )}
 
       {showDetail && (
-        <CardDetailDialog cardId={card.id} onClose={() => setShowDetail(false)} />
+        <CardDetailDialog
+          boardId={boardId}
+          cardId={card.id}
+          onClose={() => setShowDetail(false)}
+        />
       )}
 
     </>

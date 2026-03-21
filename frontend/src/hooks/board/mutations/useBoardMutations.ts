@@ -11,8 +11,8 @@ export function useBoardMutations() {
 
   const create = useMutation({
     mutationFn: (name: string) => api.createBoard(name),
-    onSuccess: () => {
-      invalidateBoardAll()
+    onSuccess: async () => {
+      await invalidateBoardAll()
       toast.success('看板已建立')
     },
     onError: () => toast.error('建立看板失敗'),
@@ -32,8 +32,8 @@ export function useBoardMutations() {
 
   const remove = useMutation({
     mutationFn: (id: number) => api.deleteBoard(id),
-    onSuccess: () => {
-      invalidateBoardAll()
+    onSuccess: async () => {
+      await invalidateBoardAll()
       toast.success('看板已刪除')
     },
     onError: () => toast.error('刪除看板失敗'),

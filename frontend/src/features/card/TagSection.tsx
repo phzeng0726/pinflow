@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react'
-import { Tag as TagIcon, X } from 'lucide-react'
-import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Tag as TagIcon, X } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import type { z } from 'zod'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
@@ -10,14 +11,13 @@ import { useTagMutations } from '../../hooks/tag/mutations/useTagMutations'
 import { useTags } from '../../hooks/tag/queries/useTags'
 import { tagInputSchema } from '../../lib/schemas'
 import type { Card } from '../../types'
-import type { z } from 'zod'
 
 type TagInputForm = z.infer<typeof tagInputSchema>
 
-export function TagSection({ card }: { card: Card }) {
+export function TagSection({ boardId, card }: { boardId: number; card: Card }) {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const { data: allTags = [] } = useTags()
-  const { createTag, attachTag, detachTag } = useTagMutations()
+  const { createTag, attachTag, detachTag } = useTagMutations(boardId)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const { register, handleSubmit, watch, reset } = useForm<TagInputForm>({

@@ -1,6 +1,7 @@
 import { Pin, X } from 'lucide-react'
 import type React from 'react'
 import { useEffect } from 'react'
+import { Button } from '../../components/ui/button'
 import { usePinnedCards } from '../../hooks/card/queries/useCards'
 import { useCardMutations } from '../../hooks/card/mutations/useCardMutations'
 import { usePinStore } from '../../stores/pinStore'
@@ -38,16 +39,18 @@ export function PinWindow() {
           </span>
         </div>
         <div className="flex items-center gap-1" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 hover:bg-white/20 text-white"
             onClick={() => {
               const api = (window as any).electronAPI
               if (api?.hidePinWindow) api.hidePinWindow()
               else close()
             }}
-            className="hover:bg-white/20 rounded p-0.5 transition-colors"
           >
             <X className="w-3.5 h-3.5" />
-          </button>
+          </Button>
         </div>
       </div>
 

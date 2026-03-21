@@ -13,18 +13,25 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { ArrowLeft, Moon, Pin, Plus, Sun } from 'lucide-react'
 import { Fragment, useEffect, useRef, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip'
 import { useBoard } from '../../hooks/board/queries/useBoards'
 import { usePinnedCards } from '../../hooks/card/queries/useCards'
 import { useCardMutations } from '../../hooks/card/mutations/useCardMutations'
 import { useColumnMutations } from '../../hooks/column/mutations/useColumnMutations'
 import { midPosition } from '../../lib/utils'
+import { columnSchema } from '../../lib/schemas'
 import { useThemeStore } from '../../stores/themeStore'
 import type { Card, Column } from '../../types'
+import type { z } from 'zod'
 import { AddCardForm } from './AddCardForm'
 import { CardItem } from './CardItem'
 import { ColumnHeader } from './ColumnHeader'
+
+type ColumnForm = z.infer<typeof columnSchema>
 
 export function BoardPage() {
   const { boardId } = useParams({ from: '/boards/$boardId' })
@@ -52,8 +59,11 @@ export function BoardPage() {
   }, [pinPopoverOpen])
 
   const [addingColumn, setAddingColumn] = useState(false)
-  const [newColumnName, setNewColumnName] = useState('')
   const [activeCard, setActiveCard] = useState<Card | null>(null)
+
+  const { register: registerCol, handleSubmit: handleSubmitCol, reset: resetCol } = useForm<ColumnForm>({
+    resolver: zodResolver(columnSchema),
+  })
   const [activeCardDndId, setActiveCardDndId] = useState<string | null>(null)
   const [overId, setOverId] = useState<string | null>(null)
 
@@ -117,10 +127,9 @@ export function BoardPage() {
     moveCard.mutate({ id: dragged.id, columnId: targetColumnId, position })
   }
 
-  const handleAddColumn = async () => {
-    if (!newColumnName.trim()) return
-    await createColumn.mutateAsync(newColumnName.trim())
-    setNewColumnName('')
+  const handleAddColumn = async (data: ColumnForm) => {
+    await createColumn.mutateAsync(data.name)
+    resetCol()
     setAddingColumn(false)
   }
 
@@ -128,24 +137,37 @@ export function BoardPage() {
     <div className="h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-4 py-3 flex items-center gap-4 shrink-0">
-        <button
-          onClick={() => navigate({ to: '/' })}
-          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate({ to: '/' })}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>返回</TooltipContent>
+        </Tooltip>
         <div>
           <h1 className="font-bold text-gray-900 dark:text-gray-100">{board.name}</h1>
           <p className="text-xs text-gray-400 dark:text-gray-500">PinFlow</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <button
-            onClick={toggleTheme}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            title={theme === 'dark' ? '切換亮色模式' : '切換暗色模式'}
-          >
-            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{theme === 'dark' ? '切換亮色模式' : '切換暗色模式'}</TooltipContent>
+          </Tooltip>
           <div className="relative" ref={pinPopoverRef}>
             <Button
               variant="outline"
@@ -186,12 +208,14 @@ export function BoardPage() {
                 )}
                 {(window as any).electronAPI?.isElectron && (
                   <div className="border-t dark:border-gray-700 px-3 py-2">
-                    <button
-                      className="w-full text-xs text-blue-600 dark:text-blue-400 hover:underline text-left"
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="w-full text-xs text-blue-600 dark:text-blue-400 h-auto p-0 justify-start"
                       onClick={() => { (window as any).electronAPI.togglePinWindow(); setPinPopoverOpen(false) }}
                     >
                       浮動視窗
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -228,20 +252,18 @@ export function BoardPage() {
             {/* Add column */}
             <div className="w-64 shrink-0">
               {addingColumn ? (
-                <div className="bg-gray-200 dark:bg-gray-700 rounded-xl p-3 space-y-2">
+                <form onSubmit={handleSubmitCol(handleAddColumn)} className="bg-gray-200 dark:bg-gray-700 rounded-xl p-3 space-y-2">
                   <Input
-                    value={newColumnName}
-                    onChange={e => setNewColumnName(e.target.value)}
                     placeholder="欄位名稱"
-                    onKeyDown={e => e.key === 'Enter' && handleAddColumn()}
+                    {...registerCol('name')}
                     autoFocus
                     className="text-sm"
                   />
                   <div className="flex gap-1">
-                    <Button size="sm" onClick={handleAddColumn} disabled={!newColumnName.trim()} className="h-7 text-xs">新增</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setAddingColumn(false)} className="h-7 text-xs">取消</Button>
+                    <Button type="submit" size="sm" className="h-7 text-xs">新增</Button>
+                    <Button type="button" size="sm" variant="ghost" onClick={() => { resetCol(); setAddingColumn(false) }} className="h-7 text-xs">取消</Button>
                   </div>
-                </div>
+                </form>
               ) : (
                 <button
                   onClick={() => setAddingColumn(true)}
@@ -325,7 +347,6 @@ function ColumnView({
           <div className="space-y-2 pt-1">
             {cards.map(card => {
               const dndId = `card-${card.id}`
-              // 顯示插入線：overId 對到這張卡，且不是自己
               const showLineBefore = isDragging && overId === dndId && activeCardDndId !== dndId
               return (
                 <Fragment key={card.id}>
@@ -341,13 +362,11 @@ function ColumnView({
                 </Fragment>
               )
             })}
-            {/* 拖到欄位尾端（over column drop zone 且有卡片）顯示末尾插入線 */}
             {isDragging && isOver && cards.length > 0 && overId === colDropId && (
               <InsertionLine />
             )}
           </div>
         </SortableContext>
-        {/* 空欄位拖入提示 */}
         {isDragging && isOver && cards.length === 0 && (
           <InsertionLine />
         )}

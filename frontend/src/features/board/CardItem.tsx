@@ -1,11 +1,20 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Calendar, Check, CheckSquare, Copy, GripVertical, Pencil, Pin, PinOff, Trash2, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../../components/ui/dropdown-menu'
 import { Input } from '../../components/ui/input'
 import { Textarea } from '../../components/ui/textarea'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip'
 import { cn } from '../../lib/utils'
 import type { Card } from '../../types'
 import { CardDetailDialog } from '../card/CardDetailDialog'
@@ -24,8 +33,8 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
   const [editTitle, setEditTitle] = useState(card.title)
   const [editDesc, setEditDesc] = useState(card.description)
   const [showDetail, setShowDetail] = useState(false)
-  const [showMenu, setShowMenu] = useState(false)
-  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 })
+  const [showEdit, setShowEdit] = useState(false)
+  const [showDropdown, setShowDropdown] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showDuplicate, setShowDuplicate] = useState(false)
 
@@ -43,28 +52,25 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
     opacity: isDragging ? 0.4 : 1,
   }
 
-  const openMenu = (e: React.MouseEvent) => {
-    e.preventDefault()
+  const openMenu = () => {
     if (!cardRef.current) return
-    const rect = cardRef.current.getBoundingClientRect()
-    setCardRect(rect)
-    const menuLeft = rect.right + 8 + 160 > window.innerWidth
-      ? rect.left - 168
-      : rect.right + 8
-    setMenuPos({ top: rect.top, left: menuLeft })
-    setShowMenu(true)
+    setCardRect(cardRef.current.getBoundingClientRect())
+    setShowEdit(true)
+    setShowDropdown(true)
   }
 
   const handleSave = () => {
     if (!editTitle.trim()) return
     onUpdate(card.id, editTitle.trim(), editDesc)
-    setShowMenu(false)
+    setShowEdit(false)
+    setShowDropdown(false)
   }
 
   const handleCancel = () => {
     setEditTitle(card.title)
     setEditDesc(card.description)
-    setShowMenu(false)
+    setShowEdit(false)
+    setShowDropdown(false)
   }
 
   const tags = card.tags ?? []
@@ -72,14 +78,6 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
   const hasSchedule = !!card.start_time || !!card.end_time
   const totalItems = checklists.reduce((n, cl) => n + (cl.total_count ?? 0), 0)
   const completedItems = checklists.reduce((n, cl) => n + (cl.completed_count ?? 0), 0)
-
-  useEffect(() => {
-    if (!showMenu || !cardRef.current) return
-    const id = requestAnimationFrame(() => {
-      if (cardRef.current) setCardRect(cardRef.current.getBoundingClientRect())
-    })
-    return () => cancelAnimationFrame(id)
-  }, [showMenu])
 
   return (
     <>
@@ -90,20 +88,20 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
         {...listeners}
         onClick={(e) => {
           if (isDragging) return
-          if (showMenu) { setShowMenu(false); return }
+          if (showEdit) { handleCancel(); return }
           if ((e.target as HTMLElement).closest('[data-card-actions]')) return
           setShowDetail(true)
         }}
-        onContextMenu={openMenu}
+        onContextMenu={(e) => { e.preventDefault(); openMenu() }}
         className={cn(
           'bg-white dark:bg-gray-700 rounded-lg border dark:border-gray-600 p-3 shadow-sm',
           'group relative select-none',
           'cursor-pointer active:cursor-grabbing',
           card.is_pinned && 'border-l-4 border-l-yellow-500',
-          showMenu && 'ring-2 ring-blue-500 shadow-lg'
+          showEdit && 'ring-2 ring-blue-500 shadow-lg z-[9995]'
         )}
       >
-        {showMenu ? (
+        {showEdit ? (
           <div onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
             <Input
               value={editTitle}
@@ -124,64 +122,101 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
               <Button size="icon" variant="ghost" onClick={handleCancel} className="h-7 w-7"><X className="w-3 h-3" /></Button>
             </div>
           </div>
-        ) : <div className="flex items-start gap-2">
-          <GripVertical className="w-4 h-4 mt-0.5 text-gray-300 dark:text-gray-500 shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-sm text-gray-900 dark:text-gray-100 leading-snug">{card.title}</p>
-            {card.description && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{card.description}</p>
-            )}
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-1.5">
-                {tags.slice(0, 3).map(tag => (
-                  <span
-                    key={tag.id}
-                    className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded text-xs"
-                  >
-                    {tag.name}
-                  </span>
-                ))}
-                {tags.length > 3 && (
-                  <span className="text-xs text-gray-400">+{tags.length - 3}</span>
-                )}
-              </div>
-            )}
-            {(hasSchedule || totalItems > 0) && (
-              <div className="flex items-center gap-2 mt-1.5">
-                {hasSchedule && (
-                  <span className="flex items-center gap-0.5 text-xs text-gray-400">
-                    <Calendar className="w-3 h-3" />
-                    {card.start_time ? new Date(card.start_time).toLocaleDateString() : ''}
-                  </span>
-                )}
-                {totalItems > 0 && (
-                  <span className={cn(
-                    'flex items-center gap-0.5 text-xs',
-                    completedItems === totalItems ? 'text-green-500' : 'text-gray-400'
-                  )}>
-                    <CheckSquare className="w-3 h-3" />
-                    {completedItems}/{totalItems}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-          {/* Action buttons */}
-          <div
-            data-card-actions
-            className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-            onPointerDown={e => e.stopPropagation()}
-          >
-            <button
-              onClick={e => { e.stopPropagation(); openMenu(e) }}
-              className="text-gray-400 hover:text-blue-500 p-0.5"
-              title="編輯"
+        ) : (
+          <div className="flex items-start gap-2">
+            <GripVertical className="w-4 h-4 mt-0.5 text-gray-300 dark:text-gray-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm text-gray-900 dark:text-gray-100 leading-snug">{card.title}</p>
+              {card.description && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{card.description}</p>
+              )}
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {tags.slice(0, 3).map(tag => (
+                    <Badge
+                      key={tag.id}
+                      variant="secondary"
+                      className="text-xs rounded px-1.5 py-0.5"
+                    >
+                      {tag.name}
+                    </Badge>
+                  ))}
+                  {tags.length > 3 && (
+                    <span className="text-xs text-gray-400">+{tags.length - 3}</span>
+                  )}
+                </div>
+              )}
+              {(hasSchedule || totalItems > 0) && (
+                <div className="flex items-center gap-2 mt-1.5">
+                  {hasSchedule && (
+                    <span className="flex items-center gap-0.5 text-xs text-gray-400">
+                      <Calendar className="w-3 h-3" />
+                      {card.start_time ? new Date(card.start_time).toLocaleDateString() : ''}
+                    </span>
+                  )}
+                  {totalItems > 0 && (
+                    <span className={cn(
+                      'flex items-center gap-0.5 text-xs',
+                      completedItems === totalItems ? 'text-green-500' : 'text-gray-400'
+                    )}>
+                      <CheckSquare className="w-3 h-3" />
+                      {completedItems}/{totalItems}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            {/* Action buttons */}
+            <div
+              data-card-actions
+              className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+              onPointerDown={e => e.stopPropagation()}
             >
-              <Pencil className="w-3.5 h-3.5" />
-            </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); openMenu() }}
+                    className="text-gray-400 hover:text-blue-500 p-0.5"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>編輯</TooltipContent>
+              </Tooltip>
+            </div>
           </div>
-        </div>}
+        )}
 
+        {/* Context menu / dropdown - always rendered for right-click and edit button */}
+        <DropdownMenu open={showDropdown} onOpenChange={(open) => { if (!open) setShowDropdown(false) }}>
+          <DropdownMenuTrigger asChild>
+            {/* 隱藏的按鈕，用於觸發下拉選單 */}
+            <button className="absolute right-0 top-0 w-0 h-0 opacity-0 pointer-events-none" tabIndex={-1} aria-hidden />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            side="right"
+            align="start"
+            className="min-w-[140px] z-[9995] ml-2"
+            onInteractOutside={() => handleCancel()}
+          >
+            <DropdownMenuItem onSelect={() => { onTogglePin(card.id); setShowDropdown(false) }}>
+              {card.is_pinned
+                ? <><PinOff className="w-3.5 h-3.5" /> 取消釘選</>
+                : <><Pin className="w-3.5 h-3.5" /> 釘選</>
+              }
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => { setShowDuplicate(true); setShowDropdown(false) }}>
+              <Copy className="w-3.5 h-3.5" /> 複製卡片
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onSelect={() => { setShowDeleteConfirm(true); setShowDropdown(false) }}
+              className="text-red-500 focus:text-red-500"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> 刪除
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Inline delete confirmation */}
         {showDeleteConfirm && (
@@ -213,7 +248,7 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
       </div>
 
       {/* Backdrop panels that expose only the card area */}
-      {showMenu && cardRect && createPortal(
+      {showEdit && cardRect && createPortal(
         <>
           <div className="fixed inset-x-0 top-0 bg-black/40 z-[9990]"
             style={{ height: cardRect.top }} onClick={handleCancel} />
@@ -226,39 +261,6 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
             style={{ top: cardRect.top, height: cardRect.height, left: cardRect.right }}
             onClick={handleCancel} />
         </>,
-        document.body
-      )}
-
-      {/* Floating context menu rendered via portal */}
-      {showMenu && createPortal(
-        <div
-          style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999 }}
-          className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-lg py-1 min-w-[140px]"
-          onPointerDown={e => e.stopPropagation()}
-          onClick={e => e.stopPropagation()}
-        >
-          <button
-            className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-            onClick={() => { onTogglePin(card.id); setShowMenu(false) }}
-          >
-            {card.is_pinned
-              ? <><PinOff className="w-3.5 h-3.5" /> 取消釘選</>
-              : <><Pin className="w-3.5 h-3.5" /> 釘選</>
-            }
-          </button>
-          <button
-            className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-            onClick={() => { setShowDuplicate(true); setShowMenu(false) }}
-          >
-            <Copy className="w-3.5 h-3.5" /> 複製卡片
-          </button>
-          <button
-            className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700"
-            onClick={() => { setShowDeleteConfirm(true); setShowMenu(false) }}
-          >
-            <Trash2 className="w-3.5 h-3.5" /> 刪除
-          </button>
-        </div>,
         document.body
       )}
 

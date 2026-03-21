@@ -1,7 +1,13 @@
 import { Plus, X } from 'lucide-react'
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
+import { cardSchema } from '../../lib/schemas'
+import type { z } from 'zod'
+
+type CardForm = z.infer<typeof cardSchema>
 
 interface AddCardFormProps {
   onAdd: (title: string, description: string) => void
@@ -9,14 +15,14 @@ interface AddCardFormProps {
 
 export function AddCardForm({ onAdd }: AddCardFormProps) {
   const [open, setOpen] = useState(false)
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
 
-  const handleSubmit = () => {
-    if (!title.trim()) return
-    onAdd(title.trim(), description.trim())
-    setTitle('')
-    setDescription('')
+  const { register, handleSubmit, reset } = useForm<CardForm>({
+    resolver: zodResolver(cardSchema),
+  })
+
+  const onSubmit = (data: CardForm) => {
+    onAdd(data.title, data.description ?? '')
+    reset()
     setOpen(false)
   }
 
@@ -33,21 +39,19 @@ export function AddCardForm({ onAdd }: AddCardFormProps) {
   }
 
   return (
-    <div className="space-y-2">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
       <Input
-        value={title}
-        onChange={e => setTitle(e.target.value)}
+        {...register('title')}
         placeholder="卡片標題"
-        onKeyDown={e => e.key === 'Enter' && handleSubmit()}
         autoFocus
         className="text-sm"
       />
       <div className="flex gap-1">
-        <Button size="sm" onClick={handleSubmit} disabled={!title.trim()} className="h-7 text-xs">新增</Button>
-        <Button size="icon" variant="ghost" onClick={() => setOpen(false)} className="h-7 w-7">
+        <Button type="submit" size="sm" className="h-7 text-xs">新增</Button>
+        <Button type="button" size="icon" variant="ghost" onClick={() => { reset(); setOpen(false) }} className="h-7 w-7">
           <X className="w-3 h-3" />
         </Button>
       </div>
-    </div>
+    </form>
   )
 }

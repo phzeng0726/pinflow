@@ -1,8 +1,22 @@
 import { useState } from 'react'
 import { Pin, Trash2, MoreHorizontal, Check, X } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { cn } from '../../lib/utils'
+import { columnSchema } from '../../lib/schemas'
 import type { Column } from '../../types'
+import type { z } from 'zod'
 import { Input } from '../../components/ui/input'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../../components/ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip'
+
+type ColumnForm = z.infer<typeof columnSchema>
 
 interface ColumnHeaderProps {
   column: Column
@@ -19,34 +33,34 @@ const COLUMN_COLORS = [
 
 export function ColumnHeader({ column, cardCount, onRename, onToggleAutoPin, onDelete }: ColumnHeaderProps) {
   const [editing, setEditing] = useState(false)
-  const [name, setName] = useState(column.name)
-  const [menuOpen, setMenuOpen] = useState(false)
+
+  const { register, handleSubmit, reset } = useForm<ColumnForm>({
+    resolver: zodResolver(columnSchema),
+    defaultValues: { name: column.name },
+  })
 
   const colorClass = COLUMN_COLORS[column.id % COLUMN_COLORS.length]
 
-  const handleRename = () => {
-    if (!name.trim()) return
-    onRename(column.id, name.trim())
+  const handleRename = (data: ColumnForm) => {
+    onRename(column.id, data.name)
     setEditing(false)
-    setMenuOpen(false)
   }
 
   return (
-    <div className="flex items-center justify-between px-3 py-2 relative">
+    <div className="flex items-center justify-between px-3 py-2">
       <div className="flex items-center gap-2 flex-1 min-w-0">
         <span className={cn('w-2.5 h-2.5 rounded-full shrink-0', colorClass)} />
         {editing ? (
-          <div className="flex gap-1 flex-1">
+          <form onSubmit={handleSubmit(handleRename)} className="flex gap-1 flex-1">
             <Input
-              value={name}
-              onChange={e => setName(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setEditing(false) }}
+              {...register('name')}
+              onKeyDown={e => { if (e.key === 'Escape') { reset(); setEditing(false) } }}
               className="h-6 text-sm py-0"
               autoFocus
             />
-            <button onClick={handleRename} className="text-green-600"><Check className="w-3.5 h-3.5" /></button>
-            <button onClick={() => setEditing(false)} className="text-gray-400"><X className="w-3.5 h-3.5" /></button>
-          </div>
+            <button type="submit" className="text-green-600"><Check className="w-3.5 h-3.5" /></button>
+            <button type="button" onClick={() => { reset(); setEditing(false) }} className="text-gray-400"><X className="w-3.5 h-3.5" /></button>
+          </form>
         ) : (
           <span className="font-semibold text-sm text-gray-700 dark:text-gray-200 truncate">
             {column.name}
@@ -57,41 +71,39 @@ export function ColumnHeader({ column, cardCount, onRename, onToggleAutoPin, onD
 
       <div className="flex items-center gap-1 shrink-0">
         {column.auto_pin && (
-          <Pin className="w-3.5 h-3.5 text-blue-500 fill-blue-500" aria-label="自動釘選已開啟" />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <Pin className="w-3.5 h-3.5 text-blue-500 fill-blue-500" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>自動釘選已開啟</TooltipContent>
+          </Tooltip>
         )}
-        <div className="relative">
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded"
-          >
-            <MoreHorizontal className="w-4 h-4" />
-          </button>
-          {menuOpen && (
-            <div className="absolute right-0 top-6 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg shadow-lg py-1 w-44 z-20 text-sm">
-              <button
-                className="w-full text-left px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200"
-                onClick={() => { setEditing(true); setMenuOpen(false) }}
-              >
-                重新命名
-              </button>
-              <button
-                className="w-full text-left px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 flex items-center gap-2"
-                onClick={() => { onToggleAutoPin(column.id, column.auto_pin); setMenuOpen(false) }}
-              >
-                <Pin className={cn('w-3.5 h-3.5', column.auto_pin ? 'text-blue-500' : 'text-gray-400')} />
-                {column.auto_pin ? '關閉自動釘選' : '開啟自動釘選'}
-              </button>
-              <hr className="my-1 dark:border-gray-600" />
-              <button
-                className="w-full text-left px-3 py-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 flex items-center gap-2"
-                onClick={() => { onDelete(column.id); setMenuOpen(false) }}
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                刪除欄位
-              </button>
-            </div>
-          )}
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded">
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem onSelect={() => { reset({ name: column.name }); setEditing(true) }}>
+              重新命名
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => onToggleAutoPin(column.id, column.auto_pin)}>
+              <Pin className={cn('w-3.5 h-3.5', column.auto_pin ? 'text-blue-500' : 'text-gray-400')} />
+              {column.auto_pin ? '關閉自動釘選' : '開啟自動釘選'}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onSelect={() => onDelete(column.id)}
+              className="text-red-500 focus:text-red-500"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              刪除欄位
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   )

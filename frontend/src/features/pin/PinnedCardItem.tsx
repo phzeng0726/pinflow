@@ -1,4 +1,6 @@
 import { PinOff } from 'lucide-react'
+import { Button } from '../../components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip'
 import type { PinnedCard } from '../../types'
 
 const COLUMN_COLORS = [
@@ -29,13 +31,20 @@ export function PinnedCardItem({ card, onUnpin }: PinnedCardItemProps) {
             {card.column_name}
           </span>
         </div>
-        <button
-          onClick={() => onUnpin(card.id)}
-          className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all shrink-0 mt-0.5"
-          title="取消釘選"
-        >
-          <PinOff className="w-3.5 h-3.5" />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="取消釘選"
+              className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all shrink-0 mt-0.5 h-6 w-6"
+              onClick={() => onUnpin(card.id)}
+            >
+              <PinOff className="w-3.5 h-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>取消釘選</TooltipContent>
+        </Tooltip>
       </div>
     </div>
   )

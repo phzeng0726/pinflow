@@ -82,7 +82,8 @@ describe('CardDetailDialog', () => {
 
   it('calls onClose when Escape key pressed', () => {
     wrapper(<CardDetailDialog cardId={1} onClose={onClose} />)
-    fireEvent.keyDown(window, { key: 'Escape' })
+    // Radix Dialog listens on document, not window
+    fireEvent.keyDown(document, { key: 'Escape' })
     expect(onClose).toHaveBeenCalled()
   })
 })

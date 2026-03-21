@@ -6,7 +6,8 @@ import { queryKeys } from '../../queryKeys'
 export function useColumnMutations(boardId: number) {
   const qc = useQueryClient()
 
-  const invalidateBoardDetail = () => qc.invalidateQueries({ queryKey: queryKeys.boards.detail(boardId) })
+  const invalidateBoardDetail = () =>
+    qc.invalidateQueries({ queryKey: queryKeys.boards.detail(boardId) })
 
   const create = useMutation({
     mutationFn: (name: string) => api.createColumn(boardId, name),
@@ -18,8 +19,13 @@ export function useColumnMutations(boardId: number) {
   })
 
   const update = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: { name?: string; auto_pin?: boolean; position?: number } }) =>
-      api.updateColumn(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number
+      data: { name?: string; auto_pin?: boolean; position?: number }
+    }) => api.updateColumn(id, data),
     onError: () => toast.error('更新欄位失敗'),
     onSettled: async () => {
       await invalidateBoardDetail()
@@ -35,5 +41,9 @@ export function useColumnMutations(boardId: number) {
     onError: () => toast.error('刪除欄位失敗'),
   })
 
-  return { createColumn: create, updateColumn: update, deleteColumn: remove }
+  return {
+    createColumn: create,
+    updateColumn: update,
+    deleteColumn: remove,
+  }
 }

@@ -4,10 +4,21 @@ import { Controller, useForm } from 'react-hook-form'
 import type { z } from 'zod'
 import { Button } from '../../components/ui/button'
 import { Checkbox } from '../../components/ui/checkbox'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select'
 import { useBoardDetail } from '../../hooks/board/queries/useBoardDetail'
 import { useBoards } from '../../hooks/board/queries/useBoards'
 import { useCardMutations } from '../../hooks/card/mutations/useCardMutations'
@@ -32,7 +43,14 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
   const { data: boards = [] } = useBoards()
   const { duplicateCard: duplicate } = useCardMutations(boardId)
 
-  const { register, handleSubmit, control, watch, setValue, formState: { errors } } = useForm<DuplicateCardForm>({
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<DuplicateCardForm>({
     resolver: zodResolver(duplicateCardSchema),
     defaultValues: {
       title: card.title,
@@ -51,7 +69,7 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
 
   const { data: selectedBoard } = useBoardDetail(selectedBoardId)
   const columns = selectedBoard?.columns ?? []
-  const targetColumn = columns.find(c => c.id === selectedColumnId)
+  const targetColumn = columns.find((c) => c.id === selectedColumnId)
   const targetCards = targetColumn?.cards ?? []
   const positionCount = targetCards.length + 1
   const isAutoPin = targetColumn?.auto_pin ?? false
@@ -62,7 +80,7 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
 
   const handleBoardChange = (newBoardId: number) => {
     setValue('selectedBoardId', newBoardId)
-    const newBoard = boards.find(b => b.id === newBoardId)
+    const newBoard = boards.find((b) => b.id === newBoardId)
     const firstCol = newBoard?.columns?.[0]
     setValue('selectedColumnId', firstCol?.id ?? 0)
     setValue('positionIndex', 0)
@@ -82,16 +100,18 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
           pin: data.pin,
         },
       },
-      { onSuccess: onClose }
+      { onSuccess: onClose },
     )
   }
 
   return (
     // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-    <div onClick={e => e.stopPropagation()}>
+    <div onClick={(e) => e.stopPropagation()}>
       <Dialog
         open={true}
-        onOpenChange={(open) => { if (!open) onClose() }}
+        onOpenChange={(open) => {
+          if (!open) onClose()
+        }}
       >
         <DialogContent className="w-80 p-4">
           <DialogHeader className="mb-4">
@@ -101,19 +121,23 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Title */}
             <div>
-              <Label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">名稱</Label>
-              <Input
-                {...register('title')}
-                className="text-sm"
-                autoFocus
-              />
-              {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title.message}</p>}
+              <Label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                名稱
+              </Label>
+              <Input {...register('title')} className="text-sm" autoFocus />
+              {errors.title && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.title.message}
+                </p>
+              )}
             </div>
 
             {/* Copy options */}
             {(tags.length > 0 || checklists.length > 0 || hasSchedule) && (
               <div>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">保留...</p>
+                <p className="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+                  保留...
+                </p>
                 <div className="space-y-1.5">
                   {tags.length > 0 && (
                     <div className="flex items-center gap-2">
@@ -124,11 +148,16 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
                           <Checkbox
                             id="copyTags"
                             checked={field.value}
-                            onCheckedChange={(checked) => field.onChange(checked === true)}
+                            onCheckedChange={(checked) =>
+                              field.onChange(checked === true)
+                            }
                           />
                         )}
                       />
-                      <Label htmlFor="copyTags" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer font-normal">
+                      <Label
+                        htmlFor="copyTags"
+                        className="cursor-pointer text-sm font-normal text-gray-700 dark:text-gray-300"
+                      >
                         標籤 ({tags.length})
                       </Label>
                     </div>
@@ -142,11 +171,16 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
                           <Checkbox
                             id="copyChecklists"
                             checked={field.value}
-                            onCheckedChange={(checked) => field.onChange(checked === true)}
+                            onCheckedChange={(checked) =>
+                              field.onChange(checked === true)
+                            }
                           />
                         )}
                       />
-                      <Label htmlFor="copyChecklists" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer font-normal">
+                      <Label
+                        htmlFor="copyChecklists"
+                        className="cursor-pointer text-sm font-normal text-gray-700 dark:text-gray-300"
+                      >
                         清單 ({checklists.length})
                       </Label>
                     </div>
@@ -160,11 +194,16 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
                           <Checkbox
                             id="copySchedule"
                             checked={field.value}
-                            onCheckedChange={(checked) => field.onChange(checked === true)}
+                            onCheckedChange={(checked) =>
+                              field.onChange(checked === true)
+                            }
                           />
                         )}
                       />
-                      <Label htmlFor="copySchedule" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer font-normal">
+                      <Label
+                        htmlFor="copySchedule"
+                        className="cursor-pointer text-sm font-normal text-gray-700 dark:text-gray-300"
+                      >
                         時程
                       </Label>
                     </div>
@@ -183,17 +222,22 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
                     <Checkbox
                       id="pin"
                       checked={field.value}
-                      onCheckedChange={(checked) => field.onChange(checked === true)}
+                      onCheckedChange={(checked) =>
+                        field.onChange(checked === true)
+                      }
                       disabled={isAutoPin}
                     />
                   )}
                 />
-                <Label htmlFor="pin" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer font-normal">
+                <Label
+                  htmlFor="pin"
+                  className="cursor-pointer text-sm font-normal text-gray-700 dark:text-gray-300"
+                >
                   釘選
                 </Label>
               </div>
               {isAutoPin && (
-                <p className="text-xs text-blue-500 dark:text-blue-400 mt-1 ml-6">
+                <p className="ml-6 mt-1 text-xs text-blue-500 dark:text-blue-400">
                   目標欄位為自動釘選，將自動設為釘選
                 </p>
               )}
@@ -201,10 +245,14 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
 
             {/* Destination */}
             <div>
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">複製到...</p>
+              <p className="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+                複製到...
+              </p>
               <div className="space-y-2">
                 <div>
-                  <Label className="block text-xs text-gray-400 mb-1">面板</Label>
+                  <Label className="mb-1 block text-xs text-gray-400">
+                    面板
+                  </Label>
                   <Controller
                     name="selectedBoardId"
                     control={control}
@@ -213,15 +261,12 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
                         value={String(field.value)}
                         onValueChange={(v) => handleBoardChange(Number(v))}
                       >
-                        <SelectTrigger className="text-sm h-8">
+                        <SelectTrigger className="h-8 text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {boards.map(b => (
-                            <SelectItem
-                              key={b.id}
-                              value={String(b.id)}
-                            >
+                          {boards.map((b) => (
+                            <SelectItem key={b.id} value={String(b.id)}>
                               {b.name}
                             </SelectItem>
                           ))}
@@ -232,24 +277,26 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
                 </div>
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <Label className="block text-xs text-gray-400 mb-1">列表</Label>
+                    <Label className="mb-1 block text-xs text-gray-400">
+                      列表
+                    </Label>
                     <Controller
                       name="selectedColumnId"
                       control={control}
                       render={({ field }) => (
                         <Select
                           value={String(field.value)}
-                          onValueChange={(v) => { field.onChange(Number(v)); setValue('positionIndex', 0) }}
+                          onValueChange={(v) => {
+                            field.onChange(Number(v))
+                            setValue('positionIndex', 0)
+                          }}
                         >
-                          <SelectTrigger className="text-sm h-8">
+                          <SelectTrigger className="h-8 text-sm">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {columns.map(col => (
-                              <SelectItem
-                                key={col.id}
-                                value={String(col.id)}
-                              >
+                            {columns.map((col) => (
+                              <SelectItem key={col.id} value={String(col.id)}>
                                 {col.name}
                               </SelectItem>
                             ))}
@@ -257,10 +304,16 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
                         </Select>
                       )}
                     />
-                    {errors.selectedColumnId && <p className="text-xs text-red-500 mt-1">{errors.selectedColumnId.message}</p>}
+                    {errors.selectedColumnId && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.selectedColumnId.message}
+                      </p>
+                    )}
                   </div>
                   <div className="w-20">
-                    <Label className="block text-xs text-gray-400 mb-1">位置</Label>
+                    <Label className="mb-1 block text-xs text-gray-400">
+                      位置
+                    </Label>
                     <Controller
                       name="positionIndex"
                       control={control}
@@ -269,7 +322,7 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
                           value={String(field.value)}
                           onValueChange={(v) => field.onChange(Number(v))}
                         >
-                          <SelectTrigger className="text-sm h-8">
+                          <SelectTrigger className="h-8 text-sm">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>

@@ -18,8 +18,8 @@ function PopoverContent({
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          'z-50 w-72 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-gray-900 dark:text-gray-100 shadow-md outline-none',
-          className
+          'z-50 w-72 rounded-md border border-gray-200 bg-white p-4 text-gray-900 shadow-md outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100',
+          className,
         )}
         {...props}
       />

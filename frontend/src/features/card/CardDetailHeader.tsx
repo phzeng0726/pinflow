@@ -22,15 +22,23 @@ export function CardDetailHeader(props: CardDetailHeaderProps) {
 
   const { updateCard } = useCardMutations(boardId)
 
-  const { register, handleSubmit, formState: { errors, isDirty, isSubmitting }, reset } = useForm<CardDetailForm>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isDirty, isSubmitting },
+    reset,
+  } = useForm<CardDetailForm>({
     resolver: zodResolver(cardDetailSchema),
     defaultValues: { title: card.title, desc: card.description },
   })
 
   const onSubmit = async (data: CardDetailForm) => {
     await updateCard.mutateAsync({
-      id: card.id, title: data.title, description: data.desc ?? '',
-      startTime: card.start_time, endTime: card.end_time,
+      id: card.id,
+      title: data.title,
+      description: data.desc ?? '',
+      startTime: card.start_time,
+      endTime: card.end_time,
     })
     reset(data)
   }
@@ -38,28 +46,30 @@ export function CardDetailHeader(props: CardDetailHeaderProps) {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex items-start gap-3 p-6 border-b dark:border-gray-700"
+      className="flex items-start gap-3 border-b p-6 dark:border-gray-700"
     >
       <div className="flex-1 space-y-2">
         <Input
           {...register('title')}
-          className="w-full text-xl font-semibold border-transparent shadow-none focus-visible:ring-1 px-1 bg-transparent"
+          className="w-full border-transparent bg-transparent px-1 text-xl font-semibold shadow-none focus-visible:ring-1"
         />
-        {errors.title && <p className="text-xs text-red-500">{errors.title.message}</p>}
+        {errors.title && (
+          <p className="text-xs text-red-500">{errors.title.message}</p>
+        )}
         <Textarea
           {...register('desc')}
           placeholder="Add a description..."
           rows={10}
-          className="w-full text-sm border-transparent shadow-none focus-visible:ring-1 px-1 bg-transparent resize-none text-gray-600 dark:text-gray-400"
+          className="w-full resize-none border-transparent bg-transparent px-1 text-sm text-gray-600 shadow-none focus-visible:ring-1 dark:text-gray-400"
         />
         {isDirty && (
           <Button
             type="submit"
             size="sm"
             disabled={isSubmitting}
-            className="h-7 text-xs flex items-center gap-1"
+            className="flex h-7 items-center gap-1 text-xs"
           >
-            <Save className="w-3 h-3" />
+            <Save className="h-3 w-3" />
             {isSubmitting ? '儲存中...' : '儲存'}
           </Button>
         )}
@@ -71,7 +81,7 @@ export function CardDetailHeader(props: CardDetailHeaderProps) {
         onClick={onClose}
         className="mt-1 h-8 w-8 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
       >
-        <X className="w-5 h-5" />
+        <X className="h-5 w-5" />
       </Button>
     </form>
   )

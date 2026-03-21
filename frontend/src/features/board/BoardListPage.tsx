@@ -8,7 +8,11 @@ import { useBoardMutations } from '../../hooks/board/mutations/useBoardMutations
 import { useThemeStore } from '../../stores/themeStore'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '../../components/ui/tooltip'
 import { boardSchema } from '../../lib/schemas'
 import type { z } from 'zod'
 
@@ -18,11 +22,16 @@ export function BoardListPage() {
   const { data: boards = [], isLoading } = useBoards()
   const { createBoard, deleteBoard } = useBoardMutations()
   const navigate = useNavigate()
-  const theme = useThemeStore(s => s.theme)
-  const toggleTheme = useThemeStore(s => s.toggle)
+  const theme = useThemeStore((s) => s.theme)
+  const toggleTheme = useThemeStore((s) => s.toggle)
   const [creating, setCreating] = useState(false)
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<BoardForm>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<BoardForm>({
     resolver: zodResolver(boardSchema),
   })
 
@@ -32,18 +41,19 @@ export function BoardListPage() {
     setCreating(false)
   }
 
-  if (isLoading) return (
-    <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400">
-      Loading...
-    </div>
-  )
+  if (isLoading)
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50 text-gray-500 dark:bg-gray-900 dark:text-gray-400">
+        Loading...
+      </div>
+    )
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-            <LayoutDashboard className="w-6 h-6" />
+    <div className="min-h-screen bg-gray-50 p-8 dark:bg-gray-900">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-8 flex items-center justify-between">
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <LayoutDashboard className="h-6 w-6" />
             我的看板
           </h1>
           <div className="flex items-center gap-2">
@@ -55,16 +65,22 @@ export function BoardListPage() {
                   onClick={toggleTheme}
                   className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                 >
-                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  {theme === 'dark' ? (
+                    <Sun className="h-4 w-4" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{theme === 'dark' ? '切換亮色模式' : '切換暗色模式'}</TooltipContent>
+              <TooltipContent>
+                {theme === 'dark' ? '切換亮色模式' : '切換暗色模式'}
+              </TooltipContent>
             </Tooltip>
             <Button
               onClick={() => setCreating(true)}
               className="flex items-center gap-2"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="h-4 w-4" />
               新增看板
             </Button>
           </div>
@@ -73,7 +89,7 @@ export function BoardListPage() {
         {creating && (
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-4 mb-4 space-y-1"
+            className="mb-4 space-y-1 rounded-lg border bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
           >
             <div className="flex gap-2">
               <Input
@@ -86,47 +102,59 @@ export function BoardListPage() {
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => { reset(); setCreating(false) }}
+                onClick={() => {
+                  reset()
+                  setCreating(false)
+                }}
               >
                 取消
               </Button>
             </div>
-            {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
+            {errors.name && (
+              <p className="text-xs text-red-500">{errors.name.message}</p>
+            )}
           </form>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {boards.map(board => (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {boards.map((board) => (
             <div
               key={board.id}
-              className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-4 cursor-pointer hover:shadow-md transition-shadow group"
-              onClick={() => navigate({ to: '/boards/$boardId', params: { boardId: String(board.id) } })}
+              className="group cursor-pointer rounded-lg border bg-white p-4 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+              onClick={() =>
+                navigate({
+                  to: '/boards/$boardId',
+                  params: { boardId: String(board.id) },
+                })
+              }
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="font-semibold text-gray-900 dark:text-gray-100">{board.name}</h2>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+                    {board.name}
+                  </h2>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     {board.columns?.length ?? 0} 個欄位
                   </p>
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all h-8 w-8"
-                  onClick={e => {
+                  className="h-8 w-8 text-gray-400 opacity-0 transition-all hover:text-red-500 group-hover:opacity-100"
+                  onClick={(e) => {
                     e.stopPropagation()
                     deleteBoard.mutate(board.id)
                   }}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             </div>
           ))}
 
           {boards.length === 0 && !creating && (
-            <div className="col-span-3 text-center py-12 text-gray-400 dark:text-gray-600">
-              <LayoutDashboard className="w-12 h-12 mx-auto mb-2 opacity-30" />
+            <div className="col-span-3 py-12 text-center text-gray-400 dark:text-gray-600">
+              <LayoutDashboard className="mx-auto mb-2 h-12 w-12 opacity-30" />
               <p>尚未建立任何看板</p>
             </div>
           )}

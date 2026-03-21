@@ -42,7 +42,7 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
     resolver: zodResolver(checklistItemSchema),
   })
 
-  const completedCount = checklist.items?.filter(i => i.completed).length ?? 0
+  const completedCount = checklist.items?.filter((i) => i.completed).length ?? 0
   const total = checklist.items?.length ?? 0
   const progress = total > 0 ? (completedCount / total) * 100 : 0
 
@@ -58,43 +58,51 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
   }
 
   return (
-    <div className="border dark:border-gray-700 rounded-lg p-3">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{checklist.title}</span>
+    <div className="rounded-lg border p-3 dark:border-gray-700">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
+          {checklist.title}
+        </span>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400">{completedCount}/{total}</span>
+          <span className="text-xs text-gray-400">
+            {completedCount}/{total}
+          </span>
           <Button
             variant="ghost"
             size="icon"
             className="h-6 w-6 text-gray-400 hover:text-red-500"
             onClick={() => deleteChecklist.mutate(checklist.id)}
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
-      {total > 0 && (
-        <Progress value={progress} className="h-1.5 mb-3" />
-      )}
+      {total > 0 && <Progress value={progress} className="mb-3 h-1.5" />}
       <div className="space-y-1.5">
-        {(checklist.items ?? []).map(item => (
-          <div
-            key={item.id}
-            className="flex items-center gap-2 group"
-          >
+        {(checklist.items ?? []).map((item) => (
+          <div key={item.id} className="group flex items-center gap-2">
             <Checkbox
               checked={item.completed}
-              onCheckedChange={(checked) => updateItem.mutate({ id: item.id, data: { completed: checked === true } })}
+              onCheckedChange={(checked) =>
+                updateItem.mutate({
+                  id: item.id,
+                  data: { completed: checked === true },
+                })
+              }
             />
             {editingItemId === item.id ? (
               <form
-                onSubmit={editForm.handleSubmit(data => handleEditSave(item.id, data))}
-                className="flex-1 flex gap-1"
+                onSubmit={editForm.handleSubmit((data) =>
+                  handleEditSave(item.id, data),
+                )}
+                className="flex flex-1 gap-1"
               >
                 <Input
                   {...editForm.register('text')}
-                  onKeyDown={e => { if (e.key === 'Escape') setEditingItemId(null) }}
-                  className="text-sm h-7 flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') setEditingItemId(null)
+                  }}
+                  className="h-7 flex-1 text-sm"
                   autoFocus
                 />
                 <Button
@@ -103,18 +111,21 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
                   size="icon"
                   className="h-7 w-7 text-green-500"
                 >
-                  <Check className="w-4 h-4" />
+                  <Check className="h-4 w-4" />
                 </Button>
               </form>
             ) : (
               <Label
                 className={cn(
-                  'flex-1 text-sm cursor-pointer font-normal',
+                  'flex-1 cursor-pointer text-sm font-normal',
                   item.completed
-                    ? 'line-through text-gray-400 dark:text-gray-500'
+                    ? 'text-gray-400 line-through dark:text-gray-500'
                     : 'text-gray-700 dark:text-gray-300',
                 )}
-                onClick={() => { setEditingItemId(item.id); editForm.reset({ text: item.text }) }}
+                onClick={() => {
+                  setEditingItemId(item.id)
+                  editForm.reset({ text: item.text })
+                }}
               >
                 {item.text}
               </Label>
@@ -122,10 +133,10 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500"
+              className="h-6 w-6 text-gray-400 opacity-0 hover:text-red-500 group-hover:opacity-100"
               onClick={() => deleteItem.mutate(item.id)}
             >
-              <X className="w-3 h-3" />
+              <X className="h-3 w-3" />
             </Button>
           </div>
         ))}
@@ -137,21 +148,26 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
         >
           <Input
             {...newItemForm.register('text')}
-            onKeyDown={e => { if (e.key === 'Escape') { newItemForm.reset(); setShowItemForm(false) } }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                newItemForm.reset()
+                setShowItemForm(false)
+              }
+            }}
             placeholder="新增項目..."
-            className="text-sm h-7 flex-1"
+            className="h-7 flex-1 text-sm"
             autoFocus
           />
-          <Button
-            type="submit"
-            className="h-7 text-xs"
-          >
+          <Button type="submit" className="h-7 text-xs">
             新增
           </Button>
           <Button
             type="button"
             variant="ghost"
-            onClick={() => { newItemForm.reset(); setShowItemForm(false) }}
+            onClick={() => {
+              newItemForm.reset()
+              setShowItemForm(false)
+            }}
             className="h-7 text-xs"
           >
             取消
@@ -162,9 +178,9 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
           variant="ghost"
           size="sm"
           onClick={() => setShowItemForm(true)}
-          className="mt-2 h-7 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 px-1"
+          className="mt-2 h-7 px-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
         >
-          <Plus className="w-3 h-3 mr-1" /> 新增項目
+          <Plus className="mr-1 h-3 w-3" /> 新增項目
         </Button>
       )}
     </div>

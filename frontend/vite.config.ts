@@ -11,7 +11,10 @@ export default defineConfig({
     alias: { '@': path.resolve(__dirname, './src') },
   },
   plugins: [
-    TanStackRouterVite({ routesDirectory: './src/routes', generatedRouteTree: './src/routeTree.gen.ts' }),
+    TanStackRouterVite({
+      routesDirectory: './src/routes',
+      generatedRouteTree: './src/routeTree.gen.ts',
+    }),
     react(),
   ],
   server: {

@@ -266,26 +266,7 @@ interface CardForm { title: string }
 
 ### 元件寫法
 
-#### JSX Props 換行
-
-- 2 個以上 props 時，每個 prop 獨立一行，避免橫向生長
-- 單一 prop 可寫同行
-
-```tsx
-// OK — 單一 prop 同行
-<Button className="mt-2">送出</Button>
-
-// OK — 多個 props 各自換行
-<ChecklistBlock
-  key={cl.id}
-  boardId={boardId}
-  checklist={cl}
-  cardId={card.id}
-/>
-
-// NG — 多個 props 擠在同一行
-<ChecklistBlock key={cl.id} boardId={boardId} checklist={cl} cardId={card.id} />
-```
+> **格式化規則**：JSX props 換行、callback 換行、縮排等格式問題由 **Prettier**（`printWidth: 80`）自動處理，code review 不需檢查。執行 `pnpm prettier --check .` 即可驗證。
 
 #### Props 解構模式
 
@@ -422,7 +403,6 @@ updateColumnMutate({ id, data: { position } })
 - `useEffect`、`useMemo`、`useCallback` 的依賴陣列缺漏或錯誤
 - 不必要的重新渲染（不穩定的參考、該 memo 卻沒 memo）
 - 元件職責——一個元件是否承擔太多？
-- JSX props 超過 1 個時是否每個獨立一行（禁止多 props 擠同行）
 - 元件參數是否使用 `props` 解構模式（非直接在參數中解構），且解構後空一行
 - Effect 中的清理（事件監聯器、訂閱、計時器）
 
@@ -441,7 +421,7 @@ updateColumnMutate({ id, data: { position } })
 - 不必要的狀態重複
 
 ### 樣式與 UI
-- Tailwind class 衝突或冗餘
+- Tailwind class 衝突或冗餘（class 排序由 `prettier-plugin-tailwindcss` 處理，不需人工檢查）
 - 響應式 / 無障礙性問題
 - 深色模式一致性（`dark:` variants）
 - Z-index 層級問題
@@ -473,6 +453,6 @@ updateColumnMutate({ id, data: { position } })
 
 - 直接且具體。「這個 effect 的依賴陣列缺少 `columnId`」而非「你可能要考慮檢查一下 deps」
 - 對非顯而易見的建議說明*原因*
-- 不要挑剔 `eslint`/`prettier` 應該處理的格式或風格問題
+- 不要挑剔格式或風格問題——專案已設定 **ESLint**（`eslint.config.js`）、**Prettier**（`.prettierrc`，含 `prettier-plugin-tailwindcss`）自動處理。包括但不限於：縮排、換行、分號、引號、尾逗號、JSX props 排版、Tailwind class 排序等
 - 若不確定意圖，先詢問而非假設有錯
 - 尊重專案現有模式——不要建議與 CLAUDE.md 慣例相矛盾的重寫

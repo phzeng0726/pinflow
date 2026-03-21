@@ -6,12 +6,7 @@ function TooltipProvider({
   delayDuration = 300,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
-  return (
-    <TooltipPrimitive.Provider
-      delayDuration={delayDuration}
-      {...props}
-    />
-  )
+  return <TooltipPrimitive.Provider delayDuration={delayDuration} {...props} />
 }
 
 function Tooltip({
@@ -37,7 +32,7 @@ function TooltipContent({
         sideOffset={sideOffset}
         className={cn(
           'z-50 overflow-hidden rounded-md bg-gray-900 px-3 py-1.5 text-xs text-white shadow-md',
-          className
+          className,
         )}
         {...props}
       />

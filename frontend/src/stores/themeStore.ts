@@ -19,9 +19,12 @@ export const useThemeStore = create<ThemeState>()(
         document.documentElement.classList.toggle('dark', next === 'dark')
       },
       apply: () => {
-        document.documentElement.classList.toggle('dark', get().theme === 'dark')
+        document.documentElement.classList.toggle(
+          'dark',
+          get().theme === 'dark',
+        )
       },
     }),
-    { name: 'pinflow-theme' }
-  )
+    { name: 'pinflow-theme' },
+  ),
 )

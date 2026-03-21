@@ -21,8 +21,20 @@ const mockCard: Card = {
       card_id: 1,
       title: 'My Checklist',
       items: [
-        { id: 1, checklist_id: 1, text: 'Step one', completed: false, position: 1 },
-        { id: 2, checklist_id: 1, text: 'Step two', completed: true, position: 2 },
+        {
+          id: 1,
+          checklist_id: 1,
+          text: 'Step one',
+          completed: false,
+          position: 1,
+        },
+        {
+          id: 2,
+          checklist_id: 1,
+          text: 'Step two',
+          completed: true,
+          position: 2,
+        },
       ],
       completed_count: 1,
       total_count: 2,
@@ -36,7 +48,13 @@ function wrapper(ui: React.ReactElement) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   // Seed the query cache with mock card data
   qc.setQueryData(['card', 1], mockCard)
-  qc.setQueryData(['tags'], [{ id: 1, name: 'urgent' }, { id: 2, name: 'bug' }])
+  qc.setQueryData(
+    ['tags'],
+    [
+      { id: 1, name: 'urgent' },
+      { id: 2, name: 'bug' },
+    ],
+  )
   return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>)
 }
 
@@ -72,7 +90,9 @@ describe('CardDetailDialog', () => {
 
   it('calls onClose when close button clicked', () => {
     wrapper(<CardDetailDialog cardId={1} onClose={onClose} />)
-    const closeBtn = screen.getAllByRole('button').find(b => b.querySelector('svg'))
+    const closeBtn = screen
+      .getAllByRole('button')
+      .find((b) => b.querySelector('svg'))
     // Find the X button in the header
     const xButtons = screen.getAllByRole('button')
     fireEvent.click(xButtons[0])

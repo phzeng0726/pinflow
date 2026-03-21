@@ -15,13 +15,15 @@ function DropdownMenuSubTrigger({
   inset,
   children,
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.SubTrigger> & { inset?: boolean }) {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.SubTrigger> & {
+  inset?: boolean
+}) {
   return (
     <DropdownMenuPrimitive.SubTrigger
       className={cn(
         'flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent data-[state=open]:bg-accent',
         inset && 'pl-8',
-        className
+        className,
       )}
       {...props}
     >
@@ -38,8 +40,8 @@ function DropdownMenuSubContent({
   return (
     <DropdownMenuPrimitive.SubContent
       className={cn(
-        'z-50 min-w-[8rem] overflow-hidden rounded-md border bg-white dark:bg-gray-800 dark:border-gray-700 p-1 text-gray-700 dark:text-gray-200 shadow-lg',
-        className
+        'z-50 min-w-[8rem] overflow-hidden rounded-md border bg-white p-1 text-gray-700 shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200',
+        className,
       )}
       {...props}
     />
@@ -56,8 +58,8 @@ function DropdownMenuContent({
       <DropdownMenuPrimitive.Content
         sideOffset={sideOffset}
         className={cn(
-          'z-50 min-w-[8rem] overflow-hidden rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-1 text-gray-700 dark:text-gray-200 shadow-md',
-          className
+          'z-50 min-w-[8rem] overflow-hidden rounded-md border border-gray-200 bg-white p-1 text-gray-700 shadow-md dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200',
+          className,
         )}
         {...props}
       />
@@ -69,13 +71,15 @@ function DropdownMenuItem({
   className,
   inset,
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Item> & { inset?: boolean }) {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Item> & {
+  inset?: boolean
+}) {
   return (
     <DropdownMenuPrimitive.Item
       className={cn(
-        'relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-gray-100 dark:focus:bg-gray-700 data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        'relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-gray-100 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 dark:focus:bg-gray-700',
         inset && 'pl-8',
-        className
+        className,
       )}
       {...props}
     />
@@ -92,7 +96,7 @@ function DropdownMenuCheckboxItem({
     <DropdownMenuPrimitive.CheckboxItem
       className={cn(
         'relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-        className
+        className,
       )}
       checked={checked}
       {...props}
@@ -116,7 +120,7 @@ function DropdownMenuRadioItem({
     <DropdownMenuPrimitive.RadioItem
       className={cn(
         'relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-        className
+        className,
       )}
       {...props}
     >
@@ -134,10 +138,16 @@ function DropdownMenuLabel({
   className,
   inset,
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Label> & { inset?: boolean }) {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Label> & {
+  inset?: boolean
+}) {
   return (
     <DropdownMenuPrimitive.Label
-      className={cn('px-2 py-1.5 text-sm font-semibold', inset && 'pl-8', className)}
+      className={cn(
+        'px-2 py-1.5 text-sm font-semibold',
+        inset && 'pl-8',
+        className,
+      )}
       {...props}
     />
   )

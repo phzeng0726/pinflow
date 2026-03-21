@@ -8,31 +8,43 @@ export function useCardMutations(boardId?: number) {
   const qc = useQueryClient()
 
   const invalidateBoardDetail = () =>
-    boardId != null ? qc.invalidateQueries({ queryKey: queryKeys.boards.detail(boardId) }) : Promise.resolve()
-  const invalidateCardDetail = (id: number) => qc.invalidateQueries({ queryKey: queryKeys.cards.detail(id) })
-  const invalidatePinned = () => qc.invalidateQueries({ queryKey: queryKeys.cards.pinned() })
+    boardId != null
+      ? qc.invalidateQueries({ queryKey: queryKeys.boards.detail(boardId) })
+      : Promise.resolve()
+  const invalidateCardDetail = (id: number) =>
+    qc.invalidateQueries({ queryKey: queryKeys.cards.detail(id) })
+  const invalidatePinned = () =>
+    qc.invalidateQueries({ queryKey: queryKeys.cards.pinned() })
 
   const create = useMutation({
-    mutationFn: ({ columnId, title, description }: { columnId: number; title: string; description: string }) =>
-      api.createCard(columnId, title, description),
+    mutationFn: ({
+      columnId,
+      title,
+      description,
+    }: {
+      columnId: number
+      title: string
+      description: string
+    }) => api.createCard(columnId, title, description),
     onSuccess: async () => {
-      await Promise.all([
-        invalidateBoardDetail(),
-        invalidatePinned()
-      ])
+      await Promise.all([invalidateBoardDetail(), invalidatePinned()])
       toast.success('卡片已建立')
     },
     onError: () => toast.error('建立卡片失敗'),
   })
 
   const move = useMutation({
-    mutationFn: ({ id, columnId, position }: { id: number; columnId: number; position: number }) =>
-      api.moveCard(id, columnId, position),
+    mutationFn: ({
+      id,
+      columnId,
+      position,
+    }: {
+      id: number
+      columnId: number
+      position: number
+    }) => api.moveCard(id, columnId, position),
     onSuccess: async () => {
-      await Promise.all([
-        invalidateBoardDetail(),
-        invalidatePinned()
-      ])
+      await Promise.all([invalidateBoardDetail(), invalidatePinned()])
     },
     onError: async () => {
       await invalidateBoardDetail()
@@ -43,26 +55,31 @@ export function useCardMutations(boardId?: number) {
   const togglePin = useMutation({
     mutationFn: (id: number) => api.togglePin(id),
     onSuccess: async (data) => {
-      await Promise.all([
-        invalidateBoardDetail(),
-        invalidatePinned()
-      ])
+      await Promise.all([invalidateBoardDetail(), invalidatePinned()])
       toast.success(data.is_pinned ? '已釘選' : '已取消釘選')
     },
     onError: () => toast.error('切換釘選失敗'),
   })
 
   const update = useMutation({
-    mutationFn: ({ id, title, description, startTime, endTime }: {
-      id: number; title: string; description: string;
-      startTime?: string | null; endTime?: string | null
-    }) =>
-      api.updateCard(id, title, description, startTime, endTime),
+    mutationFn: ({
+      id,
+      title,
+      description,
+      startTime,
+      endTime,
+    }: {
+      id: number
+      title: string
+      description: string
+      startTime?: string | null
+      endTime?: string | null
+    }) => api.updateCard(id, title, description, startTime, endTime),
     onSuccess: async (_data, variables) => {
       await Promise.all([
         invalidateBoardDetail(),
         invalidateCardDetail(variables.id),
-        invalidatePinned()
+        invalidatePinned(),
       ])
       toast.success('卡片已更新')
     },
@@ -72,10 +89,7 @@ export function useCardMutations(boardId?: number) {
   const remove = useMutation({
     mutationFn: (id: number) => api.deleteCard(id),
     onSuccess: async () => {
-      await Promise.all([
-        invalidateBoardDetail(),
-        invalidatePinned()
-      ])
+      await Promise.all([invalidateBoardDetail(), invalidatePinned()])
       toast.success('卡片已刪除')
     },
     onError: () => toast.error('刪除卡片失敗'),
@@ -85,10 +99,7 @@ export function useCardMutations(boardId?: number) {
     mutationFn: ({ id, data }: { id: number; data: DuplicateCardRequest }) =>
       api.duplicateCard(id, data),
     onSuccess: async () => {
-      await Promise.all([
-        invalidateBoardDetail(),
-        invalidatePinned()
-      ])
+      await Promise.all([invalidateBoardDetail(), invalidatePinned()])
       toast.success('卡片已複製')
     },
     onError: () => toast.error('複製卡片失敗'),

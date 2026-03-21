@@ -20,7 +20,12 @@ export function ScheduleSection(props: ScheduleSectionProps) {
   const { boardId, card } = props
 
   const { updateCard } = useCardMutations(boardId)
-  const { control, handleSubmit, reset, formState: { errors, isSubmitting, isDirty } } = useForm<ScheduleForm>({
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting, isDirty },
+  } = useForm<ScheduleForm>({
     resolver: zodResolver(scheduleSchema),
     defaultValues: {
       startTime: card.start_time ?? '',
@@ -30,8 +35,11 @@ export function ScheduleSection(props: ScheduleSectionProps) {
 
   const onSubmit = async (data: ScheduleForm) => {
     await updateCard.mutateAsync({
-      id: card.id, title: card.title, description: card.description,
-      startTime: data.startTime || null, endTime: data.endTime || null,
+      id: card.id,
+      title: card.title,
+      description: card.description,
+      startTime: data.startTime || null,
+      endTime: data.endTime || null,
     })
     // 儲存後重設 dirty 狀態，讓按鈕隱藏
     reset({ startTime: data.startTime, endTime: data.endTime })
@@ -39,13 +47,15 @@ export function ScheduleSection(props: ScheduleSectionProps) {
 
   return (
     <div>
-      <Label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-        <Calendar className="w-4 h-4" /> 時程
+      <Label className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+        <Calendar className="h-4 w-4" /> 時程
       </Label>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">開始時間</Label>
+            <Label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
+              開始時間
+            </Label>
             <Controller
               name="startTime"
               control={control}
@@ -58,7 +68,9 @@ export function ScheduleSection(props: ScheduleSectionProps) {
             />
           </div>
           <div>
-            <Label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">結束時間</Label>
+            <Label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
+              結束時間
+            </Label>
             <Controller
               name="endTime"
               control={control}
@@ -71,7 +83,9 @@ export function ScheduleSection(props: ScheduleSectionProps) {
             />
           </div>
         </div>
-        {errors.endTime && <p className="text-xs text-red-500 mt-1">{errors.endTime.message}</p>}
+        {errors.endTime && (
+          <p className="mt-1 text-xs text-red-500">{errors.endTime.message}</p>
+        )}
         {/* 有修改才顯示 */}
         {isDirty && (
           <Button

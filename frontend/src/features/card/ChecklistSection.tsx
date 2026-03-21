@@ -36,11 +36,11 @@ export function ChecklistSection(props: ChecklistSectionProps) {
 
   return (
     <div>
-      <Label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-        <CheckSquare className="w-4 h-4" /> 檢查清單
+      <Label className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+        <CheckSquare className="h-4 w-4" /> 檢查清單
       </Label>
       <div className="space-y-4">
-        {(card.checklists ?? []).map(cl => (
+        {(card.checklists ?? []).map((cl) => (
           <ChecklistBlock
             key={cl.id}
             boardId={boardId}
@@ -50,27 +50,29 @@ export function ChecklistSection(props: ChecklistSectionProps) {
         ))}
       </div>
       {showNewForm ? (
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="mt-3 flex gap-2"
-        >
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-3 flex gap-2">
           <Input
             {...register('title')}
-            onKeyDown={e => { if (e.key === 'Escape') { reset(); setShowNewForm(false) } }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                reset()
+                setShowNewForm(false)
+              }
+            }}
             placeholder="清單名稱..."
-            className="text-sm h-8"
+            className="h-8 text-sm"
             autoFocus
           />
-          <Button
-            type="submit"
-            className="h-8 text-xs"
-          >
+          <Button type="submit" className="h-8 text-xs">
             新增
           </Button>
           <Button
             type="button"
             variant="ghost"
-            onClick={() => { reset(); setShowNewForm(false) }}
+            onClick={() => {
+              reset()
+              setShowNewForm(false)
+            }}
             className="h-8 text-xs"
           >
             取消
@@ -82,7 +84,7 @@ export function ChecklistSection(props: ChecklistSectionProps) {
           onClick={() => setShowNewForm(true)}
           className="mt-3 h-8 text-xs text-gray-500"
         >
-          <Plus className="w-3.5 h-3.5 mr-1" /> 新增清單
+          <Plus className="mr-1 h-3.5 w-3.5" /> 新增清單
         </Button>
       )}
     </div>

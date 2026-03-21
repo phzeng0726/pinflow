@@ -12,11 +12,14 @@ const card: PinnedCard = {
   column_name: '進行中',
 }
 
-function renderCard(props: { card: PinnedCard; onUnpin: (id: number) => void }) {
+function renderCard(props: {
+  card: PinnedCard
+  onUnpin: (id: number) => void
+}) {
   return render(
     <TooltipProvider>
       <PinnedCardItem {...props} />
-    </TooltipProvider>
+    </TooltipProvider>,
   )
 }
 

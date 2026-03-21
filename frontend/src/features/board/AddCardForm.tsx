@@ -51,9 +51,9 @@ export function AddCardForm(props: AddCardFormProps) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="w-full text-left px-2 py-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex items-center gap-1 transition-colors"
+        className="flex w-full items-center gap-1 rounded px-2 py-1.5 text-left text-sm text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
       >
-        <Plus className="w-4 h-4" />
+        <Plus className="h-4 w-4" />
         新增卡片
       </button>
     )
@@ -66,25 +66,24 @@ export function AddCardForm(props: AddCardFormProps) {
           {...register('title')}
           placeholder="卡片標題"
           autoFocus
-          className="text-sm resize-none"
+          className="resize-none text-sm"
           rows={3}
         />
         <div className="flex gap-1">
-          <Button
-            type="submit"
-            size="sm"
-            className="h-7 text-xs"
-          >
+          <Button type="submit" size="sm" className="h-7 text-xs">
             新增
           </Button>
           <Button
             type="button"
             size="icon"
             variant="ghost"
-            onClick={() => { reset(); setOpen(false) }}
+            onClick={() => {
+              reset()
+              setOpen(false)
+            }}
             className="h-7 w-7"
           >
-            <X className="w-3 h-3" />
+            <X className="h-3 w-3" />
           </Button>
         </div>
       </form>

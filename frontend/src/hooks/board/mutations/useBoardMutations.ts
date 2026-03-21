@@ -6,8 +6,10 @@ import { queryKeys } from '../../queryKeys'
 export function useBoardMutations() {
   const qc = useQueryClient()
 
-  const invalidateBoardAll = () => qc.invalidateQueries({ queryKey: queryKeys.boards.all() })
-  const invalidateBoardDetail = (id: number) => qc.invalidateQueries({ queryKey: queryKeys.boards.detail(id) })
+  const invalidateBoardAll = () =>
+    qc.invalidateQueries({ queryKey: queryKeys.boards.all() })
+  const invalidateBoardDetail = (id: number) =>
+    qc.invalidateQueries({ queryKey: queryKeys.boards.detail(id) })
 
   const create = useMutation({
     mutationFn: (name: string) => api.createBoard(name),
@@ -19,12 +21,10 @@ export function useBoardMutations() {
   })
 
   const update = useMutation({
-    mutationFn: ({ id, name }: { id: number; name: string }) => api.updateBoard(id, name),
+    mutationFn: ({ id, name }: { id: number; name: string }) =>
+      api.updateBoard(id, name),
     onSuccess: async (data) => {
-      await Promise.all([
-        invalidateBoardAll(),
-        invalidateBoardDetail(data.id),
-      ])
+      await Promise.all([invalidateBoardAll(), invalidateBoardDetail(data.id)])
       toast.success('看板已更新')
     },
     onError: () => toast.error('更新看板失敗'),
@@ -39,5 +39,9 @@ export function useBoardMutations() {
     onError: () => toast.error('刪除看板失敗'),
   })
 
-  return { createBoard: create, updateBoard: update, deleteBoard: remove }
+  return {
+    createBoard: create,
+    updateBoard: update,
+    deleteBoard: remove,
+  }
 }

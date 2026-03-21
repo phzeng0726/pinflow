@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogTitle } from '../../components/ui/dialog'
-import { useCard } from '../../hooks/card/queries/useCards'
+import { useCardDetail } from '../../hooks/card/queries/useCardDetail'
 import { CardDetailHeader } from './CardDetailHeader'
 import { ChecklistSection } from './ChecklistSection'
 import { ScheduleSection } from './ScheduleSection'
@@ -11,7 +11,7 @@ interface CardDetailDialogProps {
 }
 
 export function CardDetailDialog({ cardId, onClose }: CardDetailDialogProps) {
-  const { data: card, isLoading } = useCard(cardId)
+  const { data: card, isLoading } = useCardDetail(cardId)
 
   return (
     <Dialog open={true} onOpenChange={(open) => { if (!open) onClose() }}>

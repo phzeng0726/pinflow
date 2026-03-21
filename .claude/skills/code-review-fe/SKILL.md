@@ -117,7 +117,7 @@ git diff main --name-only -- frontend/ ':!frontend/dist/' ':!frontend/coverage/'
 hooks/
   queryKeys.ts              ← 所有 query key 的唯一來源
   <domain>/
-    queries/use<Domain>.ts  ← query hooks
+    queries/use<QueryName>.ts  ← 每個檔案只放一個 query hook
     mutations/use<Domain>Mutations.ts ← mutation hooks
 ```
 
@@ -137,7 +137,7 @@ queryKey: ['boards', id]
 
 #### Query Hooks（`queries/`）
 
-- 一個檔案可 export 多個相關 query hook
+- 一個檔案只 export 一個 query hook（檔名即 hook 名稱，如 `useBoardDetail.ts`、`usePinnedCards.ts`）
 - API 呼叫使用 `import * as api from '../../../lib/api'`（詳見 API 層章節）
 - queryKey 一律引用 `queryKeys`，禁止字串字面值
 - 有條件才 fetch 時使用 `enabled` 守衛（如 `enabled: id > 0`）

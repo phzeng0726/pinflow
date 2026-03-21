@@ -25,10 +25,10 @@ import {
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip'
-import { useBoard } from '../../hooks/board/queries/useBoards'
+import { useBoardDetail } from '../../hooks/board/queries/useBoardDetail'
 import { useBoardDnd } from '../../hooks/board/useBoardDnd'
 import { useCardMutations } from '../../hooks/card/mutations/useCardMutations'
-import { usePinnedCards } from '../../hooks/card/queries/useCards'
+import { usePinnedCards } from '../../hooks/card/queries/usePinnedCards'
 import { useColumnMutations } from '../../hooks/column/mutations/useColumnMutations'
 import { columnSchema } from '../../lib/schemas'
 import { useThemeStore } from '../../stores/themeStore'
@@ -43,7 +43,7 @@ export function BoardPage() {
   const { boardId } = useParams({ from: '/boards/$boardId' })
   const id = Number(boardId)
   const navigate = useNavigate()
-  const { data: board, isLoading } = useBoard(id)
+  const { data: board, isLoading } = useBoardDetail(id)
   const { data: pinned = [] } = usePinnedCards()
   const theme = useThemeStore(s => s.theme)
   const toggleTheme = useThemeStore(s => s.toggle)

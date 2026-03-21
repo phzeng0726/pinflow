@@ -5,12 +5,14 @@ import { queryKeys } from '../../queryKeys'
 
 export function useTagMutations() {
   const qc = useQueryClient()
-  const invalidateBoards = () => qc.invalidateQueries({ queryKey: queryKeys.boards.all() })
+  const invalidateBoardAll = () => qc.invalidateQueries({ queryKey: queryKeys.boards.all() })
+  const invalidateTagsAll = () => qc.invalidateQueries({ queryKey: queryKeys.tags.all() })
+  const invalidateCardDetail = (id: number) => qc.invalidateQueries({ queryKey: queryKeys.cards.detail(id) })
 
   const create = useMutation({
     mutationFn: createTag,
     onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: queryKeys.tags.all() })
+      await invalidateTagsAll()
       toast.success('標籤已建立')
     },
     onError: () => toast.error('建立標籤失敗'),
@@ -20,10 +22,7 @@ export function useTagMutations() {
     mutationFn: ({ cardId, tagId }: { cardId: number; tagId: number }) =>
       attachTag(cardId, tagId),
     onSuccess: async (_, { cardId }) => {
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: queryKeys.cards.detail(cardId) }),
-        invalidateBoards(),
-      ])
+      await Promise.all([invalidateCardDetail(cardId), invalidateBoardAll()])
     },
     onError: () => toast.error('新增標籤失敗'),
   })
@@ -32,10 +31,7 @@ export function useTagMutations() {
     mutationFn: ({ cardId, tagId }: { cardId: number; tagId: number }) =>
       detachTag(cardId, tagId),
     onSuccess: async (_, { cardId }) => {
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: queryKeys.cards.detail(cardId) }),
-        invalidateBoards(),
-      ])
+      await Promise.all([invalidateCardDetail(cardId), invalidateBoardAll()])
     },
     onError: () => toast.error('移除標籤失敗'),
   })

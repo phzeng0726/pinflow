@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils'
 import {
   DndContext,
   DragOverlay,
@@ -35,7 +36,8 @@ export function BoardPage() {
   const navigate = useNavigate()
   const { data: board, isLoading } = useBoard(id)
   const { data: pinned = [] } = usePinnedCards()
-  const { theme, toggle: toggleTheme } = useThemeStore()
+  const theme = useThemeStore(s => s.theme)
+  const toggleTheme = useThemeStore(s => s.toggle)
 
   const { createColumn, updateColumn, deleteColumn } = useColumnMutations(id)
   const { createCard, moveCard, togglePin, updateCard, deleteCard } = useCardMutations(id)
@@ -316,8 +318,10 @@ function ColumnView({
       />
       <div
         ref={setDropRef}
-        className={`flex-1 overflow-y-auto px-2 pb-2 min-h-[60px] rounded-lg transition-colors ${isOver && cards.length === 0 ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-          }`}
+        className={cn(
+          "flex-1 overflow-y-auto px-2 pb-2 min-h-[60px] rounded-lg transition-colors",
+          isOver && cards.length === 0 && 'bg-blue-50 dark:bg-blue-900/20',
+        )}
       >
         <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
           <div className="space-y-2 pt-1">

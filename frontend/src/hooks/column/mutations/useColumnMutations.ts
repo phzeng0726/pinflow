@@ -20,8 +20,8 @@ export function useColumnMutations(boardId: number) {
     mutationFn: ({ id, data }: { id: number; data: { name?: string; auto_pin?: boolean; position?: number } }) =>
       api.updateColumn(id, data),
     onError: () => toast.error('更新欄位失敗'),
-    onSettled: () => {
-      invalidate()
+    onSettled: async () => {
+      await invalidate()
     },
   })
 

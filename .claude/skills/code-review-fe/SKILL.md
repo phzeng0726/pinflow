@@ -147,11 +147,20 @@ queryKey: ['boards', id]
 
 - 同 domain 的 mutations 集中在一個 `use<Domain>Mutations()` hook
 - hook 內部取得 `useQueryClient()`，縮寫為 `qc`
-- 共用的 invalidation 抽成內部 helper，命名為 `invalidate<Domain><Scope>`
+- **所有** `qc.invalidateQueries` 呼叫一律抽成頂部 helper，命名為 `invalidate<Domain><Scope>`，定義在 `const qc = useQueryClient()` 正下方
+- 禁止在 mutation callback（`onSuccess`、`onError`、`onSettled`）內直接呼叫 `qc.invalidateQueries`
 
 ```ts
+// OK — 全部 helper 集中在頂部
 const invalidateBoardAll = () => qc.invalidateQueries({ queryKey: queryKeys.boards.all() })
 const invalidateBoardDetail = (id: number) => qc.invalidateQueries({ queryKey: queryKeys.boards.detail(id) })
+const invalidateCardDetail = (id: number) => qc.invalidateQueries({ queryKey: queryKeys.cards.detail(id) })
+// ...每個 mutation 按需挑選
+
+// NG — inline qc.invalidateQueries 散落在 mutation 內部
+onSuccess: async (_, { cardId }) => {
+  await qc.invalidateQueries({ queryKey: queryKeys.cards.detail(cardId) }) // ← 應抽成 helper
+}
 ```
 
 - 多個快取需失效時，`onSuccess`/`onError` 使用 `async` + `await Promise.all([...])`
@@ -374,6 +383,7 @@ updateColumnMutate({ id, data: { position } })
 - 樂觀更新邏輯（rollback 處理、快取失效）
 - 缺少 `enabled` 守衛或 loading/error 狀態處理
 - Mutation 副作用（`onSuccess`、`onError`、`onSettled`）
+- 所有 `qc.invalidateQueries` 是否抽成頂部 helper，禁止在 callback 內 inline 呼叫
 - Toast 訊息是否使用繁體中文且透過 `sonner` 呼叫
 
 ### 狀態管理

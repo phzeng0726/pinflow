@@ -6,27 +6,29 @@ import { queryKeys } from '../../queryKeys'
 
 export function useCardMutations(boardId = 0) {
   const qc = useQueryClient()
-  const invalidateBoard = () => qc.invalidateQueries({ queryKey: queryKeys.boards.detail(boardId) })
+  const invalidateBoardAll = () => qc.invalidateQueries({ queryKey: queryKeys.boards.all() })
+  const invalidateBoardDetail = () => qc.invalidateQueries({ queryKey: queryKeys.boards.detail(boardId) })
+  const invalidateCardDetail = (id: number) => qc.invalidateQueries({ queryKey: queryKeys.cards.detail(id) })
   const invalidatePinned = () => qc.invalidateQueries({ queryKey: queryKeys.cards.pinned() })
 
-  const createCard = useMutation({
+  const create = useMutation({
     mutationFn: ({ columnId, title, description }: { columnId: number; title: string; description: string }) =>
       api.createCard(columnId, title, description),
     onSuccess: async () => {
-      await Promise.all([invalidateBoard(), invalidatePinned()])
+      await Promise.all([invalidateBoardDetail(), invalidatePinned()])
       toast.success('卡片已建立')
     },
     onError: () => toast.error('建立卡片失敗'),
   })
 
-  const moveCard = useMutation({
+  const move = useMutation({
     mutationFn: ({ id, columnId, position }: { id: number; columnId: number; position: number }) =>
       api.moveCard(id, columnId, position),
     onSuccess: async () => {
-      await Promise.all([invalidateBoard(), invalidatePinned()])
+      await Promise.all([invalidateBoardDetail(), invalidatePinned()])
     },
     onError: async () => {
-      await invalidateBoard()
+      await invalidateBoardDetail()
       toast.error('移動卡片失敗')
     },
   })
@@ -34,45 +36,39 @@ export function useCardMutations(boardId = 0) {
   const togglePin = useMutation({
     mutationFn: (id: number) => api.togglePin(id),
     onSuccess: async (data) => {
-      await Promise.all([invalidateBoard(), invalidatePinned()])
+      await Promise.all([invalidateBoardDetail(), invalidatePinned()])
       toast.success(data.is_pinned ? '已釘選' : '已取消釘選')
     },
     onError: () => toast.error('切換釘選失敗'),
   })
 
-  const updateCard = useMutation({
+  const update = useMutation({
     mutationFn: ({ id, title, description, startTime, endTime }: {
       id: number; title: string; description: string;
       startTime?: string | null; endTime?: string | null
     }) =>
       api.updateCard(id, title, description, startTime, endTime),
     onSuccess: async (_data, variables) => {
-      await Promise.all([
-        invalidateBoard(),
-        qc.invalidateQueries({ queryKey: queryKeys.cards.detail(variables.id) }),
-      ])
+      await Promise.all([invalidateBoardDetail(), invalidateCardDetail(variables.id)])
       toast.success('卡片已更新')
     },
     onError: () => toast.error('更新卡片失敗'),
   })
 
-  const deleteCard = useMutation({
+  const remove = useMutation({
     mutationFn: (id: number) => api.deleteCard(id),
     onSuccess: async () => {
-      await Promise.all([invalidateBoard(), invalidatePinned()])
+      await Promise.all([invalidateBoardDetail(), invalidatePinned()])
       toast.success('卡片已刪除')
     },
     onError: () => toast.error('刪除卡片失敗'),
   })
 
-  const duplicateCard = useMutation({
+  const duplicate = useMutation({
     mutationFn: ({ id, data }: { id: number; data: DuplicateCardRequest }) =>
       api.duplicateCard(id, data),
     onSuccess: async () => {
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: queryKeys.boards.all() }),
-        invalidatePinned(),
-      ])
+      await Promise.all([invalidateBoardAll(), invalidatePinned()])
       toast.success('卡片已複製')
     },
     onError: () => toast.error('複製卡片失敗'),
@@ -81,14 +77,11 @@ export function useCardMutations(boardId = 0) {
   const togglePinFromPin = useMutation({
     mutationFn: (id: number) => api.togglePin(id),
     onSuccess: async (data) => {
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: queryKeys.boards.all() }),
-        invalidatePinned(),
-      ])
+      await Promise.all([invalidateBoardAll(), invalidatePinned()])
       toast.success(data.is_pinned ? '已釘選' : '已取消釘選')
     },
     onError: () => toast.error('切換釘選失敗'),
   })
 
-  return { createCard, moveCard, togglePin, updateCard, deleteCard, duplicateCard, togglePinFromPin }
+  return { createCard: create, moveCard: move, togglePin, updateCard: update, deleteCard: remove, duplicateCard: duplicate, togglePinFromPin }
 }

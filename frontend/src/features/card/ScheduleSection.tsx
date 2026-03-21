@@ -1,24 +1,23 @@
-import { Calendar } from 'lucide-react'
-import { useQueryClient } from '@tanstack/react-query'
-import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Calendar } from 'lucide-react'
+import { Controller, useForm } from 'react-hook-form'
+import type { z } from 'zod'
 import { Button } from '../../components/ui/button'
 import { DateTimePicker } from '../../components/ui/date-time-picker'
 import { Label } from '../../components/ui/label'
-import { updateCard } from '../../lib/api'
+import { useCardMutations } from '../../hooks/card/mutations/useCardMutations'
 import { scheduleSchema } from '../../lib/schemas'
 import type { Card } from '../../types'
-import type { z } from 'zod'
 
 type ScheduleForm = z.infer<typeof scheduleSchema>
 
 interface ScheduleSectionProps {
   card: Card
-  qc: ReturnType<typeof useQueryClient>
 }
 
-export function ScheduleSection({ card, qc }: ScheduleSectionProps) {
-  const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<ScheduleForm>({
+export function ScheduleSection({ card }: ScheduleSectionProps) {
+  const { updateCard } = useCardMutations()
+  const { control, handleSubmit, reset, formState: { errors, isSubmitting, isDirty } } = useForm<ScheduleForm>({
     resolver: zodResolver(scheduleSchema),
     defaultValues: {
       startTime: card.start_time ?? '',
@@ -27,10 +26,12 @@ export function ScheduleSection({ card, qc }: ScheduleSectionProps) {
   })
 
   const onSubmit = async (data: ScheduleForm) => {
-    const start = data.startTime || null
-    const end = data.endTime || null
-    await updateCard(card.id, card.title, card.description, start, end)
-    qc.invalidateQueries({ queryKey: ['card', card.id] })
+    await updateCard.mutateAsync({
+      id: card.id, title: card.title, description: card.description,
+      startTime: data.startTime || null, endTime: data.endTime || null,
+    })
+    // 儲存後重設 dirty 狀態，讓按鈕隱藏
+    reset({ startTime: data.startTime, endTime: data.endTime })
   }
 
   return (
@@ -68,9 +69,12 @@ export function ScheduleSection({ card, qc }: ScheduleSectionProps) {
           </div>
         </div>
         {errors.endTime && <p className="text-xs text-red-500 mt-1">{errors.endTime.message}</p>}
-        <Button type="submit" disabled={isSubmitting} className="mt-2 h-7 text-xs">
-          {isSubmitting ? '儲存中...' : '儲存時程'}
-        </Button>
+        {/* 有修改才顯示 */}
+        {isDirty && (
+          <Button type="submit" disabled={isSubmitting} className="mt-2 h-7 text-xs">
+            {isSubmitting ? '儲存中...' : '儲存時程'}
+          </Button>
+        )}
       </form>
     </div>
   )

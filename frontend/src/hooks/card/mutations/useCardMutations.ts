@@ -26,9 +26,15 @@ export function useCardMutations(boardId = 0) {
   })
 
   const updateCard = useMutation({
-    mutationFn: ({ id, title, description }: { id: number; title: string; description: string }) =>
-      api.updateCard(id, title, description),
-    onSuccess: invalidateBoard,
+    mutationFn: ({ id, title, description, startTime, endTime }: {
+      id: number; title: string; description: string;
+      startTime?: string | null; endTime?: string | null
+    }) =>
+      api.updateCard(id, title, description, startTime, endTime),
+    onSuccess: (_data, variables) => {
+      invalidateBoard()
+      qc.invalidateQueries({ queryKey: queryKeys.cards.detail(variables.id) })
+    },
   })
 
   const deleteCard = useMutation({

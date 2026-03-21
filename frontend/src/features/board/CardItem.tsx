@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Calendar, Check, CheckSquare, Copy, GripVertical, Pencil, Pin, PinOff, Trash2, X } from 'lucide-react'
+import { Calendar, Check, CheckSquare, Copy, Pencil, Pin, PinOff, Trash2, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Badge } from '../../components/ui/badge'
@@ -94,10 +94,10 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
         }}
         onContextMenu={(e) => { e.preventDefault(); openMenu() }}
         className={cn(
-          'bg-white dark:bg-gray-700 rounded-lg border dark:border-gray-600 p-3 shadow-sm',
+          'rounded-lg p-3 shadow-sm bg-white dark:bg-gray-700',
+          card.is_pinned ? 'border border-l-4 border-l-sky-500' : 'border dark:border-gray-600',
           'group relative select-none',
           'cursor-pointer active:cursor-grabbing',
-          card.is_pinned && 'border-l-4 border-l-yellow-500',
           showEdit && 'ring-2 ring-blue-500 shadow-lg z-[9995]'
         )}
       >
@@ -124,7 +124,6 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
           </div>
         ) : (
           <div className="flex items-start gap-2">
-            <GripVertical className="w-4 h-4 mt-0.5 text-gray-300 dark:text-gray-500 shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm text-gray-900 dark:text-gray-100 leading-snug">{card.title}</p>
               {card.description && (
@@ -201,7 +200,7 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
           >
             <DropdownMenuItem onSelect={() => { onTogglePin(card.id); setShowDropdown(false) }}>
               {card.is_pinned
-                ? <><PinOff className="w-3.5 h-3.5" /> 取消釘選</>
+                ? <><PinOff className="w-3.5 h-3.5 text-sky-500" /> <span className="text-sky-500">取消釘選</span></>
                 : <><Pin className="w-3.5 h-3.5" /> 釘選</>
               }
             </DropdownMenuItem>

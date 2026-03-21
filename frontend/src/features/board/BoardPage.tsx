@@ -10,23 +10,23 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { ArrowLeft, Moon, Pin, Plus, Sun } from 'lucide-react'
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import type { z } from 'zod'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip'
 import { useBoard } from '../../hooks/board/queries/useBoards'
-import { usePinnedCards } from '../../hooks/card/queries/useCards'
 import { useCardMutations } from '../../hooks/card/mutations/useCardMutations'
+import { usePinnedCards } from '../../hooks/card/queries/useCards'
 import { useColumnMutations } from '../../hooks/column/mutations/useColumnMutations'
-import { midPosition } from '../../lib/utils'
 import { columnSchema } from '../../lib/schemas'
+import { midPosition } from '../../lib/utils'
 import { useThemeStore } from '../../stores/themeStore'
 import type { Card, Column } from '../../types'
-import type { z } from 'zod'
 import { AddCardForm } from './AddCardForm'
 import { CardItem } from './CardItem'
 import { ColumnHeader } from './ColumnHeader'
@@ -178,7 +178,7 @@ export function BoardPage() {
               <Pin className="w-3.5 h-3.5" />
               釘選任務
               {pinned.length > 0 && (
-                <span className="bg-blue-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+                <span className="bg-sky-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
                   {pinned.length}
                 </span>
               )}
@@ -195,7 +195,7 @@ export function BoardPage() {
                   <ul className="py-1 max-h-64 overflow-y-auto">
                     {pinned.map(card => (
                       <li key={card.id} className="px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
-                        <Pin className="w-3 h-3 text-blue-500 shrink-0" />
+                        <Pin className="w-3 h-3 text-sky-500 shrink-0" />
                         <span className="text-sm text-gray-800 dark:text-gray-200 flex-1 truncate">{card.title}</span>
                         {card.column_name && (
                           <span className="text-xs bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-300 px-1.5 py-0.5 rounded shrink-0">
@@ -339,9 +339,8 @@ function ColumnView({
       />
       <div
         ref={setNodeRef}
-        className={`flex-1 overflow-y-auto px-2 pb-2 min-h-[60px] rounded-lg transition-colors ${
-          isOver && cards.length === 0 ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-        }`}
+        className={`flex-1 overflow-y-auto px-2 pb-2 min-h-[60px] rounded-lg transition-colors ${isOver && cards.length === 0 ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+          }`}
       >
         <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
           <div className="space-y-2 pt-1">

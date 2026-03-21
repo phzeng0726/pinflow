@@ -1,11 +1,10 @@
 import { Save, X } from 'lucide-react'
-import { useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Textarea } from '../../components/ui/textarea'
-import { updateCard } from '../../lib/api'
+import { useCardMutations } from '../../hooks/card/mutations/useCardMutations'
 import { cardDetailSchema } from '../../lib/schemas'
 import type { Card } from '../../types'
 import type { z } from 'zod'
@@ -15,18 +14,20 @@ type CardDetailForm = z.infer<typeof cardDetailSchema>
 interface CardDetailHeaderProps {
   card: Card
   onClose: () => void
-  qc: ReturnType<typeof useQueryClient>
 }
 
-export function CardDetailHeader({ card, onClose, qc }: CardDetailHeaderProps) {
+export function CardDetailHeader({ card, onClose }: CardDetailHeaderProps) {
+  const { updateCard } = useCardMutations()
   const { register, handleSubmit, formState: { errors, isDirty, isSubmitting }, reset } = useForm<CardDetailForm>({
     resolver: zodResolver(cardDetailSchema),
     defaultValues: { title: card.title, desc: card.description },
   })
 
   const onSubmit = async (data: CardDetailForm) => {
-    await updateCard(card.id, data.title, data.desc ?? '', card.start_time, card.end_time)
-    qc.invalidateQueries({ queryKey: ['card', card.id] })
+    await updateCard.mutateAsync({
+      id: card.id, title: data.title, description: data.desc ?? '',
+      startTime: card.start_time, endTime: card.end_time,
+    })
     reset(data)
   }
 

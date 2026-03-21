@@ -1,6 +1,5 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Dialog, DialogContent } from '../../components/ui/dialog'
-import { getCard } from '../../lib/api'
+import { useCard } from '../../hooks/card/queries/useCards'
 import { CardDetailHeader } from './CardDetailHeader'
 import { ChecklistSection } from './ChecklistSection'
 import { ScheduleSection } from './ScheduleSection'
@@ -12,11 +11,7 @@ interface CardDetailDialogProps {
 }
 
 export function CardDetailDialog({ cardId, onClose }: CardDetailDialogProps) {
-  const qc = useQueryClient()
-  const { data: card, isLoading } = useQuery({
-    queryKey: ['card', cardId],
-    queryFn: () => getCard(cardId),
-  })
+  const { data: card, isLoading } = useCard(cardId)
 
   return (
     <Dialog open={true} onOpenChange={(open) => { if (!open) onClose() }}>
@@ -25,10 +20,10 @@ export function CardDetailDialog({ cardId, onClose }: CardDetailDialogProps) {
           <div className="p-8 text-gray-500 dark:text-gray-400">Loading...</div>
         ) : (
           <>
-            <CardDetailHeader card={card} onClose={onClose} qc={qc} />
+            <CardDetailHeader card={card} onClose={onClose} />
             <div className="p-6 space-y-6">
               <TagSection card={card} />
-              <ScheduleSection card={card} qc={qc} />
+              <ScheduleSection card={card} />
               <ChecklistSection card={card} />
             </div>
           </>

@@ -27,7 +27,6 @@ interface CardContextMenuProps {
   onOpenChange: (open: boolean) => void
   onTogglePin: (id: number) => void
   onDelete: (id: number) => void
-  onInteractOutside: () => void
 }
 
 export function CardContextMenu({
@@ -37,14 +36,13 @@ export function CardContextMenu({
   onOpenChange,
   onTogglePin,
   onDelete,
-  onInteractOutside,
 }: CardContextMenuProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showDuplicate, setShowDuplicate] = useState(false)
 
   return (
     <>
-      <DropdownMenu open={open} onOpenChange={(o) => { if (!o) onOpenChange(false) }}>
+      <DropdownMenu modal={false} open={open} onOpenChange={(o) => { if (!o) onOpenChange(false) }}>
         <DropdownMenuTrigger asChild>
           <button className="absolute right-0 top-0 w-0 h-0 opacity-0 pointer-events-none" tabIndex={-1} aria-hidden />
         </DropdownMenuTrigger>
@@ -52,7 +50,8 @@ export function CardContextMenu({
           side="right"
           align="start"
           className="min-w-[140px] z-[9995] ml-2"
-          onInteractOutside={onInteractOutside}
+          onInteractOutside={(e) => e.preventDefault()}
+          onFocusOutside={(e) => e.preventDefault()}
         >
           <DropdownMenuItem onSelect={() => { onTogglePin(card.id); onOpenChange(false) }}>
             {card.is_pinned

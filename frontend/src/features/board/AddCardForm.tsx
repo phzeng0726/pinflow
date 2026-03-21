@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import type { z } from 'zod'
 import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
+import { Textarea } from '../../components/ui/textarea'
 import { cardSchema } from '../../lib/schemas'
 
 type CardForm = z.infer<typeof cardSchema>
@@ -60,11 +60,12 @@ export function AddCardForm({ onAdd }: AddCardFormProps) {
   return (
     <div ref={formRef}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
-        <Input
+        <Textarea
           {...register('title')}
           placeholder="卡片標題"
           autoFocus
-          className="text-sm"
+          className="text-sm resize-none"
+          rows={3}
         />
         <div className="flex gap-1">
           <Button type="submit" size="sm" className="h-7 text-xs">新增</Button>

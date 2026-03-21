@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import type { z } from 'zod'
 import { Button } from '../../components/ui/button'
@@ -15,16 +15,35 @@ interface AddCardFormProps {
 
 export function AddCardForm({ onAdd }: AddCardFormProps) {
   const [open, setOpen] = useState(false)
+  const formRef = useRef<HTMLDivElement>(null)
 
-  const { register, handleSubmit, reset } = useForm<CardForm>({
+  const { register, handleSubmit, reset, watch } = useForm<CardForm>({
     resolver: zodResolver(cardSchema),
   })
+
+  const titleValue = watch('title')
 
   const onSubmit = (data: CardForm) => {
     onAdd(data.title, data.description ?? '')
     reset()
     setOpen(false)
   }
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (!formRef.current?.contains(e.target as Node)) {
+        if (titleValue?.trim()) {
+          handleSubmit(onSubmit)()
+        } else {
+          reset()
+          setOpen(false)
+        }
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open, titleValue])
 
   if (!open) {
     return (
@@ -39,19 +58,21 @@ export function AddCardForm({ onAdd }: AddCardFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
-      <Input
-        {...register('title')}
-        placeholder="卡片標題"
-        autoFocus
-        className="text-sm"
-      />
-      <div className="flex gap-1">
-        <Button type="submit" size="sm" className="h-7 text-xs">新增</Button>
-        <Button type="button" size="icon" variant="ghost" onClick={() => { reset(); setOpen(false) }} className="h-7 w-7">
-          <X className="w-3 h-3" />
-        </Button>
-      </div>
-    </form>
+    <div ref={formRef}>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
+        <Input
+          {...register('title')}
+          placeholder="卡片標題"
+          autoFocus
+          className="text-sm"
+        />
+        <div className="flex gap-1">
+          <Button type="submit" size="sm" className="h-7 text-xs">新增</Button>
+          <Button type="button" size="icon" variant="ghost" onClick={() => { reset(); setOpen(false) }} className="h-7 w-7">
+            <X className="w-3 h-3" />
+          </Button>
+        </div>
+      </form>
+    </div>
   )
 }

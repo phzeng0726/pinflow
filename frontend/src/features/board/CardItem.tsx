@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Calendar, Check, CheckSquare, Copy, Pencil, Pin, PinOff, Trash2, X } from 'lucide-react'
+import { Calendar, CheckSquare, Copy, Pencil, Pin, PinOff, Trash2, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
@@ -23,7 +23,6 @@ import {
   DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu'
 import { Input } from '../../components/ui/input'
-import { Textarea } from '../../components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip'
 import { cn } from '../../lib/utils'
 import type { Card } from '../../types'
@@ -41,7 +40,6 @@ interface CardItemProps {
 
 export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: CardItemProps) {
   const [editTitle, setEditTitle] = useState(card.title)
-  const [editDesc, setEditDesc] = useState(card.description)
   const [showDetail, setShowDetail] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
@@ -71,14 +69,13 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
 
   const handleSave = () => {
     if (!editTitle.trim()) return
-    onUpdate(card.id, editTitle.trim(), editDesc)
+    onUpdate(card.id, editTitle.trim(), card.description)
     setShowEdit(false)
     setShowDropdown(false)
   }
 
   const handleCancel = () => {
     setEditTitle(card.title)
-    setEditDesc(card.description)
     setShowEdit(false)
     setShowDropdown(false)
   }
@@ -120,15 +117,8 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
               className="mb-2 font-medium"
               autoFocus
             />
-            <Textarea
-              value={editDesc}
-              onChange={e => setEditDesc(e.target.value)}
-              placeholder="描述（選填）"
-              className="mb-2 text-sm"
-              rows={2}
-            />
             <div className="flex gap-1">
-              <Button size="icon" onClick={handleSave} className="h-7 w-7"><Check className="w-3 h-3" /></Button>
+              <Button size="sm" onClick={handleSave} className="h-7 text-xs">儲存</Button>
               <Button size="icon" variant="ghost" onClick={handleCancel} className="h-7 w-7"><X className="w-3 h-3" /></Button>
             </div>
           </div>
@@ -207,7 +197,7 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
             side="right"
             align="start"
             className="min-w-[140px] z-[9995] ml-2"
-            onInteractOutside={() => handleCancel()}
+            onInteractOutside={() => setShowDropdown(false)}
           >
             <DropdownMenuItem onSelect={() => { onTogglePin(card.id); setShowDropdown(false) }}>
               {card.is_pinned

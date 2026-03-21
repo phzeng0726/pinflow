@@ -61,6 +61,7 @@ export interface DuplicateCardRequest {
   copy_tags: boolean
   copy_checklists: boolean
   copy_schedule: boolean
+  pin: boolean
 }
 
 export interface PinnedCard {

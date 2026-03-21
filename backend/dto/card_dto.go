@@ -34,6 +34,7 @@ type DuplicateCardRequest struct {
 	CopyTags       bool   `json:"copy_tags"`
 	CopyChecklists bool   `json:"copy_checklists"`
 	CopySchedule   bool   `json:"copy_schedule"`
+	Pin            bool   `json:"pin"`
 }
 
 type CardResponse struct {

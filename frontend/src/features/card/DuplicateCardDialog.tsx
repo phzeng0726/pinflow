@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '../../components/ui/button'
@@ -35,6 +36,7 @@ export function DuplicateCardDialog({ card, boardId, onClose }: DuplicateCardDia
       copyTags: true,
       copyChecklists: true,
       copySchedule: true,
+      pin: card.is_pinned,
       selectedBoardId: boardId,
       selectedColumnId: card.column_id,
       positionIndex: 0,
@@ -49,6 +51,11 @@ export function DuplicateCardDialog({ card, boardId, onClose }: DuplicateCardDia
   const targetColumn = columns.find(c => c.id === selectedColumnId)
   const targetCards = targetColumn?.cards ?? []
   const positionCount = targetCards.length + 1
+  const isAutoPin = targetColumn?.auto_pin ?? false
+
+  useEffect(() => {
+    setValue('pin', isAutoPin || card.is_pinned)
+  }, [selectedColumnId, isAutoPin, setValue])
 
   const handleBoardChange = (newBoardId: number) => {
     setValue('selectedBoardId', newBoardId)
@@ -69,6 +76,7 @@ export function DuplicateCardDialog({ card, boardId, onClose }: DuplicateCardDia
           copy_tags: data.copyTags,
           copy_checklists: data.copyChecklists,
           copy_schedule: data.copySchedule,
+          pin: data.pin,
         },
       },
       { onSuccess: onClose }
@@ -76,6 +84,8 @@ export function DuplicateCardDialog({ card, boardId, onClose }: DuplicateCardDia
   }
 
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+    <div onClick={e => e.stopPropagation()}>
     <Dialog open={true} onOpenChange={(open) => { if (!open) onClose() }}>
       <DialogContent className="w-80 p-4">
         <DialogHeader className="mb-4">
@@ -156,6 +166,32 @@ export function DuplicateCardDialog({ card, boardId, onClose }: DuplicateCardDia
               </div>
             </div>
           )}
+
+          {/* Pin */}
+          <div>
+            <div className="flex items-center gap-2">
+              <Controller
+                name="pin"
+                control={control}
+                render={({ field }) => (
+                  <Checkbox
+                    id="pin"
+                    checked={field.value}
+                    onCheckedChange={(checked) => field.onChange(checked === true)}
+                    disabled={isAutoPin}
+                  />
+                )}
+              />
+              <Label htmlFor="pin" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer font-normal">
+                釘選
+              </Label>
+            </div>
+            {isAutoPin && (
+              <p className="text-xs text-blue-500 dark:text-blue-400 mt-1 ml-6">
+                目標欄位為自動釘選，將自動設為釘選
+              </p>
+            )}
+          </div>
 
           {/* Destination */}
           <div>
@@ -250,5 +286,6 @@ export function DuplicateCardDialog({ card, boardId, onClose }: DuplicateCardDia
         </form>
       </DialogContent>
     </Dialog>
+    </div>
   )
 }

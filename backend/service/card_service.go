@@ -245,6 +245,7 @@ func (s *cardService) DuplicateCard(id uint, req dto.DuplicateCardRequest) (*dto
 		Title:       strings.TrimSpace(req.Title),
 		Description: src.Description,
 		Position:    position,
+		IsPinned:    req.Pin,
 	}
 	if req.CopySchedule {
 		newCard.StartTime = src.StartTime

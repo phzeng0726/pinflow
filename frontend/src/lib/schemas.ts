@@ -43,6 +43,7 @@ export const duplicateCardSchema = z.object({
   copyTags: z.boolean(),
   copyChecklists: z.boolean(),
   copySchedule: z.boolean(),
+  pin: z.boolean(),
   selectedBoardId: z.number(),
   selectedColumnId: z.number().min(1, '請選擇目標欄位'),
   positionIndex: z.number(),

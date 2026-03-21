@@ -22,7 +22,9 @@ interface DuplicateCardDialogProps {
   onClose: () => void
 }
 
-export function DuplicateCardDialog({ card, boardId, onClose }: DuplicateCardDialogProps) {
+export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
+  const { card, boardId, onClose } = props
+
   const tags = card.tags ?? []
   const checklists = card.checklists ?? []
   const hasSchedule = !!card.start_time || !!card.end_time
@@ -87,7 +89,10 @@ export function DuplicateCardDialog({ card, boardId, onClose }: DuplicateCardDia
   return (
     // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
     <div onClick={e => e.stopPropagation()}>
-      <Dialog open={true} onOpenChange={(open) => { if (!open) onClose() }}>
+      <Dialog
+        open={true}
+        onOpenChange={(open) => { if (!open) onClose() }}
+      >
         <DialogContent className="w-80 p-4">
           <DialogHeader className="mb-4">
             <DialogTitle>複製卡片</DialogTitle>
@@ -213,7 +218,12 @@ export function DuplicateCardDialog({ card, boardId, onClose }: DuplicateCardDia
                         </SelectTrigger>
                         <SelectContent>
                           {boards.map(b => (
-                            <SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>
+                            <SelectItem
+                              key={b.id}
+                              value={String(b.id)}
+                            >
+                              {b.name}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -236,7 +246,12 @@ export function DuplicateCardDialog({ card, boardId, onClose }: DuplicateCardDia
                           </SelectTrigger>
                           <SelectContent>
                             {columns.map(col => (
-                              <SelectItem key={col.id} value={String(col.id)}>{col.name}</SelectItem>
+                              <SelectItem
+                                key={col.id}
+                                value={String(col.id)}
+                              >
+                                {col.name}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -262,7 +277,10 @@ export function DuplicateCardDialog({ card, boardId, onClose }: DuplicateCardDia
                               const val = i + 1
                               const isLast = val === positionCount
                               return (
-                                <SelectItem key={val} value={isLast ? '0' : String(val)}>
+                                <SelectItem
+                                  key={val}
+                                  value={isLast ? '0' : String(val)}
+                                >
                                   {isLast ? '末尾' : String(val)}
                                 </SelectItem>
                               )

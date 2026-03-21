@@ -16,7 +16,9 @@ interface ScheduleSectionProps {
   card: Card
 }
 
-export function ScheduleSection({ boardId, card }: ScheduleSectionProps) {
+export function ScheduleSection(props: ScheduleSectionProps) {
+  const { boardId, card } = props
+
   const { updateCard } = useCardMutations(boardId)
   const { control, handleSubmit, reset, formState: { errors, isSubmitting, isDirty } } = useForm<ScheduleForm>({
     resolver: zodResolver(scheduleSchema),
@@ -72,7 +74,11 @@ export function ScheduleSection({ boardId, card }: ScheduleSectionProps) {
         {errors.endTime && <p className="text-xs text-red-500 mt-1">{errors.endTime.message}</p>}
         {/* 有修改才顯示 */}
         {isDirty && (
-          <Button type="submit" disabled={isSubmitting} className="mt-2 h-7 text-xs">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="mt-2 h-7 text-xs"
+          >
             {isSubmitting ? '儲存中...' : '儲存時程'}
           </Button>
         )}

@@ -14,7 +14,14 @@ import type { Card } from '../../types'
 
 type TagInputForm = z.infer<typeof tagInputSchema>
 
-export function TagSection({ boardId, card }: { boardId: number; card: Card }) {
+interface TagSectionProps {
+  boardId: number
+  card: Card
+}
+
+export function TagSection(props: TagSectionProps) {
+  const { boardId, card } = props
+
   const [showSuggestions, setShowSuggestions] = useState(false)
   const { data: allTags = [] } = useTags()
   const { createTag, attachTag, detachTag } = useTagMutations(boardId)
@@ -74,7 +81,7 @@ export function TagSection({ boardId, card }: { boardId: number; card: Card }) {
       <div className="relative">
         <Input
           {...restRegister}
-          ref={(el) => { rhfRef(el); (inputRef as React.MutableRefObject<HTMLInputElement | null>).current = el }}
+          ref={(el) => { rhfRef(el); (inputRef as React.RefObject<HTMLInputElement | null>).current = el }}
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
           onKeyDown={e => {

@@ -4,10 +4,11 @@ import * as api from '../../../lib/api'
 import type { DuplicateCardRequest } from '../../../types'
 import { queryKeys } from '../../queryKeys'
 
-export function useCardMutations(boardId: number) {
+export function useCardMutations(boardId?: number) {
   const qc = useQueryClient()
 
-  const invalidateBoardDetail = () => qc.invalidateQueries({ queryKey: queryKeys.boards.detail(boardId) })
+  const invalidateBoardDetail = () =>
+    boardId != null ? qc.invalidateQueries({ queryKey: queryKeys.boards.detail(boardId) }) : Promise.resolve()
   const invalidateCardDetail = (id: number) => qc.invalidateQueries({ queryKey: queryKeys.cards.detail(id) })
   const invalidatePinned = () => qc.invalidateQueries({ queryKey: queryKeys.cards.pinned() })
 
@@ -93,18 +94,6 @@ export function useCardMutations(boardId: number) {
     onError: () => toast.error('複製卡片失敗'),
   })
 
-  const togglePinFromPin = useMutation({
-    mutationFn: (id: number) => api.togglePin(id),
-    onSuccess: async (data) => {
-      await Promise.all([
-        invalidateBoardDetail(),
-        invalidatePinned()
-      ])
-      toast.success(data.is_pinned ? '已釘選' : '已取消釘選')
-    },
-    onError: () => toast.error('切換釘選失敗'),
-  })
-
   return {
     createCard: create,
     moveCard: move,
@@ -112,6 +101,6 @@ export function useCardMutations(boardId: number) {
     updateCard: update,
     deleteCard: remove,
     duplicateCard: duplicate,
-    togglePinFromPin
+    togglePinFromPin: togglePin,
   }
 }

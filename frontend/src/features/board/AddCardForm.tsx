@@ -13,7 +13,9 @@ interface AddCardFormProps {
   onAdd: (title: string, description: string) => void
 }
 
-export function AddCardForm({ onAdd }: AddCardFormProps) {
+export function AddCardForm(props: AddCardFormProps) {
+  const { onAdd } = props
+
   const [open, setOpen] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
 
@@ -68,8 +70,20 @@ export function AddCardForm({ onAdd }: AddCardFormProps) {
           rows={3}
         />
         <div className="flex gap-1">
-          <Button type="submit" size="sm" className="h-7 text-xs">新增</Button>
-          <Button type="button" size="icon" variant="ghost" onClick={() => { reset(); setOpen(false) }} className="h-7 w-7">
+          <Button
+            type="submit"
+            size="sm"
+            className="h-7 text-xs"
+          >
+            新增
+          </Button>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            onClick={() => { reset(); setOpen(false) }}
+            className="h-7 w-7"
+          >
             <X className="w-3 h-3" />
           </Button>
         </div>

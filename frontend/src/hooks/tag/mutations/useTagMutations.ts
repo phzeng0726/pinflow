@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { attachTag, createTag, detachTag } from '../../../lib/api'
+import * as api from '../../../lib/api'
 import { queryKeys } from '../../queryKeys'
 
 export function useTagMutations(boardId: number) {
@@ -11,7 +11,7 @@ export function useTagMutations(boardId: number) {
   const invalidateCardDetail = (id: number) => qc.invalidateQueries({ queryKey: queryKeys.cards.detail(id) })
 
   const create = useMutation({
-    mutationFn: createTag,
+    mutationFn: api.createTag,
     onSuccess: async () => {
       await invalidateTagsAll()
       toast.success('標籤已建立')
@@ -22,7 +22,7 @@ export function useTagMutations(boardId: number) {
   // 在 Card 上附上標籤
   const attach = useMutation({
     mutationFn: ({ cardId, tagId }: { cardId: number; tagId: number }) =>
-      attachTag(cardId, tagId),
+      api.attachTag(cardId, tagId),
     onSuccess: async (_, { cardId }) => {
       await Promise.all([
         invalidateCardDetail(cardId),
@@ -35,7 +35,7 @@ export function useTagMutations(boardId: number) {
   // 移除 Card 上的標籤
   const detach = useMutation({
     mutationFn: ({ cardId, tagId }: { cardId: number; tagId: number }) =>
-      detachTag(cardId, tagId),
+      api.detachTag(cardId, tagId),
     onSuccess: async (_, { cardId }) => {
       await Promise.all([
         invalidateCardDetail(cardId),

@@ -17,7 +17,9 @@ interface CardDetailHeaderProps {
   onClose: () => void
 }
 
-export function CardDetailHeader({ boardId, card, onClose }: CardDetailHeaderProps) {
+export function CardDetailHeader(props: CardDetailHeaderProps) {
+  const { boardId, card, onClose } = props
+
   const { updateCard } = useCardMutations(boardId)
 
   const { register, handleSubmit, formState: { errors, isDirty, isSubmitting }, reset } = useForm<CardDetailForm>({
@@ -34,7 +36,10 @@ export function CardDetailHeader({ boardId, card, onClose }: CardDetailHeaderPro
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex items-start gap-3 p-6 border-b dark:border-gray-700">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="flex items-start gap-3 p-6 border-b dark:border-gray-700"
+    >
       <div className="flex-1 space-y-2">
         <Input
           {...register('title')}
@@ -48,7 +53,12 @@ export function CardDetailHeader({ boardId, card, onClose }: CardDetailHeaderPro
           className="w-full text-sm border-transparent shadow-none focus-visible:ring-1 px-1 bg-transparent resize-none text-gray-600 dark:text-gray-400"
         />
         {isDirty && (
-          <Button type="submit" size="sm" disabled={isSubmitting} className="h-7 text-xs flex items-center gap-1">
+          <Button
+            type="submit"
+            size="sm"
+            disabled={isSubmitting}
+            className="h-7 text-xs flex items-center gap-1"
+          >
             <Save className="w-3 h-3" />
             {isSubmitting ? '儲存中...' : '儲存'}
           </Button>

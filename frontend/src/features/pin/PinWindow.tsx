@@ -9,7 +9,7 @@ import { PinnedCardItem } from './PinnedCardItem'
 
 export function PinWindow() {
   const { data: cards = [] } = usePinnedCards()
-  const { close } = usePinStore()
+  const close = usePinStore(s => s.close)
   const { togglePinFromPin: togglePin } = useCardMutations()
 
   useEffect(() => {

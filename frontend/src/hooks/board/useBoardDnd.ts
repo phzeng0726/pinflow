@@ -13,7 +13,9 @@ interface UseBoardDndParams {
   onMoveOutAutoPin?: (card: Card) => void
 }
 
-export function useBoardDnd({ boardId, columns, updateColumnMutate, moveCardMutate, onMoveOutAutoPin }: UseBoardDndParams) {
+export function useBoardDnd(params: UseBoardDndParams) {
+  const { boardId, columns, updateColumnMutate, moveCardMutate, onMoveOutAutoPin } = params
+
   const qc = useQueryClient()
   const [activeCard, setActiveCard] = useState<Card | null>(null)
   const [activeCardDndId, setActiveCardDndId] = useState<string | null>(null)

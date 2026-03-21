@@ -27,7 +27,9 @@ interface CardItemProps {
   onUpdate: (id: number, title: string, description: string) => void
 }
 
-export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: CardItemProps) {
+export function CardItem(props: CardItemProps) {
+  const { card, boardId, onTogglePin, onDelete, onUpdate } = props
+
   const [showDetail, setShowDetail] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
 
@@ -95,7 +97,11 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
         )}
       >
         {showMenu ? (
-          <form onSubmit={handleSubmit(onSubmit)} onPointerDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            onPointerDown={e => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
+          >
             <Textarea
               {...register('title')}
               onKeyDown={e => { if (e.key === 'Escape') handleCancel() }}
@@ -104,8 +110,22 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
               autoFocus
             />
             <div className="flex gap-1">
-              <Button type="submit" size="sm" className="h-7 text-xs">儲存</Button>
-              <Button type="button" size="icon" variant="ghost" onClick={handleCancel} className="h-7 w-7"><X className="w-3 h-3" /></Button>
+              <Button
+                type="submit"
+                size="sm"
+                className="h-7 text-xs"
+              >
+                儲存
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={handleCancel}
+                className="h-7 w-7"
+              >
+                <X className="w-3 h-3" />
+              </Button>
             </div>
           </form>
         ) : (
@@ -189,16 +209,26 @@ export function CardItem({ card, boardId, onTogglePin, onDelete, onUpdate }: Car
       {/* Backdrop panels that expose only the card area */}
       {showMenu && cardRect && createPortal(
         <>
-          <div className="fixed inset-x-0 top-0 bg-black/40 z-[9990]"
-            style={{ height: cardRect.top }} onClick={handleCancel} />
-          <div className="fixed inset-x-0 bottom-0 bg-black/40 z-[9990]"
-            style={{ top: cardRect.bottom }} onClick={handleCancel} />
-          <div className="fixed left-0 bg-black/40 z-[9990]"
+          <div
+            className="fixed inset-x-0 top-0 bg-black/40 z-[9990]"
+            style={{ height: cardRect.top }}
+            onClick={handleCancel}
+          />
+          <div
+            className="fixed inset-x-0 bottom-0 bg-black/40 z-[9990]"
+            style={{ top: cardRect.bottom }}
+            onClick={handleCancel}
+          />
+          <div
+            className="fixed left-0 bg-black/40 z-[9990]"
             style={{ top: cardRect.top, height: cardRect.height, width: cardRect.left }}
-            onClick={handleCancel} />
-          <div className="fixed right-0 bg-black/40 z-[9990]"
+            onClick={handleCancel}
+          />
+          <div
+            className="fixed right-0 bg-black/40 z-[9990]"
             style={{ top: cardRect.top, height: cardRect.height, left: cardRect.right }}
-            onClick={handleCancel} />
+            onClick={handleCancel}
+          />
         </>,
         document.body
       )}

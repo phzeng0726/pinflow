@@ -264,6 +264,48 @@ interface CardForm { title: string }
 - 使用 `handleSubmit` 包裝 submit handler
 - 提交成功後呼叫 `reset()` 清空表單
 
+### 元件寫法
+
+#### JSX Props 換行
+
+- 2 個以上 props 時，每個 prop 獨立一行，避免橫向生長
+- 單一 prop 可寫同行
+
+```tsx
+// OK — 單一 prop 同行
+<Button className="mt-2">送出</Button>
+
+// OK — 多個 props 各自換行
+<ChecklistBlock
+  key={cl.id}
+  boardId={boardId}
+  checklist={cl}
+  cardId={card.id}
+/>
+
+// NG — 多個 props 擠在同一行
+<ChecklistBlock key={cl.id} boardId={boardId} checklist={cl} cardId={card.id} />
+```
+
+#### Props 解構模式
+
+- 函式元件參數使用 `props` 接收，在函式體內第一行解構
+- 解構後空一行再寫後續程式碼
+
+```tsx
+// OK — props 解構模式
+export function ChecklistBlock(props: ChecklistBlockProps) {
+  const { boardId, checklist, cardId } = props
+
+  // 後續程式碼...
+}
+
+// NG — 直接在參數中解構
+export function ChecklistBlock({ boardId, checklist, cardId }: ChecklistBlockProps) {
+  // ...
+}
+```
+
 ### UI 元件
 
 #### 技術選型
@@ -380,6 +422,8 @@ updateColumnMutate({ id, data: { position } })
 - `useEffect`、`useMemo`、`useCallback` 的依賴陣列缺漏或錯誤
 - 不必要的重新渲染（不穩定的參考、該 memo 卻沒 memo）
 - 元件職責——一個元件是否承擔太多？
+- JSX props 超過 1 個時是否每個獨立一行（禁止多 props 擠同行）
+- 元件參數是否使用 `props` 解構模式（非直接在參數中解構），且解構後空一行
 - Effect 中的清理（事件監聯器、訂閱、計時器）
 
 ### TanStack Query

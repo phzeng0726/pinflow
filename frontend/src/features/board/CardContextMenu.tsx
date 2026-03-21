@@ -29,20 +29,19 @@ interface CardContextMenuProps {
   onDelete: (id: number) => void
 }
 
-export function CardContextMenu({
-  card,
-  boardId,
-  open,
-  onOpenChange,
-  onTogglePin,
-  onDelete,
-}: CardContextMenuProps) {
+export function CardContextMenu(props: CardContextMenuProps) {
+  const { card, boardId, open, onOpenChange, onTogglePin, onDelete } = props
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showDuplicate, setShowDuplicate] = useState(false)
 
   return (
     <>
-      <DropdownMenu modal={false} open={open} onOpenChange={(o) => { if (!o) onOpenChange(false) }}>
+      <DropdownMenu
+        modal={false}
+        open={open}
+        onOpenChange={(o) => { if (!o) onOpenChange(false) }}
+      >
         <DropdownMenuTrigger asChild>
           <button className="absolute right-0 top-0 w-0 h-0 opacity-0 pointer-events-none" tabIndex={-1} aria-hidden />
         </DropdownMenuTrigger>
@@ -80,7 +79,10 @@ export function CardContextMenu({
         />
       )}
 
-      <AlertDialog open={showDeleteConfirm} onOpenChange={(o) => { if (!o) setShowDeleteConfirm(false) }}>
+      <AlertDialog
+        open={showDeleteConfirm}
+        onOpenChange={(o) => { if (!o) setShowDeleteConfirm(false) }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>刪除卡片</AlertDialogTitle>

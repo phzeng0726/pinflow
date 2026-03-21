@@ -6,7 +6,7 @@ import { PinWindow } from './PinWindow'
  * In Electron mode this is not used (separate BrowserWindow handles /pin route).
  */
 export function PinOverlay() {
-  const { isOpen } = usePinStore()
+  const isOpen = usePinStore(s => s.isOpen)
   if (!isOpen) return null
 
   return (

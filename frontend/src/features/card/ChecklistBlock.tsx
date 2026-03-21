@@ -21,7 +21,9 @@ interface ChecklistBlockProps {
   cardId: number
 }
 
-export function ChecklistBlock({ boardId, checklist, cardId }: ChecklistBlockProps) {
+export function ChecklistBlock(props: ChecklistBlockProps) {
+  const { boardId, checklist, cardId } = props
+
   const [showItemForm, setShowItemForm] = useState(false)
   const [editingItemId, setEditingItemId] = useState<number | null>(null)
 
@@ -76,7 +78,10 @@ export function ChecklistBlock({ boardId, checklist, cardId }: ChecklistBlockPro
       )}
       <div className="space-y-1.5">
         {(checklist.items ?? []).map(item => (
-          <div key={item.id} className="flex items-center gap-2 group">
+          <div
+            key={item.id}
+            className="flex items-center gap-2 group"
+          >
             <Checkbox
               checked={item.completed}
               onCheckedChange={(checked) => updateItem.mutate({ id: item.id, data: { completed: checked === true } })}
@@ -92,7 +97,12 @@ export function ChecklistBlock({ boardId, checklist, cardId }: ChecklistBlockPro
                   className="text-sm h-7 flex-1"
                   autoFocus
                 />
-                <Button type="submit" variant="ghost" size="icon" className="h-7 w-7 text-green-500">
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-green-500"
+                >
                   <Check className="w-4 h-4" />
                 </Button>
               </form>
@@ -121,7 +131,10 @@ export function ChecklistBlock({ boardId, checklist, cardId }: ChecklistBlockPro
         ))}
       </div>
       {showItemForm ? (
-        <form onSubmit={newItemForm.handleSubmit(handleAddItem)} className="mt-2 flex gap-2">
+        <form
+          onSubmit={newItemForm.handleSubmit(handleAddItem)}
+          className="mt-2 flex gap-2"
+        >
           <Input
             {...newItemForm.register('text')}
             onKeyDown={e => { if (e.key === 'Escape') { newItemForm.reset(); setShowItemForm(false) } }}
@@ -129,8 +142,20 @@ export function ChecklistBlock({ boardId, checklist, cardId }: ChecklistBlockPro
             className="text-sm h-7 flex-1"
             autoFocus
           />
-          <Button type="submit" className="h-7 text-xs">新增</Button>
-          <Button type="button" variant="ghost" onClick={() => { newItemForm.reset(); setShowItemForm(false) }} className="h-7 text-xs">取消</Button>
+          <Button
+            type="submit"
+            className="h-7 text-xs"
+          >
+            新增
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => { newItemForm.reset(); setShowItemForm(false) }}
+            className="h-7 text-xs"
+          >
+            取消
+          </Button>
         </form>
       ) : (
         <Button

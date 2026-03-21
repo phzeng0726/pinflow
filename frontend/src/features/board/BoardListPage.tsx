@@ -18,7 +18,8 @@ export function BoardListPage() {
   const { data: boards = [], isLoading } = useBoards()
   const { createBoard, deleteBoard } = useBoardMutations()
   const navigate = useNavigate()
-  const { theme, toggle: toggleTheme } = useThemeStore()
+  const theme = useThemeStore(s => s.theme)
+  const toggleTheme = useThemeStore(s => s.toggle)
   const [creating, setCreating] = useState(false)
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<BoardForm>({
@@ -59,7 +60,10 @@ export function BoardListPage() {
               </TooltipTrigger>
               <TooltipContent>{theme === 'dark' ? '切換亮色模式' : '切換暗色模式'}</TooltipContent>
             </Tooltip>
-            <Button onClick={() => setCreating(true)} className="flex items-center gap-2">
+            <Button
+              onClick={() => setCreating(true)}
+              className="flex items-center gap-2"
+            >
               <Plus className="w-4 h-4" />
               新增看板
             </Button>
@@ -67,7 +71,10 @@ export function BoardListPage() {
         </div>
 
         {creating && (
-          <form onSubmit={handleSubmit(onSubmit)} className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-4 mb-4 space-y-1">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 p-4 mb-4 space-y-1"
+          >
             <div className="flex gap-2">
               <Input
                 placeholder="看板名稱"
@@ -76,7 +83,13 @@ export function BoardListPage() {
                 className="flex-1"
               />
               <Button type="submit">建立</Button>
-              <Button type="button" variant="ghost" onClick={() => { reset(); setCreating(false) }}>取消</Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => { reset(); setCreating(false) }}
+              >
+                取消
+              </Button>
             </div>
             {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
           </form>

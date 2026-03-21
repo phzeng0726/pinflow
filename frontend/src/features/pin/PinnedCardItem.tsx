@@ -1,6 +1,7 @@
 import { PinOff } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip'
+import { cn } from '../../lib/utils'
 import type { PinnedCard } from '../../types'
 
 const COLUMN_COLORS = [
@@ -13,14 +14,19 @@ interface PinnedCardItemProps {
   onUnpin: (id: number) => void
 }
 
-export function PinnedCardItem({ card, onUnpin }: PinnedCardItemProps) {
+export function PinnedCardItem(props: PinnedCardItemProps) {
+  const { card, onUnpin } = props
+
   const colorClass = COLUMN_COLORS[card.column_id % COLUMN_COLORS.length]
   const truncatedDesc = card.description.length > 100
     ? card.description.slice(0, 100) + '…'
     : card.description
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg border-l-4 ${colorClass} px-3 py-2 group relative`}>
+    <div className={cn(
+      'bg-white dark:bg-gray-800 rounded-lg border-l-4 px-3 py-2 group relative',
+      colorClass,
+    )}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm text-gray-900 dark:text-gray-100 leading-snug">{card.title}</p>

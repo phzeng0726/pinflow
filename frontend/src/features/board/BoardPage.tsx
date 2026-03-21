@@ -134,7 +134,10 @@ export function BoardPage() {
             </TooltipTrigger>
             <TooltipContent>{theme === 'dark' ? '切換亮色模式' : '切換暗色模式'}</TooltipContent>
           </Tooltip>
-          <div className="relative" ref={pinPopoverRef}>
+          <div
+            className="relative"
+            ref={pinPopoverRef}
+          >
             <Button
               variant="outline"
               size="sm"
@@ -160,7 +163,10 @@ export function BoardPage() {
                 ) : (
                   <ul className="py-1 max-h-64 overflow-y-auto">
                     {pinned.map(card => (
-                      <li key={card.id} className="px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2">
+                      <li
+                        key={card.id}
+                        className="px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                      >
                         <Pin className="w-3 h-3 text-blue-500 shrink-0" />
                         <span className="text-sm text-gray-800 dark:text-gray-200 flex-1 truncate">{card.title}</span>
                         {card.column_name && (
@@ -190,7 +196,10 @@ export function BoardPage() {
         </div>
       </div>
 
-      <AlertDialog open={!!pendingUnpinCard} onOpenChange={(open) => { if (!open) handleDismissUnpin() }}>
+      <AlertDialog
+        open={!!pendingUnpinCard}
+        onOpenChange={(open) => { if (!open) handleDismissUnpin() }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>移出自動釘選欄位</AlertDialogTitle>
@@ -198,7 +207,10 @@ export function BoardPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>保持釘選</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmUnpin} disabled={togglePin.isPending}>
+            <AlertDialogAction
+              onClick={handleConfirmUnpin}
+              disabled={togglePin.isPending}
+            >
               取消釘選
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -213,7 +225,10 @@ export function BoardPage() {
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext items={columns.map(c => `col-${c.id}`)} strategy={horizontalListSortingStrategy}>
+          <SortableContext
+            items={columns.map(c => `col-${c.id}`)}
+            strategy={horizontalListSortingStrategy}
+          >
             <div className="flex gap-3 h-full items-start">
               {columns.map(col => (
                 <ColumnView
@@ -234,7 +249,10 @@ export function BoardPage() {
               {/* Add column */}
               <div className="w-64 shrink-0">
                 {addingColumn ? (
-                  <form onSubmit={handleSubmitCol(handleAddColumn)} className="bg-gray-200 dark:bg-gray-700 rounded-xl p-3 space-y-2">
+                  <form
+                    onSubmit={handleSubmitCol(handleAddColumn)}
+                    className="bg-gray-200 dark:bg-gray-700 rounded-xl p-3 space-y-2"
+                  >
                     <Input
                       placeholder="欄位名稱"
                       {...registerCol('name')}
@@ -242,8 +260,22 @@ export function BoardPage() {
                       className="text-sm"
                     />
                     <div className="flex gap-1">
-                      <Button type="submit" size="sm" className="h-7 text-xs">新增</Button>
-                      <Button type="button" size="sm" variant="ghost" onClick={() => { resetCol(); setAddingColumn(false) }} className="h-7 text-xs">取消</Button>
+                      <Button
+                        type="submit"
+                        size="sm"
+                        className="h-7 text-xs"
+                      >
+                        新增
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => { resetCol(); setAddingColumn(false) }}
+                        className="h-7 text-xs"
+                      >
+                        取消
+                      </Button>
                     </div>
                   </form>
                 ) : (
@@ -304,11 +336,13 @@ interface ColumnViewProps {
   onUpdateCard: (id: number, title: string, description: string) => void
 }
 
-function ColumnView({
-  column, overId, activeCardDndId,
-  onRename, onToggleAutoPin, onDeleteColumn,
-  onAddCard, onTogglePin, onDeleteCard, onUpdateCard,
-}: ColumnViewProps) {
+function ColumnView(props: ColumnViewProps) {
+  const {
+    column, overId, activeCardDndId,
+    onRename, onToggleAutoPin, onDeleteColumn,
+    onAddCard, onTogglePin, onDeleteCard, onUpdateCard,
+  } = props
+
   const cards = (column.cards ?? []).sort((a, b) => a.position - b.position)
   const cardIds = cards.map(c => `card-${c.id}`)
   const colDropId = `column-drop-${column.id}`
@@ -353,7 +387,10 @@ function ColumnView({
           isOver && cards.length === 0 && 'bg-blue-50 dark:bg-blue-900/20',
         )}
       >
-        <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={cardIds}
+          strategy={verticalListSortingStrategy}
+        >
           <div className="space-y-2 pt-1">
             {cards.map(card => {
               const dndId = `card-${card.id}`

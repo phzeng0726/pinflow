@@ -13,7 +13,14 @@ import { ChecklistBlock } from './ChecklistBlock'
 
 type ChecklistForm = z.infer<typeof checklistSchema>
 
-export function ChecklistSection({ boardId, card }: { boardId: number; card: Card }) {
+interface ChecklistSectionProps {
+  boardId: number
+  card: Card
+}
+
+export function ChecklistSection(props: ChecklistSectionProps) {
+  const { boardId, card } = props
+
   const [showNewForm, setShowNewForm] = useState(false)
   const { createChecklist } = useChecklistMutations(boardId, card.id)
 
@@ -34,11 +41,19 @@ export function ChecklistSection({ boardId, card }: { boardId: number; card: Car
       </Label>
       <div className="space-y-4">
         {(card.checklists ?? []).map(cl => (
-          <ChecklistBlock key={cl.id} boardId={boardId} checklist={cl} cardId={card.id} />
+          <ChecklistBlock
+            key={cl.id}
+            boardId={boardId}
+            checklist={cl}
+            cardId={card.id}
+          />
         ))}
       </div>
       {showNewForm ? (
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-3 flex gap-2">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="mt-3 flex gap-2"
+        >
           <Input
             {...register('title')}
             onKeyDown={e => { if (e.key === 'Escape') { reset(); setShowNewForm(false) } }}
@@ -46,8 +61,20 @@ export function ChecklistSection({ boardId, card }: { boardId: number; card: Car
             className="text-sm h-8"
             autoFocus
           />
-          <Button type="submit" className="h-8 text-xs">新增</Button>
-          <Button type="button" variant="ghost" onClick={() => { reset(); setShowNewForm(false) }} className="h-8 text-xs">取消</Button>
+          <Button
+            type="submit"
+            className="h-8 text-xs"
+          >
+            新增
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => { reset(); setShowNewForm(false) }}
+            className="h-8 text-xs"
+          >
+            取消
+          </Button>
         </form>
       ) : (
         <Button

@@ -1,21 +1,21 @@
-import { useState } from 'react'
-import { CheckSquare, Plus } from 'lucide-react'
-import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { CheckSquare, Plus } from 'lucide-react'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import type { z } from 'zod'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { useChecklistMutations } from '../../hooks/checklist/mutations/useChecklistMutations'
 import { checklistSchema } from '../../lib/schemas'
 import type { Card } from '../../types'
-import type { z } from 'zod'
 import { ChecklistBlock } from './ChecklistBlock'
 
 type ChecklistForm = z.infer<typeof checklistSchema>
 
-export function ChecklistSection({ card }: { card: Card }) {
+export function ChecklistSection({ boardId, card }: { boardId: number; card: Card }) {
   const [showNewForm, setShowNewForm] = useState(false)
-  const { createChecklist } = useChecklistMutations(card.id)
+  const { createChecklist } = useChecklistMutations(boardId, card.id)
 
   const { register, handleSubmit, reset } = useForm<ChecklistForm>({
     resolver: zodResolver(checklistSchema),
@@ -34,7 +34,7 @@ export function ChecklistSection({ card }: { card: Card }) {
       </Label>
       <div className="space-y-4">
         {(card.checklists ?? []).map(cl => (
-          <ChecklistBlock key={cl.id} checklist={cl} cardId={card.id} />
+          <ChecklistBlock key={cl.id} boardId={boardId} checklist={cl} cardId={card.id} />
         ))}
       </div>
       {showNewForm ? (

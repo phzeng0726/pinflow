@@ -25,8 +25,8 @@ export function CardDetailDialog({ boardId, cardId, onClose }: CardDetailDialogP
             <CardDetailHeader boardId={boardId} card={card} onClose={onClose} />
             <div className="p-6 space-y-6">
               <TagSection boardId={boardId} card={card} />
-              <ScheduleSection card={card} />
-              <ChecklistSection card={card} />
+              <ScheduleSection boardId={boardId} card={card} />
+              <ChecklistSection boardId={boardId} card={card} />
             </div>
           </>
         )}

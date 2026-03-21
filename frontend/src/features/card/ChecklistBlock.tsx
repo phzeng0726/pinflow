@@ -1,7 +1,8 @@
-import { useState } from 'react'
-import { Check, Plus, Trash2, X } from 'lucide-react'
-import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Check, Plus, Trash2, X } from 'lucide-react'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import type { z } from 'zod'
 import { Button } from '../../components/ui/button'
 import { Checkbox } from '../../components/ui/checkbox'
 import { Input } from '../../components/ui/input'
@@ -11,20 +12,25 @@ import { useChecklistMutations } from '../../hooks/checklist/mutations/useCheckl
 import { checklistItemSchema } from '../../lib/schemas'
 import { cn } from '../../lib/utils'
 import type { Checklist } from '../../types'
-import type { z } from 'zod'
 
 type ChecklistItemForm = z.infer<typeof checklistItemSchema>
 
 interface ChecklistBlockProps {
+  boardId: number
   checklist: Checklist
   cardId: number
 }
 
-export function ChecklistBlock({ checklist, cardId }: ChecklistBlockProps) {
+export function ChecklistBlock({ boardId, checklist, cardId }: ChecklistBlockProps) {
   const [showItemForm, setShowItemForm] = useState(false)
   const [editingItemId, setEditingItemId] = useState<number | null>(null)
 
-  const { deleteChecklist, createChecklistItem: createItem, updateChecklistItem: updateItem, deleteChecklistItem: deleteItem } = useChecklistMutations(cardId)
+  const {
+    deleteChecklist,
+    createChecklistItem: createItem,
+    updateChecklistItem: updateItem,
+    deleteChecklistItem: deleteItem,
+  } = useChecklistMutations(boardId, cardId)
 
   const newItemForm = useForm<ChecklistItemForm>({
     resolver: zodResolver(checklistItemSchema),

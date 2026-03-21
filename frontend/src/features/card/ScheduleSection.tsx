@@ -12,11 +12,12 @@ import type { Card } from '../../types'
 type ScheduleForm = z.infer<typeof scheduleSchema>
 
 interface ScheduleSectionProps {
+  boardId: number
   card: Card
 }
 
-export function ScheduleSection({ card }: ScheduleSectionProps) {
-  const { updateCard } = useCardMutations()
+export function ScheduleSection({ boardId, card }: ScheduleSectionProps) {
+  const { updateCard } = useCardMutations(boardId)
   const { control, handleSubmit, reset, formState: { errors, isSubmitting, isDirty } } = useForm<ScheduleForm>({
     resolver: zodResolver(scheduleSchema),
     defaultValues: {

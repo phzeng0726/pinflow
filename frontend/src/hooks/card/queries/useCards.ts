@@ -13,6 +13,5 @@ export function usePinnedCards() {
   return useQuery({
     queryKey: queryKeys.cards.pinned(),
     queryFn: api.getPinnedCards,
-    refetchInterval: 3000,
   })
 }

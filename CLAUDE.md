@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 | Layer | Path | Tech |
 |---|---|---|
-| Backend | `backend/` | Go, Gin, GORM, SQLite (pure-Go), Swagger |
+| Backend | `backend/` | Go, Gin, file-based JSON storage, Swagger |
 | Frontend | `frontend/` | React 19, Vite, Tailwind v3, TanStack Query+Router, Zustand, @dnd-kit |
 | Electron | `electron/` | Wraps frontend SPA + spawns Go backend, NSIS Windows target |
 
@@ -24,7 +24,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Backend (Go module root is `backend/`, NOT repo root)
 ```bash
-cd backend && go run .                  # dev server on :34115
+cd backend && go run . --workspace ../../pinflow-workspace  # dev server on :34115
 cd backend && go build ./...            # compile check
 cd backend && go test ./... -v          # all tests
 cd backend && go test ./tests/... -run TestFoo -v  # single test
@@ -48,25 +48,48 @@ cd electron && npm start                # runs Electron (requires built frontend
 
 ## Architecture
 
+### Storage
+
+Data is stored as JSON files in a **workspace directory** (Bruno-style, no database):
+
+```
+pinflow-workspace/
+  manifest.json          # Version + ID counters
+  tags.json              # Global tags [{id, name, color}]
+  boards/
+    board-N/
+      board.json         # Board metadata
+      columns.json       # All columns for this board
+      cards/
+        card-N.json      # Card with tag_ids + embedded checklists
+```
+
+- `--workspace` flag sets the workspace path (default `./pinflow-workspace`)
+- In-memory store with write-through to JSON files (`backend/store/`)
+- Workspace is Git-syncable for multi-device portability
+- Migration from old SQLite: `cd backend && go run ./cmd/migrate --db pinflow.db --out <workspace-path>`
+
 ### Backend Layers
 ```
-model/      → GORM structs (Board, Column, Card, Tag, Checklist, ChecklistItem)
-repository/ → GORM queries (interfaces + implementations)
+store/      → FileStore: in-memory data + JSON file persistence
+model/      → Data structs (Board, Column, Card, Tag, Checklist, ChecklistItem)
+repository/ → File-based repository implementations (interfaces + NewFile*Repository)
 service/    → Business logic (interfaces + implementations); auto-pin logic lives here
 dto/        → Request/Response types for JSON binding
 api/        → Gin handlers + router.go
 docs/       → Swagger auto-generated (do not edit manually)
 tests/      → All tests (repository, service, handler layers)
+cmd/migrate → One-time SQLite → file workspace migration tool (uses GORM)
 ```
 
-Import paths use module name `pinflow` (e.g. `pinflow/service`, `pinflow/repository`).
+Import paths use module name `pinflow` (e.g. `pinflow/service`, `pinflow/repository`, `pinflow/store`).
 
 **Key backend decisions:**
-- SQLite DSN must include `?_pragma=foreign_keys(1)` for cascade deletes
-- `glebarez/sqlite` (pure-Go, no CGO) — no gcc required
 - Gin v1.12.0 requires go 1.25+
 - Auto-pin logic: `CardService.MoveCard` and `CreateCard` check `Column.AutoPin`
 - Position ordering: float64 midpoint (`midPosition` util in `frontend/src/lib/utils.ts`)
+- FileStore uses `sync.RWMutex` for thread-safe concurrent access
+- Card files embed checklists and store tag associations as `tag_ids` array
 
 ### Frontend Architecture
 ```
@@ -132,7 +155,7 @@ GET    /swagger/*any
 **Full local dev:**
 ```bash
 # Terminal 1
-cd backend && go run .
+cd backend && go run . --workspace ../../pinflow-workspace
 
 # Terminal 2
 cd frontend && pnpm dev

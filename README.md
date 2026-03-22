@@ -8,16 +8,41 @@ Trello 風格的看板任務管理系統，支援桌面懸浮釘選視窗。
 - **卡片管理**：在欄位內新增卡片，支援拖曳排序與跨欄移動
 - **釘選模式**：手動將卡片釘選，懸浮顯示在桌面最上層
 - **自動釘選**：設定欄位為「自動釘選」，移入該欄位的卡片自動釘選
+- **檔案式儲存**：資料以 JSON 檔案儲存，可透過 Git 同步到不同裝置
 - **Swagger UI**：內建 API 文件
 
 ## 技術棧
 
 | 層級 | 技術 |
 |------|------|
-| Backend | Go 1.25 · Gin · GORM · SQLite · Swagger |
+| Backend | Go 1.25 · Gin · 檔案式 JSON 儲存 · Swagger |
 | Frontend | React 19 · TypeScript · Vite · Tailwind v3 · TanStack Query/Router · Zustand · @dnd-kit |
 | Desktop | Electron 40 (Windows) |
 | 部署 | Docker Compose |
+
+---
+
+## 資料儲存
+
+Pinflow 採用 **Bruno 風格的檔案式儲存**（無資料庫），所有資料以 JSON 檔案存放在 workspace 目錄中：
+
+```
+pinflow-workspace/
+  manifest.json          # 版本 + ID 計數器
+  tags.json              # 全域 Tag 定義
+  boards/
+    board-N/
+      board.json         # Board 元資料
+      columns.json       # 該 Board 的所有欄位
+      cards/
+        card-N.json      # 卡片（含 tag_ids + 內嵌 checklists）
+```
+
+**優點：**
+- 資料可攜（portable）— 複製目錄即可搬移
+- 可透過 Git 同步到不同裝置
+- 無需安裝資料庫
+- 每張卡片獨立一個檔案，Git merge 衝突最小化
 
 ---
 
@@ -47,7 +72,7 @@ cd frontend && pnpm install && cd ..
 
 ```bash
 cd backend
-go run .
+go run . --workspace ../../pinflow-workspace
 ```
 
 **終端機 2 — 啟動 Frontend 開發伺服器**
@@ -119,7 +144,7 @@ pnpm electron:package
 
 ```bash
 cd backend
-go run .
+go run . --workspace ../../pinflow-workspace
 ```
 
 API 服務啟動於 `http://localhost:34115`
@@ -137,6 +162,17 @@ pnpm dev
 開啟瀏覽器：`http://localhost:5173`
 
 > Vite 會自動將 `/api` 請求 proxy 到 `:34115`，無需額外設定。
+
+---
+
+## 從舊版 SQLite 遷移
+
+如果你有舊版的 `pinflow.db`，可以用遷移工具轉換為檔案式 workspace：
+
+```bash
+cd backend
+go run ./cmd/migrate --db pinflow.db --out ../../pinflow-workspace
+```
 
 ---
 
@@ -184,10 +220,6 @@ docker-compose up --build
 docker-compose down
 ```
 
-資料儲存在 Docker volume `pinflow_data`，停止後不會遺失。
-
----
-
 ---
 
 ## 專案結構
@@ -197,9 +229,11 @@ pinflow/
 ├── backend/              # Go API server
 │   ├── api/              # Gin handlers
 │   ├── service/          # 業務邏輯
-│   ├── repository/       # 資料庫查詢
-│   ├── model/            # GORM 資料模型
+│   ├── repository/       # 檔案式 repository 實作
+│   ├── store/            # FileStore（記憶體 + JSON 持久化）
+│   ├── model/            # 資料模型
 │   ├── dto/              # 請求/回應 DTO
+│   ├── cmd/migrate/      # SQLite → 檔案式 workspace 遷移工具
 │   ├── docs/             # Swagger 自動生成文件
 │   └── tests/            # 單元 + 整合測試
 ├── frontend/             # React SPA
@@ -237,5 +271,12 @@ pinflow/
 | PATCH | `/api/v1/cards/:id/move` | 移動卡片（換欄/排序）|
 | PATCH | `/api/v1/cards/:id/pin` | 切換釘選狀態 |
 | DELETE | `/api/v1/cards/:id` | 刪除卡片 |
+| POST/DELETE | `/api/v1/cards/:id/tags` | 新增/移除卡片標籤 |
+| POST | `/api/v1/cards/:id/duplicate` | 複製卡片 |
+| GET/POST | `/api/v1/cards/:id/checklists` | 列出/新增檢查清單 |
+| GET/POST | `/api/v1/tags` | 列出/建立標籤 |
+| DELETE | `/api/v1/checklists/:id` | 刪除檢查清單 |
+| POST | `/api/v1/checklists/:id/items` | 新增檢查項目 |
+| PATCH/DELETE | `/api/v1/checklist-items/:id` | 更新/刪除檢查項目 |
 
 完整 API 文件請見 Swagger UI：`http://localhost:34115/swagger/index.html`

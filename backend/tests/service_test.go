@@ -9,8 +9,8 @@ import (
 )
 
 func TestBoardService_CreateValidation(t *testing.T) {
-	db := setupTestDB(t)
-	svc := service.NewBoardService(repository.NewBoardRepository(db))
+	fs := setupTestStore(t)
+	svc := service.NewBoardService(repository.NewFileBoardRepository(fs))
 
 	_, err := svc.CreateBoard("")
 	if err == nil {
@@ -27,8 +27,8 @@ func TestBoardService_CreateValidation(t *testing.T) {
 }
 
 func TestBoardService_Delete_NotFound(t *testing.T) {
-	db := setupTestDB(t)
-	svc := service.NewBoardService(repository.NewBoardRepository(db))
+	fs := setupTestStore(t)
+	svc := service.NewBoardService(repository.NewFileBoardRepository(fs))
 
 	err := svc.DeleteBoard(999)
 	if err == nil {
@@ -37,9 +37,9 @@ func TestBoardService_Delete_NotFound(t *testing.T) {
 }
 
 func TestColumnService_CreateColumn_Position(t *testing.T) {
-	db := setupTestDB(t)
-	boardRepo := repository.NewBoardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
+	fs := setupTestStore(t)
+	boardRepo := repository.NewFileBoardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
 	boardSvc := service.NewBoardService(boardRepo)
 	colSvc := service.NewColumnService(boardRepo, colRepo)
 
@@ -60,9 +60,9 @@ func TestColumnService_CreateColumn_Position(t *testing.T) {
 }
 
 func TestColumnService_AutoPinToggle(t *testing.T) {
-	db := setupTestDB(t)
-	boardRepo := repository.NewBoardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
+	fs := setupTestStore(t)
+	boardRepo := repository.NewFileBoardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
 	boardSvc := service.NewBoardService(boardRepo)
 	colSvc := service.NewColumnService(boardRepo, colRepo)
 
@@ -80,13 +80,13 @@ func TestColumnService_AutoPinToggle(t *testing.T) {
 }
 
 func TestCardService_CreateCard_AutoPin(t *testing.T) {
-	db := setupTestDB(t)
-	boardRepo := repository.NewBoardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
-	cardRepo := repository.NewCardRepository(db)
+	fs := setupTestStore(t)
+	boardRepo := repository.NewFileBoardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
+	cardRepo := repository.NewFileCardRepository(fs)
 	boardSvc := service.NewBoardService(boardRepo)
 	colSvc := service.NewColumnService(boardRepo, colRepo)
-	cardSvc := service.NewCardService(cardRepo, colRepo, repository.NewTagRepository(db), repository.NewChecklistRepository(db), repository.NewChecklistItemRepository(db))
+	cardSvc := service.NewCardService(cardRepo, colRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs))
 
 	board, _ := boardSvc.CreateBoard("B")
 	col, _ := colSvc.CreateColumn(board.ID, "InProgress")
@@ -104,13 +104,13 @@ func TestCardService_CreateCard_AutoPin(t *testing.T) {
 }
 
 func TestCardService_MoveCard_TriggersAutoPin(t *testing.T) {
-	db := setupTestDB(t)
-	boardRepo := repository.NewBoardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
-	cardRepo := repository.NewCardRepository(db)
+	fs := setupTestStore(t)
+	boardRepo := repository.NewFileBoardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
+	cardRepo := repository.NewFileCardRepository(fs)
 	boardSvc := service.NewBoardService(boardRepo)
 	colSvc := service.NewColumnService(boardRepo, colRepo)
-	cardSvc := service.NewCardService(cardRepo, colRepo, repository.NewTagRepository(db), repository.NewChecklistRepository(db), repository.NewChecklistItemRepository(db))
+	cardSvc := service.NewCardService(cardRepo, colRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs))
 
 	board, _ := boardSvc.CreateBoard("B")
 	todoCol, _ := colSvc.CreateColumn(board.ID, "Todo")
@@ -134,13 +134,13 @@ func TestCardService_MoveCard_TriggersAutoPin(t *testing.T) {
 }
 
 func TestCardService_TogglePin(t *testing.T) {
-	db := setupTestDB(t)
-	boardRepo := repository.NewBoardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
-	cardRepo := repository.NewCardRepository(db)
+	fs := setupTestStore(t)
+	boardRepo := repository.NewFileBoardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
+	cardRepo := repository.NewFileCardRepository(fs)
 	boardSvc := service.NewBoardService(boardRepo)
 	colSvc := service.NewColumnService(boardRepo, colRepo)
-	cardSvc := service.NewCardService(cardRepo, colRepo, repository.NewTagRepository(db), repository.NewChecklistRepository(db), repository.NewChecklistItemRepository(db))
+	cardSvc := service.NewCardService(cardRepo, colRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs))
 
 	board, _ := boardSvc.CreateBoard("B")
 	col, _ := colSvc.CreateColumn(board.ID, "Todo")
@@ -165,13 +165,13 @@ func TestCardService_TogglePin(t *testing.T) {
 }
 
 func TestCardService_GetPinnedCards(t *testing.T) {
-	db := setupTestDB(t)
-	boardRepo := repository.NewBoardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
-	cardRepo := repository.NewCardRepository(db)
+	fs := setupTestStore(t)
+	boardRepo := repository.NewFileBoardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
+	cardRepo := repository.NewFileCardRepository(fs)
 	boardSvc := service.NewBoardService(boardRepo)
 	colSvc := service.NewColumnService(boardRepo, colRepo)
-	cardSvc := service.NewCardService(cardRepo, colRepo, repository.NewTagRepository(db), repository.NewChecklistRepository(db), repository.NewChecklistItemRepository(db))
+	cardSvc := service.NewCardService(cardRepo, colRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs))
 
 	board, _ := boardSvc.CreateBoard("B")
 	col, _ := colSvc.CreateColumn(board.ID, "Todo")

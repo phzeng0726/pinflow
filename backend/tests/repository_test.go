@@ -5,29 +5,21 @@ import (
 
 	"pinflow/model"
 	"pinflow/repository"
-
-	"github.com/glebarez/sqlite"
-	"gorm.io/gorm"
+	"pinflow/store"
 )
 
-func setupTestDB(t *testing.T) *gorm.DB {
+func setupTestStore(t *testing.T) *store.FileStore {
 	t.Helper()
-	db, err := gorm.Open(sqlite.Open(":memory:?_pragma=foreign_keys(1)"), &gorm.Config{})
+	fs, err := store.New(t.TempDir())
 	if err != nil {
-		t.Fatalf("failed to open test db: %v", err)
+		t.Fatalf("failed to create test store: %v", err)
 	}
-	if err := db.AutoMigrate(
-		&model.Board{}, &model.Column{}, &model.Card{},
-		&model.Tag{}, &model.Checklist{}, &model.ChecklistItem{},
-	); err != nil {
-		t.Fatalf("failed to migrate: %v", err)
-	}
-	return db
+	return fs
 }
 
 func TestBoardRepository_CreateAndFind(t *testing.T) {
-	db := setupTestDB(t)
-	repo := repository.NewBoardRepository(db)
+	fs := setupTestStore(t)
+	repo := repository.NewFileBoardRepository(fs)
 
 	board := &model.Board{Name: "Test Board"}
 	if err := repo.Create(board); err != nil {
@@ -47,8 +39,8 @@ func TestBoardRepository_CreateAndFind(t *testing.T) {
 }
 
 func TestBoardRepository_FindAll(t *testing.T) {
-	db := setupTestDB(t)
-	repo := repository.NewBoardRepository(db)
+	fs := setupTestStore(t)
+	repo := repository.NewFileBoardRepository(fs)
 
 	for _, name := range []string{"A", "B", "C"} {
 		_ = repo.Create(&model.Board{Name: name})
@@ -63,8 +55,8 @@ func TestBoardRepository_FindAll(t *testing.T) {
 }
 
 func TestBoardRepository_Delete(t *testing.T) {
-	db := setupTestDB(t)
-	repo := repository.NewBoardRepository(db)
+	fs := setupTestStore(t)
+	repo := repository.NewFileBoardRepository(fs)
 
 	board := &model.Board{Name: "ToDelete"}
 	_ = repo.Create(board)
@@ -77,9 +69,9 @@ func TestBoardRepository_Delete(t *testing.T) {
 }
 
 func TestColumnRepository_PositionAndCreate(t *testing.T) {
-	db := setupTestDB(t)
-	boardRepo := repository.NewBoardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
+	fs := setupTestStore(t)
+	boardRepo := repository.NewFileBoardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
 
 	board := &model.Board{Name: "B"}
 	_ = boardRepo.Create(board)
@@ -99,10 +91,10 @@ func TestColumnRepository_PositionAndCreate(t *testing.T) {
 
 
 func TestCardRepository_AutoPinOnCreate(t *testing.T) {
-	db := setupTestDB(t)
-	boardRepo := repository.NewBoardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
-	cardRepo := repository.NewCardRepository(db)
+	fs := setupTestStore(t)
+	boardRepo := repository.NewFileBoardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
+	cardRepo := repository.NewFileCardRepository(fs)
 
 	board := &model.Board{Name: "B"}
 	_ = boardRepo.Create(board)
@@ -122,10 +114,10 @@ func TestCardRepository_AutoPinOnCreate(t *testing.T) {
 }
 
 func TestCardRepository_UpdatePinned(t *testing.T) {
-	db := setupTestDB(t)
-	boardRepo := repository.NewBoardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
-	cardRepo := repository.NewCardRepository(db)
+	fs := setupTestStore(t)
+	boardRepo := repository.NewFileBoardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
+	cardRepo := repository.NewFileCardRepository(fs)
 
 	board := &model.Board{Name: "B"}
 	_ = boardRepo.Create(board)
@@ -143,10 +135,10 @@ func TestCardRepository_UpdatePinned(t *testing.T) {
 }
 
 func TestCardRepository_CascadeDeleteWithColumn(t *testing.T) {
-	db := setupTestDB(t)
-	boardRepo := repository.NewBoardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
-	cardRepo := repository.NewCardRepository(db)
+	fs := setupTestStore(t)
+	boardRepo := repository.NewFileBoardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
+	cardRepo := repository.NewFileCardRepository(fs)
 
 	board := &model.Board{Name: "B"}
 	_ = boardRepo.Create(board)

@@ -6,37 +6,32 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"pinflow/api"
-	"pinflow/model"
 	"pinflow/repository"
 	"pinflow/service"
+	"pinflow/store"
 
 	_ "pinflow/docs"
-
-	"github.com/glebarez/sqlite"
-	"gorm.io/gorm"
 )
 
 func main() {
-	db, err := gorm.Open(sqlite.Open("pinflow.db?_pragma=foreign_keys(1)"), &gorm.Config{})
+	workspace := flag.String("workspace", "./pinflow-workspace", "path to workspace directory")
+	flag.Parse()
+
+	fs, err := store.New(*workspace)
 	if err != nil {
-		log.Fatalf("failed to connect to database: %v", err)
+		log.Fatalf("failed to open workspace: %v", err)
 	}
+	log.Printf("Workspace: %s", fs.BasePath())
 
-	if err := db.AutoMigrate(
-		&model.Board{}, &model.Column{}, &model.Card{},
-		&model.Tag{}, &model.Checklist{}, &model.ChecklistItem{},
-	); err != nil {
-		log.Fatalf("failed to migrate database: %v", err)
-	}
-
-	boardRepo := repository.NewBoardRepository(db)
-	columnRepo := repository.NewColumnRepository(db)
-	cardRepo := repository.NewCardRepository(db)
-	tagRepo := repository.NewTagRepository(db)
-	checklistRepo := repository.NewChecklistRepository(db)
-	checklistItemRepo := repository.NewChecklistItemRepository(db)
+	boardRepo := repository.NewFileBoardRepository(fs)
+	columnRepo := repository.NewFileColumnRepository(fs)
+	cardRepo := repository.NewFileCardRepository(fs)
+	tagRepo := repository.NewFileTagRepository(fs)
+	checklistRepo := repository.NewFileChecklistRepository(fs)
+	checklistItemRepo := repository.NewFileChecklistItemRepository(fs)
 
 	boardSvc := service.NewBoardService(boardRepo)
 	columnSvc := service.NewColumnService(boardRepo, columnRepo)

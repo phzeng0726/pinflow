@@ -301,8 +301,13 @@ export function BoardPage() {
                   }
                   onTogglePin={(cardId) => togglePin.mutate(cardId)}
                   onDeleteCard={(cardId) => deleteCard.mutate(cardId)}
-                  onUpdateCard={(cardId, title, description) =>
-                    updateCard.mutate({ id: cardId, title, description })
+                  onUpdateCard={(cardId, title, description, storyPoint) =>
+                    updateCard.mutate({
+                      id: cardId,
+                      title,
+                      description,
+                      storyPoint,
+                    })
                   }
                 />
               ))}
@@ -399,7 +404,12 @@ interface ColumnViewProps {
   onAddCard: (columnId: number, title: string, description: string) => void
   onTogglePin: (id: number) => void
   onDeleteCard: (id: number) => void
-  onUpdateCard: (id: number, title: string, description: string) => void
+  onUpdateCard: (
+    id: number,
+    title: string,
+    description: string,
+    storyPoint?: number | null,
+  ) => void
 }
 
 function ColumnView(props: ColumnViewProps) {

@@ -835,6 +835,62 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "patch": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "checklists"
+                ],
+                "summary": "Update a checklist's title",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Checklist ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Checklist data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateChecklistRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ChecklistResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
             }
         },
         "/checklists/{id}/items": {
@@ -1065,7 +1121,7 @@ const docTemplate = `{
                 "summary": "Create or get a tag by name",
                 "parameters": [
                     {
-                        "description": "Tag name",
+                        "description": "Tag data",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -1085,6 +1141,102 @@ const docTemplate = `{
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/dto.TagResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tags/{id}": {
+            "delete": {
+                "tags": [
+                    "tags"
+                ],
+                "summary": "Delete a tag and its card associations",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Tag ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tags"
+                ],
+                "summary": "Update a tag's name and/or color",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Tag ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Tag data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateTagRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TagResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -1135,6 +1287,9 @@ const docTemplate = `{
                 },
                 "start_time": {
                     "type": "string"
+                },
+                "story_point": {
+                    "type": "integer"
                 },
                 "tags": {
                     "type": "array",
@@ -1274,6 +1429,10 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
+                "color": {
+                    "type": "string",
+                    "maxLength": 50
+                },
                 "name": {
                     "type": "string",
                     "maxLength": 100,
@@ -1295,6 +1454,9 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "copy_tags": {
+                    "type": "boolean"
+                },
+                "pin": {
                     "type": "boolean"
                 },
                 "position_index": {
@@ -1347,6 +1509,9 @@ const docTemplate = `{
         "dto.TagResponse": {
             "type": "object",
             "properties": {
+                "color": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -1384,6 +1549,9 @@ const docTemplate = `{
                 "start_time": {
                     "type": "string"
                 },
+                "story_point": {
+                    "type": "integer"
+                },
                 "title": {
                     "type": "string",
                     "maxLength": 200,
@@ -1405,6 +1573,19 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UpdateChecklistRequest": {
+            "type": "object",
+            "required": [
+                "title"
+            ],
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1
+                }
+            }
+        },
         "dto.UpdateColumnRequest": {
             "type": "object",
             "properties": {
@@ -1416,6 +1597,20 @@ const docTemplate = `{
                 },
                 "position": {
                     "type": "number"
+                }
+            }
+        },
+        "dto.UpdateTagRequest": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
                 }
             }
         },
@@ -1474,6 +1669,9 @@ const docTemplate = `{
                 },
                 "start_time": {
                     "type": "string"
+                },
+                "story_point": {
+                    "type": "integer"
                 },
                 "tags": {
                     "type": "array",
@@ -1564,6 +1762,9 @@ const docTemplate = `{
         "model.Tag": {
             "type": "object",
             "properties": {
+                "color": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },

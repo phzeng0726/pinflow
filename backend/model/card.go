@@ -9,6 +9,7 @@ type Card struct {
 	Description string      `gorm:"size:2000" json:"description"`
 	Position    float64     `gorm:"not null;default:0" json:"position"`
 	IsPinned    bool        `gorm:"not null;default:false" json:"is_pinned"`
+	StoryPoint  *int        `json:"story_point"`
 	StartTime   *time.Time  `json:"start_time"`
 	EndTime     *time.Time  `json:"end_time"`
 	Tags        []Tag       `gorm:"many2many:card_tags;" json:"tags"`

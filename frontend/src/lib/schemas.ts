@@ -32,6 +32,11 @@ export const tagInputSchema = z.object({
   input: z.string(),
 })
 
+export const tagFormSchema = z.object({
+  name: z.string().min(1, '請輸入標籤名稱'),
+  color: z.string().optional(),
+})
+
 export const checklistSchema = z.object({
   title: z.string().min(1, '請輸入清單標題'),
 })

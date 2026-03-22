@@ -4,6 +4,10 @@ type CreateChecklistRequest struct {
 	Title string `json:"title" binding:"required,min=1,max=200"`
 }
 
+type UpdateChecklistRequest struct {
+	Title string `json:"title" binding:"required,min=1,max=200"`
+}
+
 type CreateChecklistItemRequest struct {
 	Text     string  `json:"text" binding:"required,min=1,max=500"`
 	Position float64 `json:"position"`

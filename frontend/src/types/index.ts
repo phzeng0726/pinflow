@@ -20,6 +20,7 @@ export interface Column {
 export interface Tag {
   id: number
   name: string
+  color: string
 }
 
 export interface ChecklistItem {
@@ -46,6 +47,7 @@ export interface Card {
   description: string
   position: number
   is_pinned: boolean
+  story_point: number | null
   start_time: string | null
   end_time: string | null
   tags: Tag[]

@@ -10,6 +10,7 @@ type ChecklistRepository interface {
 	Create(checklist *model.Checklist) error
 	FindByID(id uint) (*model.Checklist, error)
 	ListByCard(cardID uint) ([]model.Checklist, error)
+	Update(checklist *model.Checklist) error
 	Delete(id uint) error
 }
 
@@ -40,6 +41,10 @@ func (r *checklistRepository) ListByCard(cardID uint) ([]model.Checklist, error)
 		return db.Order("position asc")
 	}).Find(&checklists).Error
 	return checklists, err
+}
+
+func (r *checklistRepository) Update(checklist *model.Checklist) error {
+	return r.db.Save(checklist).Error
 }
 
 func (r *checklistRepository) Delete(id uint) error {

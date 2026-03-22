@@ -21,7 +21,7 @@ func NewTagHandler(svc service.TagService) *TagHandler {
 // @Tags        tags
 // @Accept      json
 // @Produce     json
-// @Param       body body dto.CreateTagRequest true "Tag name"
+// @Param       body body dto.CreateTagRequest true "Tag data"
 // @Success     200 {object} dto.TagResponse
 // @Success     201 {object} dto.TagResponse
 // @Router      /tags [post]
@@ -31,12 +31,12 @@ func (h *TagHandler) CreateTag(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	tag, err := h.svc.CreateOrGet(req.Name)
+	tag, err := h.svc.CreateOrGet(req.Name, req.Color)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, dto.TagResponse{ID: tag.ID, Name: tag.Name})
+	c.JSON(http.StatusOK, service.ToTagResponse(*tag))
 }
 
 // ListTags godoc
@@ -51,11 +51,60 @@ func (h *TagHandler) ListTags(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	result := make([]dto.TagResponse, len(tags))
-	for i, t := range tags {
-		result[i] = dto.TagResponse{ID: t.ID, Name: t.Name}
+	c.JSON(http.StatusOK, service.ToTagResponses(tags))
+}
+
+// UpdateTag godoc
+// @Summary     Update a tag's name and/or color
+// @Tags        tags
+// @Accept      json
+// @Produce     json
+// @Param       id path int true "Tag ID"
+// @Param       body body dto.UpdateTagRequest true "Tag data"
+// @Success     200 {object} dto.TagResponse
+// @Failure     404 {object} map[string]string
+// @Failure     409 {object} map[string]string
+// @Failure     422 {object} map[string]string
+// @Router      /tags/{id} [patch]
+func (h *TagHandler) UpdateTag(c *gin.Context) {
+	id, err := parseUintParam(c, "id")
+	if err != nil {
+		return
 	}
-	c.JSON(http.StatusOK, result)
+	var req dto.UpdateTagRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+	tag, err := h.svc.UpdateTag(id, req)
+	if err != nil {
+		if err.Error() == "tag name already exists" {
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, service.ToTagResponse(*tag))
+}
+
+// DeleteTag godoc
+// @Summary     Delete a tag and its card associations
+// @Tags        tags
+// @Param       id path int true "Tag ID"
+// @Success     204
+// @Failure     404 {object} map[string]string
+// @Router      /tags/{id} [delete]
+func (h *TagHandler) DeleteTag(c *gin.Context) {
+	id, err := parseUintParam(c, "id")
+	if err != nil {
+		return
+	}
+	if err := h.svc.DeleteTag(id); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusNoContent)
 }
 
 // AttachTag godoc
@@ -87,11 +136,7 @@ func (h *TagHandler) AttachTag(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	result := make([]dto.TagResponse, len(tags))
-	for i, t := range tags {
-		result[i] = dto.TagResponse{ID: t.ID, Name: t.Name}
-	}
-	c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusOK, service.ToTagResponses(tags))
 }
 
 // DetachTag godoc

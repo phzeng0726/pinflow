@@ -20,6 +20,15 @@ export function useChecklistMutations(boardId: number, cardId: number) {
     onError: () => toast.error('建立清單失敗'),
   })
 
+  const updateList = useMutation({
+    mutationFn: ({ id, title }: { id: number; title: string }) =>
+      api.updateChecklist(id, { title }),
+    onSuccess: async () => {
+      await Promise.all([invalidateCardDetail(), invalidateBoardDetail()])
+    },
+    onError: () => toast.error('更新清單失敗'),
+  })
+
   const deleteList = useMutation({
     mutationFn: (id: number) => api.deleteChecklist(id),
     onSuccess: async () => {
@@ -67,6 +76,7 @@ export function useChecklistMutations(boardId: number, cardId: number) {
 
   return {
     createChecklist: createList,
+    updateChecklist: updateList,
     deleteChecklist: deleteList,
     createChecklistItem: createItem,
     updateChecklistItem: updateItem,

@@ -14,12 +14,37 @@ export function useTagMutations(boardId: number) {
     qc.invalidateQueries({ queryKey: queryKeys.cards.detail(id) })
 
   const create = useMutation({
-    mutationFn: api.createTag,
+    mutationFn: ({ name, color }: { name: string; color?: string }) =>
+      api.createTag(name, color),
     onSuccess: async () => {
       await invalidateTagsAll()
       toast.success('標籤已建立')
     },
     onError: () => toast.error('建立標籤失敗'),
+  })
+
+  const update = useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number
+      data: { name?: string; color?: string }
+    }) => api.updateTag(id, data),
+    onSuccess: async () => {
+      await Promise.all([invalidateTagsAll(), invalidateBoardDetail()])
+      toast.success('標籤已更新')
+    },
+    onError: () => toast.error('更新標籤失敗'),
+  })
+
+  const remove = useMutation({
+    mutationFn: (id: number) => api.deleteTag(id),
+    onSuccess: async () => {
+      await Promise.all([invalidateTagsAll(), invalidateBoardDetail()])
+      toast.success('標籤已刪除')
+    },
+    onError: () => toast.error('刪除標籤失敗'),
   })
 
   // 在 Card 上附上標籤
@@ -44,6 +69,8 @@ export function useTagMutations(boardId: number) {
 
   return {
     createTag: create,
+    updateTag: update,
+    deleteTag: remove,
     attachTag: attach,
     detachTag: detach,
   }

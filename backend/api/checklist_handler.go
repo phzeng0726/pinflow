@@ -64,6 +64,35 @@ func (h *ChecklistHandler) ListChecklists(c *gin.Context) {
 	c.JSON(http.StatusOK, service.ToChecklistResponses(cls))
 }
 
+// UpdateChecklist godoc
+// @Summary     Update a checklist's title
+// @Tags        checklists
+// @Accept      json
+// @Produce     json
+// @Param       id path int true "Checklist ID"
+// @Param       body body dto.UpdateChecklistRequest true "Checklist data"
+// @Success     200 {object} dto.ChecklistResponse
+// @Failure     404 {object} map[string]string
+// @Failure     422 {object} map[string]string
+// @Router      /checklists/{id} [patch]
+func (h *ChecklistHandler) UpdateChecklist(c *gin.Context) {
+	id, err := parseUintParam(c, "id")
+	if err != nil {
+		return
+	}
+	var req dto.UpdateChecklistRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+	cl, err := h.svc.UpdateChecklist(id, req.Title)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, service.ToChecklistResponse(*cl))
+}
+
 // DeleteChecklist godoc
 // @Summary     Delete a checklist and its items
 // @Tags        checklists

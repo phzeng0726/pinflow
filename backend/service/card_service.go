@@ -13,7 +13,7 @@ import (
 type CardService interface {
 	CreateCard(columnID uint, title, description string) (*model.Card, error)
 	GetCardDetail(id uint) (*dto.CardResponse, error)
-	UpdateCard(id uint, title, description string, startTime, endTime *time.Time) (*model.Card, error)
+	UpdateCard(id uint, title, description string, storyPoint *int, startTime, endTime *time.Time) (*model.Card, error)
 	MoveCard(id uint, columnID uint, position float64) (*model.Card, error)
 	TogglePin(id uint) (*model.Card, error)
 	GetPinnedCards() ([]dto.PinnedCardResponse, error)
@@ -79,9 +79,12 @@ func (s *cardService) GetCardDetail(id uint) (*dto.CardResponse, error) {
 	return &resp, nil
 }
 
-func (s *cardService) UpdateCard(id uint, title, description string, startTime, endTime *time.Time) (*model.Card, error) {
+func (s *cardService) UpdateCard(id uint, title, description string, storyPoint *int, startTime, endTime *time.Time) (*model.Card, error) {
 	if strings.TrimSpace(title) == "" {
 		return nil, errors.New("card title is required")
+	}
+	if storyPoint != nil && *storyPoint <= 0 {
+		return nil, errors.New("story_point must be a positive integer")
 	}
 	if startTime != nil && endTime != nil && endTime.Before(*startTime) {
 		return nil, errors.New("end_time must be after start_time")
@@ -92,6 +95,7 @@ func (s *cardService) UpdateCard(id uint, title, description string, startTime, 
 	}
 	card.Title = strings.TrimSpace(title)
 	card.Description = description
+	card.StoryPoint = storyPoint
 	card.StartTime = startTime
 	card.EndTime = endTime
 	if err := s.cardRepo.Update(card); err != nil {
@@ -103,7 +107,7 @@ func (s *cardService) UpdateCard(id uint, title, description string, startTime, 
 func ToCardResponse(card *model.Card) dto.CardResponse {
 	tags := make([]dto.TagResponse, len(card.Tags))
 	for i, t := range card.Tags {
-		tags[i] = dto.TagResponse{ID: t.ID, Name: t.Name}
+		tags[i] = dto.TagResponse{ID: t.ID, Name: t.Name, Color: t.Color}
 	}
 	checklists := make([]dto.ChecklistResponse, len(card.Checklists))
 	for i, cl := range card.Checklists {
@@ -137,6 +141,7 @@ func ToCardResponse(card *model.Card) dto.CardResponse {
 		Description: card.Description,
 		Position:    card.Position,
 		IsPinned:    card.IsPinned,
+		StoryPoint:  card.StoryPoint,
 		StartTime:   card.StartTime,
 		EndTime:     card.EndTime,
 		Tags:        tags,

@@ -10,6 +10,7 @@ type CreateCardRequest struct {
 type UpdateCardRequest struct {
 	Title       string     `json:"title" binding:"required,min=1,max=200"`
 	Description string     `json:"description" binding:"max=2000"`
+	StoryPoint  *int       `json:"story_point"`
 	StartTime   *time.Time `json:"start_time"`
 	EndTime     *time.Time `json:"end_time"`
 }
@@ -44,6 +45,7 @@ type CardResponse struct {
 	Description string              `json:"description"`
 	Position    float64             `json:"position"`
 	IsPinned    bool                `json:"is_pinned"`
+	StoryPoint  *int                `json:"story_point"`
 	StartTime   *time.Time          `json:"start_time"`
 	EndTime     *time.Time          `json:"end_time"`
 	Tags        []TagResponse       `json:"tags"`

@@ -38,6 +38,7 @@ export function ScheduleSection(props: ScheduleSectionProps) {
       id: card.id,
       title: card.title,
       description: card.description,
+      storyPoint: card.story_point,
       startTime: data.startTime || null,
       endTime: data.endTime || null,
     })

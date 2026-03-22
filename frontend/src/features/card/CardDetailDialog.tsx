@@ -1,8 +1,10 @@
 import { Dialog, DialogContent, DialogTitle } from '../../components/ui/dialog'
+import { useCardMutations } from '../../hooks/card/mutations/useCardMutations'
 import { useCardDetail } from '../../hooks/card/queries/useCardDetail'
 import { CardDetailHeader } from './CardDetailHeader'
 import { ChecklistSection } from './ChecklistSection'
 import { ScheduleSection } from './ScheduleSection'
+import { StoryPointSelector } from './StoryPointSelector'
 import { TagSection } from './TagSection'
 
 interface CardDetailDialogProps {
@@ -15,6 +17,19 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
   const { boardId, cardId, onClose } = props
 
   const { data: card, isLoading } = useCardDetail(cardId)
+  const { updateCard } = useCardMutations(boardId)
+
+  const handleStoryPointChange = (sp: number | null) => {
+    if (!card) return
+    updateCard.mutate({
+      id: card.id,
+      title: card.title,
+      description: card.description,
+      storyPoint: sp,
+      startTime: card.start_time,
+      endTime: card.end_time,
+    })
+  }
 
   return (
     <Dialog
@@ -31,6 +46,10 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
           <>
             <CardDetailHeader boardId={boardId} card={card} onClose={onClose} />
             <div className="space-y-6 p-6">
+              <StoryPointSelector
+                value={card.story_point}
+                onChange={handleStoryPointChange}
+              />
               <TagSection boardId={boardId} card={card} />
               <ScheduleSection boardId={boardId} card={card} />
               <ChecklistSection boardId={boardId} card={card} />

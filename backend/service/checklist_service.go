@@ -9,6 +9,7 @@ import (
 type ChecklistService interface {
 	CreateChecklist(cardID uint, title string) (*model.Checklist, error)
 	ListByCard(cardID uint) ([]model.Checklist, error)
+	UpdateChecklist(id uint, title string) (*model.Checklist, error)
 	DeleteChecklist(id uint) error
 	CreateItem(checklistID uint, text string, position float64) (*model.ChecklistItem, error)
 	UpdateItem(id uint, req dto.UpdateChecklistItemRequest) (*model.ChecklistItem, error)
@@ -43,6 +44,18 @@ func (s *checklistService) CreateChecklist(cardID uint, title string) (*model.Ch
 
 func (s *checklistService) ListByCard(cardID uint) ([]model.Checklist, error) {
 	return s.clRepo.ListByCard(cardID)
+}
+
+func (s *checklistService) UpdateChecklist(id uint, title string) (*model.Checklist, error) {
+	cl, err := s.clRepo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	cl.Title = title
+	if err := s.clRepo.Update(cl); err != nil {
+		return nil, err
+	}
+	return cl, nil
 }
 
 func (s *checklistService) DeleteChecklist(id uint) error {

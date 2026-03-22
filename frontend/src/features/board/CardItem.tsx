@@ -1,7 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Calendar, CheckSquare, Pencil, X } from 'lucide-react'
+import { Calendar, CheckSquare, Flame, Pencil, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useForm } from 'react-hook-form'
@@ -17,6 +17,7 @@ import {
 import { cardSchema } from '../../lib/schemas'
 import { cn } from '../../lib/utils'
 import type { Card } from '../../types'
+import { getTagColorClasses } from '../card/ColorPicker'
 import { CardDetailDialog } from '../card/CardDetailDialog'
 import { CardContextMenu } from './CardContextMenu'
 
@@ -28,7 +29,12 @@ interface CardItemProps {
   columnAutoPin: boolean
   onTogglePin: (id: number) => void
   onDelete: (id: number) => void
-  onUpdate: (id: number, title: string, description: string) => void
+  onUpdate: (
+    id: number,
+    title: string,
+    description: string,
+    storyPoint?: number | null,
+  ) => void
 }
 
 export function CardItem(props: CardItemProps) {
@@ -70,7 +76,7 @@ export function CardItem(props: CardItemProps) {
   }
 
   const onSubmit = ({ title }: CardFormValues) => {
-    onUpdate(card.id, title, card.description)
+    onUpdate(card.id, title, card.description, card.story_point)
     setShowMenu(false)
   }
 
@@ -161,15 +167,22 @@ export function CardItem(props: CardItemProps) {
             <div className="min-w-0 flex-1">
               {tags.length > 0 && (
                 <div className="mb-1.5 flex flex-wrap gap-1">
-                  {tags.slice(0, 3).map((tag) => (
-                    <Badge
-                      key={tag.id}
-                      variant="secondary"
-                      className="rounded px-1.5 py-0.5 text-xs"
-                    >
-                      {tag.name}
-                    </Badge>
-                  ))}
+                  {tags.slice(0, 3).map((tag) => {
+                    const colorCls = getTagColorClasses(tag.color)
+                    return (
+                      <Badge
+                        key={tag.id}
+                        variant="secondary"
+                        className={cn(
+                          'rounded px-1.5 py-0.5 text-xs',
+                          tag.color &&
+                            `${colorCls.bg} text-white border-transparent`,
+                        )}
+                      >
+                        {tag.name}
+                      </Badge>
+                    )
+                  })}
                   {tags.length > 3 && (
                     <span className="text-xs text-gray-400">
                       +{tags.length - 3}
@@ -185,8 +198,14 @@ export function CardItem(props: CardItemProps) {
                   {card.description}
                 </p>
               )}
-              {(hasSchedule || totalItems > 0) && (
+              {(card.story_point != null || hasSchedule || totalItems > 0) && (
                 <div className="mt-1.5 flex items-center gap-2">
+                  {card.story_point != null && (
+                    <span className="flex items-center gap-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
+                      <Flame className="h-3 w-3" />
+                      {card.story_point}
+                    </span>
+                  )}
                   {hasSchedule && (
                     <span className="flex items-center gap-0.5 text-xs text-gray-400">
                       <Calendar className="h-3 w-3" />

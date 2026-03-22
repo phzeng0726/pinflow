@@ -26,13 +26,26 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
 
   const [showItemForm, setShowItemForm] = useState(false)
   const [editingItemId, setEditingItemId] = useState<number | null>(null)
+  const [editingTitle, setEditingTitle] = useState(false)
+  const [titleValue, setTitleValue] = useState(checklist.title)
 
   const {
+    updateChecklist,
     deleteChecklist,
     createChecklistItem: createItem,
     updateChecklistItem: updateItem,
     deleteChecklistItem: deleteItem,
   } = useChecklistMutations(boardId, cardId)
+
+  const handleTitleSave = () => {
+    const trimmed = titleValue.trim()
+    if (trimmed && trimmed !== checklist.title) {
+      updateChecklist.mutate({ id: checklist.id, title: trimmed })
+    } else {
+      setTitleValue(checklist.title)
+    }
+    setEditingTitle(false)
+  }
 
   const newItemForm = useForm<ChecklistItemForm>({
     resolver: zodResolver(checklistItemSchema),
@@ -60,9 +73,35 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
   return (
     <div className="rounded-lg border p-3 dark:border-gray-700">
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
-          {checklist.title}
-        </span>
+        {editingTitle ? (
+          <Input
+            value={titleValue}
+            onChange={(e) => setTitleValue(e.target.value)}
+            onBlur={handleTitleSave}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                handleTitleSave()
+              }
+              if (e.key === 'Escape') {
+                setTitleValue(checklist.title)
+                setEditingTitle(false)
+              }
+            }}
+            className="h-7 flex-1 text-sm font-medium"
+            autoFocus
+          />
+        ) : (
+          <span
+            className="cursor-pointer text-sm font-medium text-gray-800 hover:text-blue-600 dark:text-gray-200 dark:hover:text-blue-400"
+            onClick={() => {
+              setTitleValue(checklist.title)
+              setEditingTitle(true)
+            }}
+          >
+            {checklist.title}
+          </span>
+        )}
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-400">
             {completedCount}/{total}

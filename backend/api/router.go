@@ -80,10 +80,13 @@ func NewRouter(
 		{
 			tags.GET("", tagH.ListTags)
 			tags.POST("", tagH.CreateTag)
+			tags.PATCH("/:id", tagH.UpdateTag)
+			tags.DELETE("/:id", tagH.DeleteTag)
 		}
 
 		checklists := v1.Group("/checklists")
 		{
+			checklists.PATCH("/:id", checklistH.UpdateChecklist)
 			checklists.DELETE("/:id", checklistH.DeleteChecklist)
 			checklists.POST("/:id/items", checklistItemH.CreateItem)
 		}

@@ -37,6 +37,7 @@ export function CardDetailHeader(props: CardDetailHeaderProps) {
       id: card.id,
       title: data.title,
       description: data.desc ?? '',
+      storyPoint: card.story_point,
       startTime: card.start_time,
       endTime: card.end_time,
     })

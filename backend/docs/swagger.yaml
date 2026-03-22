@@ -29,6 +29,8 @@ definitions:
         type: number
       start_time:
         type: string
+      story_point:
+        type: integer
       tags:
         items:
           $ref: '#/definitions/dto.TagResponse'
@@ -120,6 +122,9 @@ definitions:
     type: object
   dto.CreateTagRequest:
     properties:
+      color:
+        maxLength: 50
+        type: string
       name:
         maxLength: 100
         minLength: 1
@@ -134,6 +139,8 @@ definitions:
       copy_schedule:
         type: boolean
       copy_tags:
+        type: boolean
+      pin:
         type: boolean
       position_index:
         description: 1-based; 0 = append to end
@@ -171,6 +178,8 @@ definitions:
     type: object
   dto.TagResponse:
     properties:
+      color:
+        type: string
       id:
         type: integer
       name:
@@ -194,6 +203,8 @@ definitions:
         type: string
       start_time:
         type: string
+      story_point:
+        type: integer
       title:
         maxLength: 200
         minLength: 1
@@ -210,6 +221,15 @@ definitions:
       text:
         type: string
     type: object
+  dto.UpdateChecklistRequest:
+    properties:
+      title:
+        maxLength: 200
+        minLength: 1
+        type: string
+    required:
+    - title
+    type: object
   dto.UpdateColumnRequest:
     properties:
       auto_pin:
@@ -218,6 +238,16 @@ definitions:
         type: string
       position:
         type: number
+    type: object
+  dto.UpdateTagRequest:
+    properties:
+      color:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
     type: object
   model.Board:
     properties:
@@ -256,6 +286,8 @@ definitions:
         type: number
       start_time:
         type: string
+      story_point:
+        type: integer
       tags:
         items:
           $ref: '#/definitions/model.Tag'
@@ -314,6 +346,8 @@ definitions:
     type: object
   model.Tag:
     properties:
+      color:
+        type: string
       id:
         type: integer
       name:
@@ -863,6 +897,43 @@ paths:
       summary: Delete a checklist and its items
       tags:
       - checklists
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Checklist ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Checklist data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateChecklistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ChecklistResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a checklist's title
+      tags:
+      - checklists
   /checklists/{id}/items:
     post:
       consumes:
@@ -1008,7 +1079,7 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Tag name
+      - description: Tag data
         in: body
         name: body
         required: true
@@ -1026,6 +1097,69 @@ paths:
           schema:
             $ref: '#/definitions/dto.TagResponse'
       summary: Create or get a tag by name
+      tags:
+      - tags
+  /tags/{id}:
+    delete:
+      parameters:
+      - description: Tag ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a tag and its card associations
+      tags:
+      - tags
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tag ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Tag data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateTagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TagResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a tag's name and/or color
       tags:
       - tags
 swagger: "2.0"

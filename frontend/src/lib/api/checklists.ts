@@ -7,6 +7,8 @@ export const createChecklist = (cardId: number, title: string) =>
   client
     .post<Checklist>(`/cards/${cardId}/checklists`, { title })
     .then((r) => r.data)
+export const updateChecklist = (id: number, data: { title: string }) =>
+  client.patch<Checklist>(`/checklists/${id}`, data).then((r) => r.data)
 export const deleteChecklist = (id: number) =>
   client.delete(`/checklists/${id}`)
 

@@ -15,6 +15,7 @@ export const updateCard = (
   id: number,
   title: string,
   description: string,
+  storyPoint?: number | null,
   startTime?: string | null,
   endTime?: string | null,
 ) =>
@@ -22,6 +23,7 @@ export const updateCard = (
     .patch<Card>(`/cards/${id}`, {
       title,
       description,
+      story_point: storyPoint ?? null,
       start_time: startTime ?? null,
       end_time: endTime ?? null,
     })

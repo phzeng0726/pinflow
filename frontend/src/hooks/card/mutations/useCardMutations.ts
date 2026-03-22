@@ -66,15 +66,17 @@ export function useCardMutations(boardId?: number) {
       id,
       title,
       description,
+      storyPoint,
       startTime,
       endTime,
     }: {
       id: number
       title: string
       description: string
+      storyPoint?: number | null
       startTime?: string | null
       endTime?: string | null
-    }) => api.updateCard(id, title, description, startTime, endTime),
+    }) => api.updateCard(id, title, description, storyPoint, startTime, endTime),
     onSuccess: async (_data, variables) => {
       await Promise.all([
         invalidateBoardDetail(),

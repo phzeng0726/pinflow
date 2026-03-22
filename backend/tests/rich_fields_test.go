@@ -13,8 +13,8 @@ import (
 // --- Tag repository tests ---
 
 func TestTagRepository_CreateOrGet(t *testing.T) {
-	db := setupTestDB(t)
-	repo := repository.NewTagRepository(db)
+	fs := setupTestStore(t)
+	repo := repository.NewFileTagRepository(fs)
 
 	tag, err := repo.CreateOrGet("urgent", "")
 	if err != nil {
@@ -35,8 +35,8 @@ func TestTagRepository_CreateOrGet(t *testing.T) {
 }
 
 func TestTagRepository_CreateOrGet_CaseInsensitive(t *testing.T) {
-	db := setupTestDB(t)
-	repo := repository.NewTagRepository(db)
+	fs := setupTestStore(t)
+	repo := repository.NewFileTagRepository(fs)
 
 	tag1, _ := repo.CreateOrGet("Bug", "")
 	tag2, _ := repo.CreateOrGet("bug", "")
@@ -46,11 +46,11 @@ func TestTagRepository_CreateOrGet_CaseInsensitive(t *testing.T) {
 }
 
 func TestTagRepository_AttachDetach(t *testing.T) {
-	db := setupTestDB(t)
-	tagRepo := repository.NewTagRepository(db)
-	cardRepo := repository.NewCardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
-	boardRepo := repository.NewBoardRepository(db)
+	fs := setupTestStore(t)
+	tagRepo := repository.NewFileTagRepository(fs)
+	cardRepo := repository.NewFileCardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
+	boardRepo := repository.NewFileBoardRepository(fs)
 
 	// Setup: board -> column -> card
 	board := &model.Board{Name: "B"}
@@ -88,11 +88,11 @@ func TestTagRepository_AttachDetach(t *testing.T) {
 // --- Schedule validation tests ---
 
 func TestCardService_UpdateCard_ScheduleValidation(t *testing.T) {
-	db := setupTestDB(t)
-	cardRepo := repository.NewCardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
-	boardRepo := repository.NewBoardRepository(db)
-	svc := service.NewCardService(cardRepo, colRepo, repository.NewTagRepository(db), repository.NewChecklistRepository(db), repository.NewChecklistItemRepository(db))
+	fs := setupTestStore(t)
+	cardRepo := repository.NewFileCardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
+	boardRepo := repository.NewFileBoardRepository(fs)
+	svc := service.NewCardService(cardRepo, colRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs))
 
 	board := &model.Board{Name: "B"}
 	_ = boardRepo.Create(board)
@@ -111,11 +111,11 @@ func TestCardService_UpdateCard_ScheduleValidation(t *testing.T) {
 }
 
 func TestCardService_UpdateCard_ScheduleSet(t *testing.T) {
-	db := setupTestDB(t)
-	cardRepo := repository.NewCardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
-	boardRepo := repository.NewBoardRepository(db)
-	svc := service.NewCardService(cardRepo, colRepo, repository.NewTagRepository(db), repository.NewChecklistRepository(db), repository.NewChecklistItemRepository(db))
+	fs := setupTestStore(t)
+	cardRepo := repository.NewFileCardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
+	boardRepo := repository.NewFileBoardRepository(fs)
+	svc := service.NewCardService(cardRepo, colRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs))
 
 	board := &model.Board{Name: "B"}
 	_ = boardRepo.Create(board)
@@ -139,12 +139,12 @@ func TestCardService_UpdateCard_ScheduleSet(t *testing.T) {
 // --- Checklist service tests ---
 
 func TestChecklistService_CreateAndList(t *testing.T) {
-	db := setupTestDB(t)
-	cardRepo := repository.NewCardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
-	boardRepo := repository.NewBoardRepository(db)
-	clRepo := repository.NewChecklistRepository(db)
-	itemRepo := repository.NewChecklistItemRepository(db)
+	fs := setupTestStore(t)
+	cardRepo := repository.NewFileCardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
+	boardRepo := repository.NewFileBoardRepository(fs)
+	clRepo := repository.NewFileChecklistRepository(fs)
+	itemRepo := repository.NewFileChecklistItemRepository(fs)
 	svc := service.NewChecklistService(clRepo, itemRepo, cardRepo)
 
 	board := &model.Board{Name: "B"}
@@ -172,12 +172,12 @@ func TestChecklistService_CreateAndList(t *testing.T) {
 }
 
 func TestChecklistService_Item_CreateToggleDelete(t *testing.T) {
-	db := setupTestDB(t)
-	cardRepo := repository.NewCardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
-	boardRepo := repository.NewBoardRepository(db)
-	clRepo := repository.NewChecklistRepository(db)
-	itemRepo := repository.NewChecklistItemRepository(db)
+	fs := setupTestStore(t)
+	cardRepo := repository.NewFileCardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
+	boardRepo := repository.NewFileBoardRepository(fs)
+	clRepo := repository.NewFileChecklistRepository(fs)
+	itemRepo := repository.NewFileChecklistItemRepository(fs)
 	svc := service.NewChecklistService(clRepo, itemRepo, cardRepo)
 
 	board := &model.Board{Name: "B"}
@@ -213,11 +213,11 @@ func TestChecklistService_Item_CreateToggleDelete(t *testing.T) {
 // --- Story point tests ---
 
 func TestCardService_UpdateCard_StoryPoint(t *testing.T) {
-	db := setupTestDB(t)
-	cardRepo := repository.NewCardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
-	boardRepo := repository.NewBoardRepository(db)
-	svc := service.NewCardService(cardRepo, colRepo, repository.NewTagRepository(db), repository.NewChecklistRepository(db), repository.NewChecklistItemRepository(db))
+	fs := setupTestStore(t)
+	cardRepo := repository.NewFileCardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
+	boardRepo := repository.NewFileBoardRepository(fs)
+	svc := service.NewCardService(cardRepo, colRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs))
 
 	board := &model.Board{Name: "B"}
 	_ = boardRepo.Create(board)
@@ -247,11 +247,11 @@ func TestCardService_UpdateCard_StoryPoint(t *testing.T) {
 }
 
 func TestCardService_UpdateCard_StoryPointNegative(t *testing.T) {
-	db := setupTestDB(t)
-	cardRepo := repository.NewCardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
-	boardRepo := repository.NewBoardRepository(db)
-	svc := service.NewCardService(cardRepo, colRepo, repository.NewTagRepository(db), repository.NewChecklistRepository(db), repository.NewChecklistItemRepository(db))
+	fs := setupTestStore(t)
+	cardRepo := repository.NewFileCardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
+	boardRepo := repository.NewFileBoardRepository(fs)
+	svc := service.NewCardService(cardRepo, colRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs))
 
 	board := &model.Board{Name: "B"}
 	_ = boardRepo.Create(board)
@@ -270,8 +270,8 @@ func TestCardService_UpdateCard_StoryPointNegative(t *testing.T) {
 // --- Tag color, update, delete tests ---
 
 func TestTagRepository_CreateOrGet_WithColor(t *testing.T) {
-	db := setupTestDB(t)
-	repo := repository.NewTagRepository(db)
+	fs := setupTestStore(t)
+	repo := repository.NewFileTagRepository(fs)
 
 	tag, err := repo.CreateOrGet("urgent", "red")
 	if err != nil {
@@ -283,9 +283,9 @@ func TestTagRepository_CreateOrGet_WithColor(t *testing.T) {
 }
 
 func TestTagService_UpdateTag(t *testing.T) {
-	db := setupTestDB(t)
-	tagRepo := repository.NewTagRepository(db)
-	cardRepo := repository.NewCardRepository(db)
+	fs := setupTestStore(t)
+	tagRepo := repository.NewFileTagRepository(fs)
+	cardRepo := repository.NewFileCardRepository(fs)
 	svc := service.NewTagService(tagRepo, cardRepo)
 
 	tag, _ := svc.CreateOrGet("feature", "blue")
@@ -302,9 +302,9 @@ func TestTagService_UpdateTag(t *testing.T) {
 }
 
 func TestTagService_UpdateTag_DuplicateName(t *testing.T) {
-	db := setupTestDB(t)
-	tagRepo := repository.NewTagRepository(db)
-	cardRepo := repository.NewCardRepository(db)
+	fs := setupTestStore(t)
+	tagRepo := repository.NewFileTagRepository(fs)
+	cardRepo := repository.NewFileCardRepository(fs)
 	svc := service.NewTagService(tagRepo, cardRepo)
 
 	svc.CreateOrGet("bug", "red")
@@ -318,11 +318,11 @@ func TestTagService_UpdateTag_DuplicateName(t *testing.T) {
 }
 
 func TestTagService_DeleteTag(t *testing.T) {
-	db := setupTestDB(t)
-	tagRepo := repository.NewTagRepository(db)
-	cardRepo := repository.NewCardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
-	boardRepo := repository.NewBoardRepository(db)
+	fs := setupTestStore(t)
+	tagRepo := repository.NewFileTagRepository(fs)
+	cardRepo := repository.NewFileCardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
+	boardRepo := repository.NewFileBoardRepository(fs)
 	svc := service.NewTagService(tagRepo, cardRepo)
 
 	board := &model.Board{Name: "B"}
@@ -357,12 +357,12 @@ func TestTagService_DeleteTag(t *testing.T) {
 // --- Checklist title update tests ---
 
 func TestChecklistService_UpdateChecklist(t *testing.T) {
-	db := setupTestDB(t)
-	cardRepo := repository.NewCardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
-	boardRepo := repository.NewBoardRepository(db)
-	clRepo := repository.NewChecklistRepository(db)
-	itemRepo := repository.NewChecklistItemRepository(db)
+	fs := setupTestStore(t)
+	cardRepo := repository.NewFileCardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
+	boardRepo := repository.NewFileBoardRepository(fs)
+	clRepo := repository.NewFileChecklistRepository(fs)
+	itemRepo := repository.NewFileChecklistItemRepository(fs)
 	svc := service.NewChecklistService(clRepo, itemRepo, cardRepo)
 
 	board := &model.Board{Name: "B"}
@@ -413,12 +413,12 @@ func TestChecklistService_UpdateChecklist(t *testing.T) {
 }
 
 func TestChecklistService_ListByCard_OrderedByPosition(t *testing.T) {
-	db := setupTestDB(t)
-	cardRepo := repository.NewCardRepository(db)
-	colRepo := repository.NewColumnRepository(db)
-	boardRepo := repository.NewBoardRepository(db)
-	clRepo := repository.NewChecklistRepository(db)
-	itemRepo := repository.NewChecklistItemRepository(db)
+	fs := setupTestStore(t)
+	cardRepo := repository.NewFileCardRepository(fs)
+	colRepo := repository.NewFileColumnRepository(fs)
+	boardRepo := repository.NewFileBoardRepository(fs)
+	clRepo := repository.NewFileChecklistRepository(fs)
+	itemRepo := repository.NewFileChecklistItemRepository(fs)
 	svc := service.NewChecklistService(clRepo, itemRepo, cardRepo)
 
 	board := &model.Board{Name: "B"}

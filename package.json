@@ -1,0 +1,54 @@
+{
+  "name": "pinflow",
+  "version": "0.1.0",
+  "description": "Trello-style kanban with desktop pin overlay",
+  "main": "electron/main.js",
+  "author": "Pinflow",
+  "license": "MIT",
+  "scripts": {
+    "electron:dev": "cross-env ELECTRON_DEV=1 electron .",
+    "electron:build:frontend": "cross-env ELECTRON_BUILD=1 pnpm --filter frontend build",
+    "electron:package": "pnpm run electron:build:frontend && electron-builder"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "electron": "^36.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.pinflow.app",
+    "productName": "Pinflow",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron/**/*",
+      "frontend/dist/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "electron/resources/",
+        "to": ".",
+        "filter": ["pinflow-backend*"]
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "electron/icons/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "electron/icons/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "electron/icons/icon.png"
+    }
+  }
+}

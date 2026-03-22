@@ -1,0 +1,1173 @@
+basePath: /api/v1
+definitions:
+  dto.AttachTagRequest:
+    properties:
+      tag_id:
+        type: integer
+    required:
+    - tag_id
+    type: object
+  dto.CardResponse:
+    properties:
+      checklists:
+        items:
+          $ref: '#/definitions/dto.ChecklistResponse'
+        type: array
+      column_id:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      end_time:
+        type: string
+      id:
+        type: integer
+      is_pinned:
+        type: boolean
+      position:
+        type: number
+      start_time:
+        type: string
+      story_point:
+        type: integer
+      tags:
+        items:
+          $ref: '#/definitions/dto.TagResponse'
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.ChecklistItemResponse:
+    properties:
+      checklist_id:
+        type: integer
+      completed:
+        type: boolean
+      id:
+        type: integer
+      position:
+        type: number
+      text:
+        type: string
+    type: object
+  dto.ChecklistResponse:
+    properties:
+      card_id:
+        type: integer
+      completed_count:
+        type: integer
+      id:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/dto.ChecklistItemResponse'
+        type: array
+      position:
+        type: number
+      title:
+        type: string
+      total_count:
+        type: integer
+    type: object
+  dto.CreateBoardRequest:
+    properties:
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  dto.CreateCardRequest:
+    properties:
+      description:
+        maxLength: 2000
+        type: string
+      title:
+        maxLength: 200
+        minLength: 1
+        type: string
+    required:
+    - title
+    type: object
+  dto.CreateChecklistItemRequest:
+    properties:
+      position:
+        type: number
+      text:
+        maxLength: 500
+        minLength: 1
+        type: string
+    required:
+    - text
+    type: object
+  dto.CreateChecklistRequest:
+    properties:
+      title:
+        maxLength: 200
+        minLength: 1
+        type: string
+    required:
+    - title
+    type: object
+  dto.CreateColumnRequest:
+    properties:
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  dto.CreateTagRequest:
+    properties:
+      color:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  dto.DuplicateCardRequest:
+    properties:
+      copy_checklists:
+        type: boolean
+      copy_schedule:
+        type: boolean
+      copy_tags:
+        type: boolean
+      pin:
+        type: boolean
+      position_index:
+        description: 1-based; 0 = append to end
+        type: integer
+      target_column_id:
+        type: integer
+      title:
+        type: string
+    required:
+    - target_column_id
+    - title
+    type: object
+  dto.MoveCardRequest:
+    properties:
+      column_id:
+        type: integer
+      position:
+        type: number
+    required:
+    - column_id
+    - position
+    type: object
+  dto.PinnedCardResponse:
+    properties:
+      column_id:
+        type: integer
+      column_name:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+    type: object
+  dto.TagResponse:
+    properties:
+      color:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  dto.UpdateBoardRequest:
+    properties:
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  dto.UpdateCardRequest:
+    properties:
+      description:
+        maxLength: 2000
+        type: string
+      end_time:
+        type: string
+      start_time:
+        type: string
+      story_point:
+        type: integer
+      title:
+        maxLength: 200
+        minLength: 1
+        type: string
+    required:
+    - title
+    type: object
+  dto.UpdateChecklistItemRequest:
+    properties:
+      completed:
+        type: boolean
+      position:
+        type: number
+      text:
+        type: string
+    type: object
+  dto.UpdateChecklistRequest:
+    properties:
+      position:
+        type: number
+      title:
+        type: string
+    type: object
+  dto.UpdateColumnRequest:
+    properties:
+      auto_pin:
+        type: boolean
+      name:
+        type: string
+      position:
+        type: number
+    type: object
+  dto.UpdateTagRequest:
+    properties:
+      color:
+        maxLength: 50
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+    type: object
+  model.Board:
+    properties:
+      columns:
+        items:
+          $ref: '#/definitions/model.Column'
+        type: array
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.Card:
+    properties:
+      checklists:
+        items:
+          $ref: '#/definitions/model.Checklist'
+        type: array
+      column_id:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      end_time:
+        type: string
+      id:
+        type: integer
+      is_pinned:
+        type: boolean
+      position:
+        type: number
+      start_time:
+        type: string
+      story_point:
+        type: integer
+      tags:
+        items:
+          $ref: '#/definitions/model.Tag'
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.Checklist:
+    properties:
+      card_id:
+        type: integer
+      id:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/model.ChecklistItem'
+        type: array
+      position:
+        type: number
+      title:
+        type: string
+    type: object
+  model.ChecklistItem:
+    properties:
+      checklist_id:
+        type: integer
+      completed:
+        type: boolean
+      id:
+        type: integer
+      position:
+        type: number
+      text:
+        type: string
+    type: object
+  model.Column:
+    properties:
+      auto_pin:
+        type: boolean
+      board_id:
+        type: integer
+      cards:
+        items:
+          $ref: '#/definitions/model.Card'
+        type: array
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      position:
+        type: number
+      updated_at:
+        type: string
+    type: object
+  model.Tag:
+    properties:
+      color:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+host: localhost:34115
+info:
+  contact: {}
+  description: Kanban board with pin mode API
+  title: Pinflow API
+  version: "1.0"
+paths:
+  /boards:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Board'
+            type: array
+      summary: List all boards
+      tags:
+      - boards
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Board name
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateBoardRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Board'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a board
+      tags:
+      - boards
+  /boards/{id}:
+    delete:
+      parameters:
+      - description: Board ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a board
+      tags:
+      - boards
+    get:
+      parameters:
+      - description: Board ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Board'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get a board by ID
+      tags:
+      - boards
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Board ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Board data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateBoardRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Board'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a board
+      tags:
+      - boards
+  /boards/{id}/columns:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Board ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Column data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateColumnRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Column'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a column in a board
+      tags:
+      - columns
+  /cards/{id}:
+    delete:
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a card
+      tags:
+      - cards
+    get:
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CardResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get a card by ID with full details
+      tags:
+      - cards
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Card data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateCardRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Card'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a card's title, description, and schedule
+      tags:
+      - cards
+  /cards/{id}/checklists:
+    get:
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.ChecklistResponse'
+            type: array
+      summary: List checklists for a card
+      tags:
+      - checklists
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Checklist data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateChecklistRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ChecklistResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a checklist on a card
+      tags:
+      - checklists
+  /cards/{id}/duplicate:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Duplicate data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.DuplicateCardRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.CardResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Duplicate a card
+      tags:
+      - cards
+  /cards/{id}/move:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Move data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MoveCardRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Card'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Move a card to another column or reorder
+      tags:
+      - cards
+  /cards/{id}/pin:
+    patch:
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Card'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Toggle pin status of a card
+      tags:
+      - cards
+  /cards/{id}/tags:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Tag ID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AttachTagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.TagResponse'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Attach a tag to a card
+      tags:
+      - tags
+  /cards/{id}/tags/{tagId}:
+    delete:
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Tag ID
+        in: path
+        name: tagId
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Detach a tag from a card
+      tags:
+      - tags
+  /cards/pinned:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PinnedCardResponse'
+            type: array
+      summary: Get all pinned cards
+      tags:
+      - cards
+  /checklist-items/{id}:
+    delete:
+      parameters:
+      - description: Item ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a checklist item
+      tags:
+      - checklist-items
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Item ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateChecklistItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ChecklistItemResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a checklist item
+      tags:
+      - checklist-items
+  /checklists/{id}:
+    delete:
+      parameters:
+      - description: Checklist ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a checklist and its items
+      tags:
+      - checklists
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Checklist ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Checklist data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateChecklistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ChecklistResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a checklist
+      tags:
+      - checklists
+  /checklists/{id}/items:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Checklist ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Item data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateChecklistItemRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ChecklistItemResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Add an item to a checklist
+      tags:
+      - checklist-items
+  /columns/{id}:
+    delete:
+      parameters:
+      - description: Column ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a column
+      tags:
+      - columns
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Column ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Column update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateColumnRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Column'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a column (rename, auto_pin, position)
+      tags:
+      - columns
+  /columns/{id}/cards:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Column ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Card data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCardRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Card'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a card in a column
+      tags:
+      - cards
+  /tags:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.TagResponse'
+            type: array
+      summary: List all tags
+      tags:
+      - tags
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tag data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateTagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TagResponse'
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.TagResponse'
+      summary: Create or get a tag by name
+      tags:
+      - tags
+  /tags/{id}:
+    delete:
+      parameters:
+      - description: Tag ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a tag and its card associations
+      tags:
+      - tags
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tag ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Tag data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateTagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TagResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a tag's name and/or color
+      tags:
+      - tags
+swagger: "2.0"

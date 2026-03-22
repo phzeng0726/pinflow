@@ -1,0 +1,26 @@
+## Requirements
+
+### Requirement: Card response DTO includes rich fields
+The card response DTO SHALL include `tags`, `start_time`, `end_time`, and `checklists` fields in addition to existing fields (`id`, `title`, `description`, `position`, `column_id`, `is_pinned`, `created_at`, `updated_at`).
+
+#### Scenario: Card detail endpoint returns rich fields
+- **WHEN** user fetches GET /api/cards/:id
+- **THEN** response includes `tags: []`, `start_time: null|string`, `end_time: null|string`, `checklists: []`
+
+#### Scenario: Board card list omits heavy nested data
+- **WHEN** user fetches GET /api/boards/:id/cards or GET /api/columns/:id/cards
+- **THEN** response MAY omit checklist item details but MUST include tag list and schedule fields to support filtering and display
+
+### Requirement: Card update accepts schedule fields
+The card PATCH endpoint SHALL accept `start_time` and `end_time` as optional nullable datetime strings in the update request body.
+
+#### Scenario: Update with schedule
+- **WHEN** user sends PATCH /api/cards/:id with schedule fields
+- **THEN** system persists and returns updated schedule alongside other card fields
+
+### Requirement: Card move flow intercepts auto-pin column exit
+當卡片從 `auto_pin: true` 的 column 移出時，前端 SHALL 偵測此情境並在 move 完成後觸發取消釘選確認流程（見 move-out-unpin-dialog spec）。
+
+#### Scenario: 移出自動釘選 column 觸發後續確認流程
+- **WHEN** moveCard mutation 成功，且來源 column 的 `auto_pin` 為 true，且卡片 `is_pinned` 為 true
+- **THEN** 前端觸發 move-out-unpin-dialog 確認 dialog

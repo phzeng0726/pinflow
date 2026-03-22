@@ -374,11 +374,79 @@ func TestChecklistService_UpdateChecklist(t *testing.T) {
 
 	cl, _ := svc.CreateChecklist(card.ID, "Original Title")
 
-	updated, err := svc.UpdateChecklist(cl.ID, "Updated Title")
+	// Verify auto-assigned position
+	if cl.Position != 1.0 {
+		t.Errorf("expected position=1.0, got %f", cl.Position)
+	}
+
+	// Create second checklist and verify position increments
+	cl2, _ := svc.CreateChecklist(card.ID, "Second")
+	if cl2.Position != 2.0 {
+		t.Errorf("expected position=2.0, got %f", cl2.Position)
+	}
+
+	// Update title only
+	newTitle := "Updated Title"
+	updated, err := svc.UpdateChecklist(cl.ID, dto.UpdateChecklistRequest{Title: &newTitle})
 	if err != nil {
 		t.Fatalf("UpdateChecklist error: %v", err)
 	}
 	if updated.Title != "Updated Title" {
 		t.Errorf("expected title='Updated Title', got '%s'", updated.Title)
+	}
+	if updated.Position != 1.0 {
+		t.Errorf("expected position unchanged=1.0, got %f", updated.Position)
+	}
+
+	// Update position only
+	newPos := 5.5
+	updated2, err := svc.UpdateChecklist(cl.ID, dto.UpdateChecklistRequest{Position: &newPos})
+	if err != nil {
+		t.Fatalf("UpdateChecklist position error: %v", err)
+	}
+	if updated2.Position != 5.5 {
+		t.Errorf("expected position=5.5, got %f", updated2.Position)
+	}
+	if updated2.Title != "Updated Title" {
+		t.Errorf("expected title unchanged='Updated Title', got '%s'", updated2.Title)
+	}
+}
+
+func TestChecklistService_ListByCard_OrderedByPosition(t *testing.T) {
+	db := setupTestDB(t)
+	cardRepo := repository.NewCardRepository(db)
+	colRepo := repository.NewColumnRepository(db)
+	boardRepo := repository.NewBoardRepository(db)
+	clRepo := repository.NewChecklistRepository(db)
+	itemRepo := repository.NewChecklistItemRepository(db)
+	svc := service.NewChecklistService(clRepo, itemRepo, cardRepo)
+
+	board := &model.Board{Name: "B"}
+	_ = boardRepo.Create(board)
+	col := &model.Column{BoardID: board.ID, Name: "C", Position: 1}
+	_ = colRepo.Create(col)
+	card := &model.Card{ColumnID: col.ID, Title: "Card", Position: 1}
+	_ = cardRepo.Create(card)
+
+	svc.CreateChecklist(card.ID, "Third")  // position 1.0
+	svc.CreateChecklist(card.ID, "First")  // position 2.0
+	svc.CreateChecklist(card.ID, "Second") // position 3.0
+
+	// Reorder: move "First" to position 0.5
+	cls, _ := svc.ListByCard(card.ID)
+	firstCl := cls[1] // "First" at position 2.0
+	newPos := 0.5
+	svc.UpdateChecklist(firstCl.ID, dto.UpdateChecklistRequest{Position: &newPos})
+
+	// Verify order
+	ordered, err := svc.ListByCard(card.ID)
+	if err != nil {
+		t.Fatalf("ListByCard error: %v", err)
+	}
+	if len(ordered) != 3 {
+		t.Fatalf("expected 3 checklists, got %d", len(ordered))
+	}
+	if ordered[0].Title != "First" || ordered[1].Title != "Third" || ordered[2].Title != "Second" {
+		t.Errorf("unexpected order: %s, %s, %s", ordered[0].Title, ordered[1].Title, ordered[2].Title)
 	}
 }

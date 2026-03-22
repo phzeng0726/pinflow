@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"pinflow/dto"
 	"pinflow/service"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -65,13 +66,14 @@ func (h *ChecklistHandler) ListChecklists(c *gin.Context) {
 }
 
 // UpdateChecklist godoc
-// @Summary     Update a checklist's title
+// @Summary     Update a checklist
 // @Tags        checklists
 // @Accept      json
 // @Produce     json
 // @Param       id path int true "Checklist ID"
 // @Param       body body dto.UpdateChecklistRequest true "Checklist data"
 // @Success     200 {object} dto.ChecklistResponse
+// @Failure     400 {object} map[string]string
 // @Failure     404 {object} map[string]string
 // @Failure     422 {object} map[string]string
 // @Router      /checklists/{id} [patch]
@@ -85,7 +87,15 @@ func (h *ChecklistHandler) UpdateChecklist(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	cl, err := h.svc.UpdateChecklist(id, req.Title)
+	if req.Title == nil && req.Position == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "at least one field (title or position) is required"})
+		return
+	}
+	if req.Title != nil && len(strings.TrimSpace(*req.Title)) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "title must not be empty"})
+		return
+	}
+	cl, err := h.svc.UpdateChecklist(id, req)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return

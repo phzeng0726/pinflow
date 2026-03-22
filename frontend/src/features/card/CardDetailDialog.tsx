@@ -38,7 +38,17 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
         if (!open) onClose()
       }}
     >
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto p-0">
+      <DialogContent
+        className="max-h-[90vh] max-w-2xl overflow-y-auto p-0"
+        onInteractOutside={(e) => {
+          const active = document.activeElement as HTMLElement | null
+          if (active && active.tagName === 'INPUT') {
+            e.preventDefault()
+            active.blur()
+            setTimeout(() => onClose(), 50)
+          }
+        }}
+      >
         <DialogTitle className="sr-only">卡片詳情</DialogTitle>
         {isLoading || !card ? (
           <div className="p-8 text-gray-500 dark:text-gray-400">Loading...</div>

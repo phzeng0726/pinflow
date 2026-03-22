@@ -35,6 +35,7 @@ export interface Checklist {
   id: number
   card_id: number
   title: string
+  position: number
   items: ChecklistItem[]
   completed_count?: number
   total_count?: number

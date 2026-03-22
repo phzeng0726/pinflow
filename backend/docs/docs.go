@@ -846,7 +846,7 @@ const docTemplate = `{
                 "tags": [
                     "checklists"
                 ],
-                "summary": "Update a checklist's title",
+                "summary": "Update a checklist",
                 "parameters": [
                     {
                         "type": "integer",
@@ -870,6 +870,15 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dto.ChecklistResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "404": {
@@ -1343,6 +1352,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/dto.ChecklistItemResponse"
                     }
                 },
+                "position": {
+                    "type": "number"
+                },
                 "title": {
                     "type": "string"
                 },
@@ -1575,14 +1587,12 @@ const docTemplate = `{
         },
         "dto.UpdateChecklistRequest": {
             "type": "object",
-            "required": [
-                "title"
-            ],
             "properties": {
+                "position": {
+                    "type": "number"
+                },
                 "title": {
-                    "type": "string",
-                    "maxLength": 200,
-                    "minLength": 1
+                    "type": "string"
                 }
             }
         },
@@ -1701,6 +1711,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.ChecklistItem"
                     }
+                },
+                "position": {
+                    "type": "number"
                 },
                 "title": {
                     "type": "string"

@@ -5,7 +5,8 @@ type CreateChecklistRequest struct {
 }
 
 type UpdateChecklistRequest struct {
-	Title string `json:"title" binding:"required,min=1,max=200"`
+	Title    *string  `json:"title"`
+	Position *float64 `json:"position"`
 }
 
 type CreateChecklistItemRequest struct {
@@ -31,6 +32,7 @@ type ChecklistResponse struct {
 	ID             uint                    `json:"id"`
 	CardID         uint                    `json:"card_id"`
 	Title          string                  `json:"title"`
+	Position       float64                 `json:"position"`
 	Items          []ChecklistItemResponse `json:"items"`
 	CompletedCount int                     `json:"completed_count"`
 	TotalCount     int                     `json:"total_count"`

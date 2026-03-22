@@ -9,7 +9,7 @@ import (
 type ChecklistService interface {
 	CreateChecklist(cardID uint, title string) (*model.Checklist, error)
 	ListByCard(cardID uint) ([]model.Checklist, error)
-	UpdateChecklist(id uint, title string) (*model.Checklist, error)
+	UpdateChecklist(id uint, req dto.UpdateChecklistRequest) (*model.Checklist, error)
 	DeleteChecklist(id uint) error
 	CreateItem(checklistID uint, text string, position float64) (*model.ChecklistItem, error)
 	UpdateItem(id uint, req dto.UpdateChecklistItemRequest) (*model.ChecklistItem, error)
@@ -34,7 +34,11 @@ func (s *checklistService) CreateChecklist(cardID uint, title string) (*model.Ch
 	if _, err := s.cardRepo.FindByID(cardID); err != nil {
 		return nil, err
 	}
-	cl := &model.Checklist{CardID: cardID, Title: title}
+	maxPos, err := s.clRepo.MaxPositionByCard(cardID)
+	if err != nil {
+		return nil, err
+	}
+	cl := &model.Checklist{CardID: cardID, Title: title, Position: maxPos + 1.0}
 	if err := s.clRepo.Create(cl); err != nil {
 		return nil, err
 	}
@@ -46,12 +50,17 @@ func (s *checklistService) ListByCard(cardID uint) ([]model.Checklist, error) {
 	return s.clRepo.ListByCard(cardID)
 }
 
-func (s *checklistService) UpdateChecklist(id uint, title string) (*model.Checklist, error) {
+func (s *checklistService) UpdateChecklist(id uint, req dto.UpdateChecklistRequest) (*model.Checklist, error) {
 	cl, err := s.clRepo.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
-	cl.Title = title
+	if req.Title != nil {
+		cl.Title = *req.Title
+	}
+	if req.Position != nil {
+		cl.Position = *req.Position
+	}
 	if err := s.clRepo.Update(cl); err != nil {
 		return nil, err
 	}
@@ -138,6 +147,7 @@ func ToChecklistResponse(cl model.Checklist) dto.ChecklistResponse {
 		ID:             cl.ID,
 		CardID:         cl.CardID,
 		Title:          cl.Title,
+		Position:       cl.Position,
 		Items:          items,
 		CompletedCount: completedCount,
 		TotalCount:     len(cl.Items),

@@ -21,8 +21,13 @@ export function useChecklistMutations(boardId: number, cardId: number) {
   })
 
   const updateList = useMutation({
-    mutationFn: ({ id, title }: { id: number; title: string }) =>
-      api.updateChecklist(id, { title }),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number
+      data: { title?: string; position?: number }
+    }) => api.updateChecklist(id, data),
     onSuccess: async () => {
       await Promise.all([invalidateCardDetail(), invalidateBoardDetail()])
     },

@@ -65,6 +65,8 @@ definitions:
         items:
           $ref: '#/definitions/dto.ChecklistItemResponse'
         type: array
+      position:
+        type: number
       title:
         type: string
       total_count:
@@ -223,12 +225,10 @@ definitions:
     type: object
   dto.UpdateChecklistRequest:
     properties:
+      position:
+        type: number
       title:
-        maxLength: 200
-        minLength: 1
         type: string
-    required:
-    - title
     type: object
   dto.UpdateColumnRequest:
     properties:
@@ -307,6 +307,8 @@ definitions:
         items:
           $ref: '#/definitions/model.ChecklistItem'
         type: array
+      position:
+        type: number
       title:
         type: string
     type: object
@@ -919,6 +921,12 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/dto.ChecklistResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "404":
           description: Not Found
           schema:
@@ -931,7 +939,7 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Update a checklist's title
+      summary: Update a checklist
       tags:
       - checklists
   /checklists/{id}/items:

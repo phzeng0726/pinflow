@@ -13,12 +13,12 @@ Trello 風格的看板任務管理系統，支援桌面懸浮釘選視窗。
 
 ## 技術棧
 
-| 層級 | 技術 |
-|------|------|
-| Backend | Go 1.25 · Gin · 檔案式 JSON 儲存 · Swagger |
+| 層級     | 技術                                                                                    |
+| -------- | --------------------------------------------------------------------------------------- |
+| Backend  | Go 1.25 · Gin · 檔案式 JSON 儲存 · Swagger                                              |
 | Frontend | React 19 · TypeScript · Vite · Tailwind v3 · TanStack Query/Router · Zustand · @dnd-kit |
-| Desktop | Electron 40 (Windows) |
-| 部署 | Docker Compose |
+| Desktop  | Electron 40 (Windows)                                                                   |
+| 部署     | Docker Compose                                                                          |
 
 ---
 
@@ -39,6 +39,7 @@ pinflow-workspace/
 ```
 
 **優點：**
+
 - 資料可攜（portable）— 複製目錄即可搬移
 - 可透過 Git 同步到不同裝置
 - 無需安裝資料庫
@@ -90,6 +91,15 @@ pnpm electron:dev
 
 > Electron 視窗會載入 `http://localhost:5173`（Vite dev server）。DevTools 會自動開啟。
 
+也可以使用 `make` 指令來啟動：
+
+```bash
+make backend # 啟動 backend
+make frontend # 啟動 frontend
+make electron # 啟動 electron
+make dev # 啟動 backend, frontend, electron
+```
+
 ### 三、打包桌面安裝檔
 
 #### 1. 編譯 Go backend 執行檔
@@ -116,11 +126,11 @@ pnpm electron:package
 
 打包完成後安裝程式會在 `dist-electron/` 目錄下：
 
-| 平台 | 產出檔案 |
-|------|----------|
+| 平台    | 產出檔案                                   |
+| ------- | ------------------------------------------ |
 | Windows | `Pinflow Setup 0.1.0.exe`（NSIS 安裝程式） |
-| macOS | `Pinflow-0.1.0.dmg` |
-| Linux | `Pinflow-0.1.0.AppImage` |
+| macOS   | `Pinflow-0.1.0.dmg`                        |
+| Linux   | `Pinflow-0.1.0.AppImage`                   |
 
 #### 3. 安裝與執行（Windows）
 
@@ -208,11 +218,11 @@ pnpm test
 docker-compose up --build
 ```
 
-| 服務 | URL |
-|------|-----|
-| 前端 | `http://localhost` |
-| 後端 API | `http://localhost:34115/api/v1` |
-| Swagger | `http://localhost:34115/swagger/index.html` |
+| 服務     | URL                                         |
+| -------- | ------------------------------------------- |
+| 前端     | `http://localhost`                          |
+| 後端 API | `http://localhost:34115/api/v1`             |
+| Swagger  | `http://localhost:34115/swagger/index.html` |
 
 ### 停止
 
@@ -258,25 +268,25 @@ pinflow/
 
 ## API 端點
 
-| 方法 | 路徑 | 說明 |
-|------|------|------|
-| GET | `/api/health` | 健康檢查 |
-| GET/POST | `/api/v1/boards` | 列出/建立看板 |
-| GET/PUT/DELETE | `/api/v1/boards/:id` | 取得/更新/刪除看板 |
-| POST | `/api/v1/boards/:id/columns` | 新增欄位 |
-| PATCH/DELETE | `/api/v1/columns/:id` | 更新/刪除欄位 |
-| POST | `/api/v1/columns/:id/cards` | 新增卡片 |
-| GET | `/api/v1/cards/pinned` | 取得所有釘選卡片 |
-| PATCH | `/api/v1/cards/:id` | 更新卡片 |
-| PATCH | `/api/v1/cards/:id/move` | 移動卡片（換欄/排序）|
-| PATCH | `/api/v1/cards/:id/pin` | 切換釘選狀態 |
-| DELETE | `/api/v1/cards/:id` | 刪除卡片 |
-| POST/DELETE | `/api/v1/cards/:id/tags` | 新增/移除卡片標籤 |
-| POST | `/api/v1/cards/:id/duplicate` | 複製卡片 |
-| GET/POST | `/api/v1/cards/:id/checklists` | 列出/新增檢查清單 |
-| GET/POST | `/api/v1/tags` | 列出/建立標籤 |
-| DELETE | `/api/v1/checklists/:id` | 刪除檢查清單 |
-| POST | `/api/v1/checklists/:id/items` | 新增檢查項目 |
-| PATCH/DELETE | `/api/v1/checklist-items/:id` | 更新/刪除檢查項目 |
+| 方法           | 路徑                           | 說明                  |
+| -------------- | ------------------------------ | --------------------- |
+| GET            | `/api/health`                  | 健康檢查              |
+| GET/POST       | `/api/v1/boards`               | 列出/建立看板         |
+| GET/PUT/DELETE | `/api/v1/boards/:id`           | 取得/更新/刪除看板    |
+| POST           | `/api/v1/boards/:id/columns`   | 新增欄位              |
+| PATCH/DELETE   | `/api/v1/columns/:id`          | 更新/刪除欄位         |
+| POST           | `/api/v1/columns/:id/cards`    | 新增卡片              |
+| GET            | `/api/v1/cards/pinned`         | 取得所有釘選卡片      |
+| PATCH          | `/api/v1/cards/:id`            | 更新卡片              |
+| PATCH          | `/api/v1/cards/:id/move`       | 移動卡片（換欄/排序） |
+| PATCH          | `/api/v1/cards/:id/pin`        | 切換釘選狀態          |
+| DELETE         | `/api/v1/cards/:id`            | 刪除卡片              |
+| POST/DELETE    | `/api/v1/cards/:id/tags`       | 新增/移除卡片標籤     |
+| POST           | `/api/v1/cards/:id/duplicate`  | 複製卡片              |
+| GET/POST       | `/api/v1/cards/:id/checklists` | 列出/新增檢查清單     |
+| GET/POST       | `/api/v1/tags`                 | 列出/建立標籤         |
+| DELETE         | `/api/v1/checklists/:id`       | 刪除檢查清單          |
+| POST           | `/api/v1/checklists/:id/items` | 新增檢查項目          |
+| PATCH/DELETE   | `/api/v1/checklist-items/:id`  | 更新/刪除檢查項目     |
 
 完整 API 文件請見 Swagger UI：`http://localhost:34115/swagger/index.html`

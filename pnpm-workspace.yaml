@@ -1,2 +1,7 @@
+packages:
+  - frontend
+  - backend
+  - electron
+
 onlyBuiltDependencies:
   - electron

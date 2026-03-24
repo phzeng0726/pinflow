@@ -3,12 +3,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import type { z } from 'zod'
 import { Button } from '../../components/ui/button'
 import { Textarea } from '../../components/ui/textarea'
-import { cardSchema } from '../../lib/schemas'
-
-type CardForm = z.infer<typeof cardSchema>
+import { newCardSchema, type NewCardForm } from '../../lib/schemas'
 
 interface AddCardFormProps {
   boardId: number
@@ -23,18 +20,14 @@ export function AddCardForm(props: AddCardFormProps) {
 
   const { createCard } = useCardMutations(boardId)
 
-  const { register, handleSubmit, reset, watch } = useForm<CardForm>({
-    resolver: zodResolver(cardSchema),
+  const { register, handleSubmit, reset, watch } = useForm<NewCardForm>({
+    resolver: zodResolver(newCardSchema),
   })
 
   const titleValue = watch('title')
 
-  const onSubmit = (data: CardForm) => {
-    createCard.mutate({
-      columnId: columnId,
-      title: data.title,
-      description: data.description ?? '',
-    })
+  const onSubmit = (form: NewCardForm) => {
+    createCard.mutate({ columnId, form })
     reset()
     setOpen(false)
   }

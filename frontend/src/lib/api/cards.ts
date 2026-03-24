@@ -1,4 +1,5 @@
 import type { Card, DuplicateCardRequest, PinnedCard } from '../../types'
+import type { EditCardForm, NewCardForm } from '../schemas'
 import { client } from './client'
 
 export const getCard = async (id: number) => {
@@ -6,32 +7,22 @@ export const getCard = async (id: number) => {
   return res.data
 }
 
-export const createCard = async (
-  columnId: number,
-  title: string,
-  description: string,
-) => {
+// TODO 後端記得刪掉 description
+export const createCard = async (columnId: number, form: NewCardForm) => {
   const res = await client.post<Card>(`/columns/${columnId}/cards`, {
-    title,
-    description,
+    title: form.title,
   })
   return res.data
 }
 
-export const updateCard = async (
-  id: number,
-  title: string,
-  description: string,
-  storyPoint?: number | null,
-  startTime?: string | null,
-  endTime?: string | null,
-) => {
+// TODO 後端 description 應該是 optional
+export const updateCard = async (id: number, form: EditCardForm) => {
   const res = await client.patch<Card>(`/cards/${id}`, {
-    title,
-    description,
-    story_point: storyPoint ?? null,
-    start_time: startTime ?? null,
-    end_time: endTime ?? null,
+    title: form.title,
+    description: form.description,
+    story_point: form.storyPoint ?? null,
+    start_time: form.startTime ?? null,
+    end_time: form.endTime ?? null,
   })
   return res.data
 }

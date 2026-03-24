@@ -1,15 +1,12 @@
+import { type EditCardForm, editCardSchema } from '@/lib/schemas'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Save, X } from 'lucide-react'
 import { useForm } from 'react-hook-form'
-import type { z } from 'zod'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Textarea } from '../../components/ui/textarea'
 import { useCardMutations } from '../../hooks/card/mutations/useCardMutations'
-import { cardDetailSchema } from '../../lib/schemas'
 import type { Card } from '../../types'
-
-type CardDetailForm = z.infer<typeof cardDetailSchema>
 
 interface CardDetailHeaderProps {
   boardId: number
@@ -27,21 +24,23 @@ export function CardDetailHeader(props: CardDetailHeaderProps) {
     handleSubmit,
     formState: { errors, isDirty, isSubmitting },
     reset,
-  } = useForm<CardDetailForm>({
-    resolver: zodResolver(cardDetailSchema),
-    defaultValues: { title: card.title, desc: card.description },
+  } = useForm<EditCardForm>({
+    resolver: zodResolver(editCardSchema),
+    defaultValues: { title: card.title, description: card.description },
   })
 
-  const onSubmit = async (data: CardDetailForm) => {
+  const onSubmit = async (form: EditCardForm) => {
     await updateCard.mutateAsync({
       id: card.id,
-      title: data.title,
-      description: data.desc ?? '',
-      storyPoint: card.story_point,
-      startTime: card.start_time,
-      endTime: card.end_time,
+      form: {
+        title: form.title,
+        description: form.description,
+        storyPoint: card.story_point ?? undefined,
+        startTime: card.start_time ?? undefined,
+        endTime: card.end_time ?? undefined,
+      },
     })
-    reset(data)
+    reset(form)
   }
 
   return (
@@ -58,7 +57,7 @@ export function CardDetailHeader(props: CardDetailHeaderProps) {
           <p className="text-xs text-red-500">{errors.title.message}</p>
         )}
         <Textarea
-          {...register('desc')}
+          {...register('description')}
           placeholder="Add a description..."
           rows={10}
           className="w-full resize-none border-transparent bg-transparent px-1 text-sm text-gray-600 shadow-none focus-visible:ring-1 dark:text-gray-400"

@@ -1,10 +1,14 @@
 import { z } from 'zod'
 
+// ─── Board ──────────────────────────────────────────────────────────────────
+
 export const newOrEditBoardSchema = z.object({
   name: z.string().min(1, '請輸入看板名稱'),
 })
 
 export type NewOrEditBoardForm = z.infer<typeof newOrEditBoardSchema>
+
+// ─── Column ──────────────────────────────────────────────────────────────────
 
 export const newColumnSchema = z.object({
   name: z.string().min(1, '請輸入欄位名稱'),
@@ -19,15 +23,23 @@ export const editColumnSchema = z.object({
 
 export type EditColumnForm = z.infer<typeof editColumnSchema>
 
-export const cardSchema = z.object({
+// ─── Card ──────────────────────────────────────────────────────────────────
+
+export const newCardSchema = z.object({
   title: z.string().min(1, '請輸入標題'),
-  description: z.string().optional(),
 })
 
-export const cardDetailSchema = z.object({
+export type NewCardForm = z.infer<typeof newCardSchema>
+
+export const editCardSchema = z.object({
   title: z.string().min(1, '請輸入標題'),
-  desc: z.string().optional(),
+  description: z.string().optional(),
+  storyPoint: z.number().optional(),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
 })
+
+export type EditCardForm = z.infer<typeof editCardSchema>
 
 export const scheduleSchema = z
   .object({

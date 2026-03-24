@@ -21,11 +21,13 @@ export function StoryPointSelector(props: StoryPointSelectorProps) {
     if (!card) return
     updateCard.mutate({
       id: card.id,
-      title: card.title,
-      description: card.description,
-      storyPoint: sp,
-      startTime: card.start_time,
-      endTime: card.end_time,
+      form: {
+        title: card.title,
+        description: card.description,
+        storyPoint: sp ?? undefined,
+        startTime: card.start_time ?? undefined,
+        endTime: card.end_time ?? undefined,
+      },
     })
   }
 

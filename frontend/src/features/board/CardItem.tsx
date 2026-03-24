@@ -1,4 +1,5 @@
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
+import { editCardSchema, type EditCardForm } from '@/lib/schemas'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -6,7 +7,6 @@ import { Calendar, CheckSquare, Flame, Pencil, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useForm } from 'react-hook-form'
-import type { z } from 'zod'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import { Textarea } from '../../components/ui/textarea'
@@ -15,14 +15,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '../../components/ui/tooltip'
-import { cardSchema } from '../../lib/schemas'
 import { cn } from '../../lib/utils'
 import type { Card } from '../../types'
 import { CardDetailDialog } from '../card/CardDetailDialog'
 import { getTagColorClasses } from '../card/ColorPicker'
 import { CardContextMenu } from './CardContextMenu'
-
-type CardFormValues = z.infer<typeof cardSchema>
 
 interface CardItemProps {
   card: Card
@@ -38,9 +35,9 @@ export function CardItem(props: CardItemProps) {
 
   const { updateCard } = useCardMutations(boardId)
 
-  const { register, handleSubmit, reset } = useForm<CardFormValues>({
+  const { register, handleSubmit, reset } = useForm<EditCardForm>({
     defaultValues: { title: card.title },
-    resolver: zodResolver(cardSchema),
+    resolver: zodResolver(editCardSchema),
   })
 
   const cardRef = useRef<HTMLDivElement | null>(null)
@@ -70,12 +67,16 @@ export function CardItem(props: CardItemProps) {
     setShowMenu(true)
   }
 
-  const onSubmit = ({ title }: CardFormValues) => {
+  const onSubmit = (form: EditCardForm) => {
     updateCard.mutate({
       id: card.id,
-      title,
-      description: card.description,
-      storyPoint: card.story_point,
+      form: {
+        title: form.title,
+        description: form.description,
+        storyPoint: card.story_point ?? undefined,
+        startTime: card.start_time ?? undefined,
+        endTime: card.end_time ?? undefined,
+      },
     })
     setShowMenu(false)
   }

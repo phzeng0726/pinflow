@@ -1,3 +1,5 @@
+import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
+import type { Card } from '@/types'
 import { Flame, X } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Label } from '../../components/ui/label'
@@ -6,13 +8,26 @@ import { cn } from '../../lib/utils'
 const STORY_POINTS = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
 
 interface StoryPointSelectorProps {
-  value: number | null
-  onChange: (value: number | null) => void
-  disabled?: boolean
+  boardId: number
+  card: Card
 }
 
 export function StoryPointSelector(props: StoryPointSelectorProps) {
-  const { value, onChange, disabled } = props
+  const { boardId, card } = props
+
+  const { updateCard } = useCardMutations(boardId)
+
+  const handleChange = (sp: number | null) => {
+    if (!card) return
+    updateCard.mutate({
+      id: card.id,
+      title: card.title,
+      description: card.description,
+      storyPoint: sp,
+      startTime: card.start_time,
+      endTime: card.end_time,
+    })
+  }
 
   return (
     <div>
@@ -24,26 +39,24 @@ export function StoryPointSelector(props: StoryPointSelectorProps) {
           <Button
             key={sp}
             type="button"
-            variant={value === sp ? 'default' : 'outline'}
+            variant={card.story_point === sp ? 'default' : 'outline'}
             size="sm"
-            disabled={disabled}
-            onClick={() => onChange(value === sp ? null : sp)}
+            onClick={() => handleChange(card.story_point === sp ? null : sp)}
             className={cn(
               'h-7 w-9 text-xs font-medium',
-              value === sp &&
+              card.story_point === sp &&
                 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600',
             )}
           >
             {sp}
           </Button>
         ))}
-        {value != null && (
+        {card.story_point != null && (
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            disabled={disabled}
-            onClick={() => onChange(null)}
+            onClick={() => handleChange(null)}
             className="h-7 w-7 p-0 text-gray-400 hover:text-red-500"
           >
             <X className="h-3.5 w-3.5" />

@@ -12,7 +12,7 @@ export const createColumn = async (boardId: number, form: NewColumnForm) => {
 export const updateColumn = async (id: number, form: EditColumnForm) => {
   const res = await client.patch<Column>(`/columns/${id}`, {
     name: form.name,
-    auto_pin: form.autoPin,
+    autoPin: form.autoPin,
   })
   return res.data
 }

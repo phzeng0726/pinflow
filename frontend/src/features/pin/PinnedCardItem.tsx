@@ -25,7 +25,7 @@ interface PinnedCardItemProps {
 export function PinnedCardItem(props: PinnedCardItemProps) {
   const { card, onUnpin } = props
 
-  const colorClass = COLUMN_COLORS[card.column_id % COLUMN_COLORS.length]
+  const colorClass = COLUMN_COLORS[card.columnId % COLUMN_COLORS.length]
   const truncatedDesc =
     card.description.length > 100
       ? card.description.slice(0, 100) + '…'
@@ -49,7 +49,7 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
             </p>
           )}
           <span className="mt-1 inline-block rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-400">
-            {card.column_name}
+            {card.columnName}
           </span>
         </div>
         <Tooltip>

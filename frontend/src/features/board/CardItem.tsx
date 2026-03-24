@@ -73,9 +73,9 @@ export function CardItem(props: CardItemProps) {
       form: {
         title: form.title,
         description: form.description,
-        storyPoint: card.story_point ?? undefined,
-        startTime: card.start_time ?? undefined,
-        endTime: card.end_time ?? undefined,
+        storyPoint: card.storyPoint ?? undefined,
+        startTime: card.startTime ?? undefined,
+        endTime: card.endTime ?? undefined,
       },
     })
     setShowMenu(false)
@@ -88,15 +88,15 @@ export function CardItem(props: CardItemProps) {
 
   const tags = card.tags ?? []
   const checklists = card.checklists ?? []
-  const hasSchedule = !!card.start_time || !!card.end_time
+  const hasSchedule = !!card.startTime || !!card.endTime
   const totalItems = checklists.reduce(
-    (n, cl) => n + (cl.total_count ?? cl.items?.length ?? 0),
+    (n, cl) => n + (cl.totalCount ?? cl.items?.length ?? 0),
     0,
   )
   const completedItems = checklists.reduce(
     (n, cl) =>
       n +
-      (cl.completed_count ?? cl.items?.filter((i) => i.completed).length ?? 0),
+      (cl.completedCount ?? cl.items?.filter((i) => i.completed).length ?? 0),
     0,
   )
 
@@ -125,7 +125,7 @@ export function CardItem(props: CardItemProps) {
         }}
         className={cn(
           'rounded-lg bg-white p-3 shadow-sm dark:bg-gray-700',
-          card.is_pinned
+          card.isPinned
             ? 'border border-l-4 border-l-blue-500'
             : 'border dark:border-gray-600',
           'group relative select-none',
@@ -199,19 +199,19 @@ export function CardItem(props: CardItemProps) {
                   {card.description}
                 </p>
               )}
-              {(card.story_point != null || hasSchedule || totalItems > 0) && (
+              {(card.storyPoint != null || hasSchedule || totalItems > 0) && (
                 <div className="mt-1.5 flex items-center gap-2">
-                  {card.story_point != null && (
+                  {card.storyPoint != null && (
                     <span className="flex items-center gap-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
                       <Flame className="h-3 w-3" />
-                      {card.story_point}
+                      {card.storyPoint}
                     </span>
                   )}
                   {hasSchedule && (
                     <span className="flex items-center gap-0.5 text-xs text-gray-400">
                       <Calendar className="h-3 w-3" />
-                      {card.start_time
-                        ? new Date(card.start_time).toLocaleDateString()
+                      {card.startTime
+                        ? new Date(card.startTime).toLocaleDateString()
                         : ''}
                     </span>
                   )}

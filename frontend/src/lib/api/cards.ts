@@ -20,9 +20,9 @@ export const updateCard = async (id: number, form: EditCardForm) => {
   const res = await client.patch<Card>(`/cards/${id}`, {
     title: form.title,
     description: form.description,
-    story_point: form.storyPoint ?? null,
-    start_time: form.startTime ?? null,
-    end_time: form.endTime ?? null,
+    storyPoint: form.storyPoint ?? null,
+    startTime: form.startTime ?? null,
+    endTime: form.endTime ?? null,
   })
   return res.data
 }
@@ -33,7 +33,7 @@ export const moveCard = async (
   position: number,
 ) => {
   const res = await client.patch<Card>(`/cards/${id}/move`, {
-    column_id: columnId,
+    columnId: columnId,
     position,
   })
   return res.data

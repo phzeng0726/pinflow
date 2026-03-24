@@ -80,8 +80,8 @@ export function ColumnView(props: ColumnViewProps) {
                     {showLineBefore && <InsertionLine />}
                     <CardItem
                       card={card}
-                      boardId={column.board_id}
-                      columnAutoPin={column.auto_pin}
+                      boardId={column.boardId}
+                      columnAutoPin={column.autoPin}
                     />
                   </Fragment>
                 )

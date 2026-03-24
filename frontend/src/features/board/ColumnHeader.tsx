@@ -107,7 +107,7 @@ export function ColumnHeader(props: ColumnHeaderProps) {
       </div>
 
       <div className="flex shrink-0 items-center gap-1">
-        {column.auto_pin && (
+        {column.autoPin && (
           <Tooltip>
             <TooltipTrigger asChild>
               <span>
@@ -134,15 +134,15 @@ export function ColumnHeader(props: ColumnHeaderProps) {
               重新命名
             </DropdownMenuItem>
             <DropdownMenuItem
-              onSelect={() => handleUpdateColumn({ autoPin: !column.auto_pin })}
+              onSelect={() => handleUpdateColumn({ autoPin: !column.autoPin })}
             >
               <Pin
                 className={cn(
                   'h-3.5 w-3.5',
-                  column.auto_pin ? 'text-blue-500' : 'text-gray-400',
+                  column.autoPin ? 'text-blue-500' : 'text-gray-400',
                 )}
               />
-              {column.auto_pin ? '關閉自動釘選' : '開啟自動釘選'}
+              {column.autoPin ? '關閉自動釘選' : '開啟自動釘選'}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem

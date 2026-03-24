@@ -6,7 +6,7 @@
 
 - 在卡片從自動釘選 column 移出時，前端攔截 move 操作並彈出確認 dialog
 - Dialog 提供兩個選項：「僅移出」與「移出並取消釘選」
-- 僅在來源 column 有 `auto_pin: true` 且卡片目前為已釘選狀態時才顯示 dialog
+- 僅在來源 column 有 `autoPin: true` 且卡片目前為已釘選狀態時才顯示 dialog
 - 不影響移入自動釘選 column 的行為（移入仍自動釘選）
 
 ## Capabilities

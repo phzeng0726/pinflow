@@ -10,13 +10,13 @@ type CreateCardRequest struct {
 type UpdateCardRequest struct {
 	Title       string     `json:"title" binding:"required,min=1,max=200"`
 	Description string     `json:"description" binding:"max=2000"`
-	StoryPoint  *int       `json:"story_point"`
-	StartTime   *time.Time `json:"start_time"`
-	EndTime     *time.Time `json:"end_time"`
+	StoryPoint  *int       `json:"storyPoint"`
+	StartTime   *time.Time `json:"startTime"`
+	EndTime     *time.Time `json:"endTime"`
 }
 
 type MoveCardRequest struct {
-	ColumnID uint    `json:"column_id" binding:"required"`
+	ColumnID uint    `json:"columnId" binding:"required"`
 	Position float64 `json:"position" binding:"required"`
 }
 
@@ -24,32 +24,32 @@ type PinnedCardResponse struct {
 	ID          uint   `json:"id"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
-	ColumnID    uint   `json:"column_id"`
-	ColumnName  string `json:"column_name"`
+	ColumnID    uint   `json:"columnId"`
+	ColumnName  string `json:"columnName"`
 }
 
 type DuplicateCardRequest struct {
 	Title          string `json:"title" binding:"required"`
-	TargetColumnID uint   `json:"target_column_id" binding:"required"`
-	PositionIndex  int    `json:"position_index"` // 1-based; 0 = append to end
-	CopyTags       bool   `json:"copy_tags"`
-	CopyChecklists bool   `json:"copy_checklists"`
-	CopySchedule   bool   `json:"copy_schedule"`
+	TargetColumnID uint   `json:"targetColumnId" binding:"required"`
+	Position       int    `json:"position"` // 1-based; 0 = append to end
+	CopyTags       bool   `json:"copyTags"`
+	CopyChecklists bool   `json:"copyChecklists"`
+	CopySchedule   bool   `json:"copySchedule"`
 	Pin            bool   `json:"pin"`
 }
 
 type CardResponse struct {
 	ID          uint                `json:"id"`
-	ColumnID    uint                `json:"column_id"`
+	ColumnID    uint                `json:"columnId"`
 	Title       string              `json:"title"`
 	Description string              `json:"description"`
 	Position    float64             `json:"position"`
-	IsPinned    bool                `json:"is_pinned"`
-	StoryPoint  *int                `json:"story_point"`
-	StartTime   *time.Time          `json:"start_time"`
-	EndTime     *time.Time          `json:"end_time"`
+	IsPinned    bool                `json:"isPinned"`
+	StoryPoint  *int                `json:"storyPoint"`
+	StartTime   *time.Time          `json:"startTime"`
+	EndTime     *time.Time          `json:"endTime"`
 	Tags        []TagResponse       `json:"tags"`
 	Checklists  []ChecklistResponse `json:"checklists"`
-	CreatedAt   time.Time           `json:"created_at"`
-	UpdatedAt   time.Time           `json:"updated_at"`
+	CreatedAt   time.Time           `json:"createdAt"`
+	UpdatedAt   time.Time           `json:"updatedAt"`
 }

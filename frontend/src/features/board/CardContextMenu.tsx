@@ -73,7 +73,7 @@ export function CardContextMenu(props: CardContextMenuProps) {
               onOpenChange(false)
             }}
           >
-            {card.is_pinned ? (
+            {card.isPinned ? (
               <>
                 <PinOff className="h-3.5 w-3.5 text-blue-500" />{' '}
                 <span className="text-blue-500">取消釘選</span>

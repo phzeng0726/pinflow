@@ -84,10 +84,10 @@ func (s *cardService) UpdateCard(id uint, title, description string, storyPoint 
 		return nil, errors.New("card title is required")
 	}
 	if storyPoint != nil && *storyPoint <= 0 {
-		return nil, errors.New("story_point must be a positive integer")
+		return nil, errors.New("storyPoint must be a positive integer")
 	}
 	if startTime != nil && endTime != nil && endTime.Before(*startTime) {
-		return nil, errors.New("end_time must be after start_time")
+		return nil, errors.New("endTime must be after startTime")
 	}
 	card, err := s.cardRepo.FindByID(id)
 	if err != nil {
@@ -228,7 +228,7 @@ func (s *cardService) DuplicateCard(id uint, req dto.DuplicateCardRequest) (*dto
 		return nil, err
 	}
 	var position float64
-	if req.PositionIndex <= 0 || req.PositionIndex > len(targetCards) {
+	if req.Position <= 0 || req.Position > len(targetCards) {
 		// Append to end
 		if len(targetCards) == 0 {
 			position = 1.0
@@ -238,10 +238,10 @@ func (s *cardService) DuplicateCard(id uint, req dto.DuplicateCardRequest) (*dto
 	} else {
 		// Insert at 1-based index
 		var before float64
-		if req.PositionIndex > 1 {
-			before = targetCards[req.PositionIndex-2].Position
+		if req.Position > 1 {
+			before = targetCards[req.Position-2].Position
 		}
-		after := targetCards[req.PositionIndex-1].Position
+		after := targetCards[req.Position-1].Position
 		position = (before + after) / 2.0
 	}
 

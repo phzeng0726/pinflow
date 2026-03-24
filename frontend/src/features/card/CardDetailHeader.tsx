@@ -35,9 +35,9 @@ export function CardDetailHeader(props: CardDetailHeaderProps) {
       form: {
         title: form.title,
         description: form.description,
-        storyPoint: card.story_point ?? undefined,
-        startTime: card.start_time ?? undefined,
-        endTime: card.end_time ?? undefined,
+        storyPoint: card.storyPoint ?? undefined,
+        startTime: card.startTime ?? undefined,
+        endTime: card.endTime ?? undefined,
       },
     })
     reset(form)

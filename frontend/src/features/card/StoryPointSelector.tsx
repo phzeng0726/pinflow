@@ -25,8 +25,8 @@ export function StoryPointSelector(props: StoryPointSelectorProps) {
         title: card.title,
         description: card.description,
         storyPoint: sp ?? undefined,
-        startTime: card.start_time ?? undefined,
-        endTime: card.end_time ?? undefined,
+        startTime: card.startTime ?? undefined,
+        endTime: card.endTime ?? undefined,
       },
     })
   }
@@ -41,19 +41,19 @@ export function StoryPointSelector(props: StoryPointSelectorProps) {
           <Button
             key={sp}
             type="button"
-            variant={card.story_point === sp ? 'default' : 'outline'}
+            variant={card.storyPoint === sp ? 'default' : 'outline'}
             size="sm"
-            onClick={() => handleChange(card.story_point === sp ? null : sp)}
+            onClick={() => handleChange(card.storyPoint === sp ? null : sp)}
             className={cn(
               'h-7 w-9 text-xs font-medium',
-              card.story_point === sp &&
+              card.storyPoint === sp &&
                 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600',
             )}
           >
             {sp}
           </Button>
         ))}
-        {card.story_point != null && (
+        {card.storyPoint != null && (
           <Button
             type="button"
             variant="ghost"

@@ -22,7 +22,7 @@ type UpdateChecklistItemRequest struct {
 
 type ChecklistItemResponse struct {
 	ID          uint    `json:"id"`
-	ChecklistID uint    `json:"checklist_id"`
+	ChecklistID uint    `json:"checklistId"`
 	Text        string  `json:"text"`
 	Completed   bool    `json:"completed"`
 	Position    float64 `json:"position"`
@@ -30,10 +30,10 @@ type ChecklistItemResponse struct {
 
 type ChecklistResponse struct {
 	ID             uint                    `json:"id"`
-	CardID         uint                    `json:"card_id"`
+	CardID         uint                    `json:"cardId"`
 	Title          string                  `json:"title"`
 	Position       float64                 `json:"position"`
 	Items          []ChecklistItemResponse `json:"items"`
-	CompletedCount int                     `json:"completed_count"`
-	TotalCount     int                     `json:"total_count"`
+	CompletedCount int                     `json:"completedCount"`
+	TotalCount     int                     `json:"totalCount"`
 }

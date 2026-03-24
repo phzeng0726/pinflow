@@ -28,8 +28,8 @@ export function ScheduleSection(props: ScheduleSectionProps) {
   } = useForm<ScheduleForm>({
     resolver: zodResolver(scheduleSchema),
     defaultValues: {
-      startTime: card.start_time ?? '',
-      endTime: card.end_time ?? '',
+      startTime: card.startTime ?? '',
+      endTime: card.endTime ?? '',
     },
   })
 
@@ -38,7 +38,7 @@ export function ScheduleSection(props: ScheduleSectionProps) {
       id: card.id,
       title: card.title,
       description: card.description,
-      storyPoint: card.story_point,
+      storyPoint: card.storyPoint,
       startTime: data.startTime || null,
       endTime: data.endTime || null,
     })

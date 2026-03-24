@@ -183,9 +183,9 @@ export function BoardPage() {
                         <span className="flex-1 truncate text-sm text-gray-800 dark:text-gray-200">
                           {card.title}
                         </span>
-                        {card.column_name && (
+                        {card.columnName && (
                           <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500 dark:bg-gray-600 dark:text-gray-300">
-                            {card.column_name}
+                            {card.columnName}
                           </span>
                         )}
                       </li>

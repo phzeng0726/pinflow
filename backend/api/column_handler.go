@@ -46,7 +46,7 @@ func (h *ColumnHandler) CreateColumn(c *gin.Context) {
 }
 
 // UpdateColumn godoc
-// @Summary     Update a column (rename, auto_pin, position)
+// @Summary     Update a column (rename, autoPin, position)
 // @Tags        columns
 // @Accept      json
 // @Produce     json

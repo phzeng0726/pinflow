@@ -6,6 +6,6 @@ type CreateColumnRequest struct {
 
 type UpdateColumnRequest struct {
 	Name     *string  `json:"name"`
-	AutoPin  *bool    `json:"auto_pin"`
+	AutoPin  *bool    `json:"autoPin"`
 	Position *float64 `json:"position"`
 }

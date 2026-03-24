@@ -106,7 +106,7 @@ func TestCardService_UpdateCard_ScheduleValidation(t *testing.T) {
 
 	_, err := svc.UpdateCard(card.ID, "Card", "", nil, &start, &end)
 	if err == nil {
-		t.Fatal("expected error when end_time < start_time")
+		t.Fatal("expected error when endTime < startTime")
 	}
 }
 
@@ -233,7 +233,7 @@ func TestCardService_UpdateCard_StoryPoint(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if updated.StoryPoint == nil || *updated.StoryPoint != 5 {
-		t.Errorf("expected story_point=5, got %v", updated.StoryPoint)
+		t.Errorf("expected storyPoint=5, got %v", updated.StoryPoint)
 	}
 
 	// Clear story point
@@ -242,7 +242,7 @@ func TestCardService_UpdateCard_StoryPoint(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if updated.StoryPoint != nil {
-		t.Errorf("expected story_point=nil, got %v", *updated.StoryPoint)
+		t.Errorf("expected storyPoint=nil, got %v", *updated.StoryPoint)
 	}
 }
 

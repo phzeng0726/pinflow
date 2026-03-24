@@ -38,7 +38,7 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
 
   const tags = card.tags ?? []
   const checklists = card.checklists ?? []
-  const hasSchedule = !!card.start_time || !!card.end_time
+  const hasSchedule = !!card.startTime || !!card.endTime
 
   const { data: boards = [] } = useBoards()
   const { duplicateCard: duplicate } = useCardMutations(boardId)
@@ -57,10 +57,10 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
       copyTags: true,
       copyChecklists: true,
       copySchedule: true,
-      pin: card.is_pinned,
+      pin: card.isPinned,
       selectedBoardId: boardId,
-      selectedColumnId: card.column_id,
-      positionIndex: 0,
+      selectedColumnId: card.columnId,
+      position: 0,
     },
   })
 
@@ -72,10 +72,10 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
   const targetColumn = columns.find((c) => c.id === selectedColumnId)
   const targetCards = targetColumn?.cards ?? []
   const positionCount = targetCards.length + 1
-  const isAutoPin = targetColumn?.auto_pin ?? false
+  const isAutoPin = targetColumn?.autoPin ?? false
 
   useEffect(() => {
-    setValue('pin', isAutoPin || card.is_pinned)
+    setValue('pin', isAutoPin || card.isPinned)
   }, [selectedColumnId, isAutoPin, setValue])
 
   const handleBoardChange = (newBoardId: number) => {
@@ -83,7 +83,7 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
     const newBoard = boards.find((b) => b.id === newBoardId)
     const firstCol = newBoard?.columns?.[0]
     setValue('selectedColumnId', firstCol?.id ?? 0)
-    setValue('positionIndex', 0)
+    setValue('position', 0)
   }
 
   const onSubmit = (data: DuplicateCardForm) => {
@@ -92,11 +92,11 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
         id: card.id,
         data: {
           title: data.title,
-          target_column_id: data.selectedColumnId,
-          position_index: data.positionIndex,
-          copy_tags: data.copyTags,
-          copy_checklists: data.copyChecklists,
-          copy_schedule: data.copySchedule,
+          targetColumnId: data.selectedColumnId,
+          position: data.position,
+          copyTags: data.copyTags,
+          copyChecklists: data.copyChecklists,
+          copySchedule: data.copySchedule,
           pin: data.pin,
         },
       },
@@ -288,7 +288,7 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
                           value={String(field.value)}
                           onValueChange={(v) => {
                             field.onChange(Number(v))
-                            setValue('positionIndex', 0)
+                            setValue('position', 0)
                           }}
                         >
                           <SelectTrigger className="h-8 text-sm">
@@ -315,7 +315,7 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
                       位置
                     </Label>
                     <Controller
-                      name="positionIndex"
+                      name="position"
                       control={control}
                       render={({ field }) => (
                         <Select

@@ -90,7 +90,7 @@ func (h *CardHandler) UpdateCard(c *gin.Context) {
 	}
 	card, err := h.svc.UpdateCard(id, req.Title, req.Description, req.StoryPoint, req.StartTime, req.EndTime)
 	if err != nil {
-		if err.Error() == "end_time must be after start_time" {
+		if err.Error() == "endTime must be after startTime" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

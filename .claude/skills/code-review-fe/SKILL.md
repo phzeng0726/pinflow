@@ -15,10 +15,10 @@ metadata:
 
 使用者可能提供以下資訊（皆為選填）：
 
-| 項目 | 說明 | 範例 |
-|------|------|------|
+| 項目         | 說明                                     | 範例                                        |
+| ------------ | ---------------------------------------- | ------------------------------------------- |
 | **審查範圍** | 指定要審查的檔案、目錄、commit 範圍或 PR | `src/hooks/board/`、`abc123..def456`、`#42` |
-| **關注重點** | 希望特別注意的面向 | 「幫我看 hook 的寫法對不對」 |
+| **關注重點** | 希望特別注意的面向                       | 「幫我看 hook 的寫法對不對」                |
 
 若使用者未提供審查範圍，則自動偵測（見步驟 1）。
 
@@ -94,6 +94,7 @@ git diff main --name-only -- frontend/ ':!frontend/dist/' ':!frontend/coverage/'
 **建議** — 錦上添花。非急迫但值得改善的部分。
 
 每個發現需包含：
+
 - 檔案與行號參考（`src/features/board/BoardPage.tsx:42`）
 - 問題是什麼（具體描述）
 - 為什麼重要
@@ -129,10 +130,10 @@ hooks/
 
 ```ts
 // OK
-queryKey: queryKeys.boards.detail(id)
+queryKey: queryKeys.boards.detail(id);
 
 // NG — 不要寫字串字面值
-queryKey: ['boards', id]
+queryKey: ["boards", id];
 ```
 
 #### Query Hooks（`queries/`）
@@ -153,15 +154,18 @@ queryKey: ['boards', id]
 
 ```ts
 // OK — 全部 helper 集中在頂部
-const invalidateBoardAll = () => qc.invalidateQueries({ queryKey: queryKeys.boards.all() })
-const invalidateBoardDetail = (id: number) => qc.invalidateQueries({ queryKey: queryKeys.boards.detail(id) })
-const invalidateCardDetail = (id: number) => qc.invalidateQueries({ queryKey: queryKeys.cards.detail(id) })
+const invalidateBoardAll = () =>
+  qc.invalidateQueries({ queryKey: queryKeys.boards.all() });
+const invalidateBoardDetail = (id: number) =>
+  qc.invalidateQueries({ queryKey: queryKeys.boards.detail(id) });
+const invalidateCardDetail = (id: number) =>
+  qc.invalidateQueries({ queryKey: queryKeys.cards.detail(id) });
 // ...每個 mutation 按需挑選
 
 // NG — inline qc.invalidateQueries 散落在 mutation 內部
 onSuccess: async (_, { cardId }) => {
-  await qc.invalidateQueries({ queryKey: queryKeys.cards.detail(cardId) }) // ← 應抽成 helper
-}
+  await qc.invalidateQueries({ queryKey: queryKeys.cards.detail(cardId) }); // ← 應抽成 helper
+};
 ```
 
 - 多個快取需失效時，`onSuccess`/`onError` 使用 `async` + `await Promise.all([...])`
@@ -246,16 +250,18 @@ lib/api/
 
 ```ts
 // OK — schema 集中管理，型別自動推導
-import { cardSchema } from '../../lib/schemas'
-type CardForm = z.infer<typeof cardSchema>
+import { cardSchema } from "../../lib/schemas";
+type CardForm = z.infer<typeof cardSchema>;
 
 const { register, handleSubmit, reset } = useForm<CardForm>({
   resolver: zodResolver(cardSchema),
-})
+});
 
 // NG — schema 寫在元件內、手動定義型別
-const schema = z.object({ title: z.string() })
-interface CardForm { title: string }
+const schema = z.object({ title: z.string() });
+interface CardForm {
+  title: string;
+}
 ```
 
 #### 表單流程慣例
@@ -276,13 +282,17 @@ interface CardForm { title: string }
 ```tsx
 // OK — props 解構模式
 export function ChecklistBlock(props: ChecklistBlockProps) {
-  const { boardId, checklist, cardId } = props
+  const { boardId, checklist, cardId } = props;
 
   // 後續程式碼...
 }
 
 // NG — 直接在參數中解構
-export function ChecklistBlock({ boardId, checklist, cardId }: ChecklistBlockProps) {
+export function ChecklistBlock({
+  boardId,
+  checklist,
+  cardId,
+}: ChecklistBlockProps) {
   // ...
 }
 ```
@@ -333,12 +343,12 @@ className={`flex-1 overflow-y-auto px-2 pb-2 min-h-[60px] rounded-lg transition-
 
 ```ts
 // OK
-toast.success('卡片已建立')
-toast.error('建立卡片失敗')
+toast.success("卡片已建立");
+toast.error("建立卡片失敗");
 
 // NG — 使用英文或其他 toast 庫
-toast.success('Card created')
-alert('建立失敗')
+toast.success("Card created");
+alert("建立失敗");
 ```
 
 ### Zustand Store 慣例
@@ -364,7 +374,7 @@ alert('建立失敗')
 ### TypeScript 型別
 
 - 型別集中定義在 `types/index.ts`，對應後端 DTO
-- 欄位使用 **snake_case**（如 `column_id`、`is_pinned`、`start_time`、`auto_pin`）
+- 欄位使用 **snake_case**（如 `columnId`、`isPinned`、`startTime`、`autoPin`）
 - 禁止在元件或 hook 內重新定義已存在的型別——一律從 `types/` 匯入
 - 新增型別時在 `types/index.ts` 中加入 interface
 
@@ -381,8 +391,8 @@ alert('建立失敗')
 qc.setQueryData(queryKeys.boards.detail(boardId), (prev) => ({
   ...prev,
   columns: reorderedColumns,
-}))
-updateColumnMutate({ id, data: { position } })
+}));
+updateColumnMutate({ id, data: { position } });
 ```
 
 ---
@@ -392,6 +402,7 @@ updateColumnMutate({ id, data: { position } })
 依以下類別評估每個變更。只回報實際存在的問題。
 
 ### 正確性
+
 - 邏輯錯誤、off-by-one、null/undefined 風險
 - 系統邊界缺少錯誤處理（API 呼叫、使用者輸入）
 - 非同步程式碼的競態條件
@@ -399,6 +410,7 @@ updateColumnMutate({ id, data: { position } })
 - 型別是否從 `types/` 匯入而非在元件內重新定義
 
 ### React 模式
+
 - Hook 規則違反（條件式 hook、迴圈中的 hook）
 - `useEffect`、`useMemo`、`useCallback` 的依賴陣列缺漏或錯誤
 - 不必要的重新渲染（不穩定的參考、該 memo 卻沒 memo）
@@ -407,6 +419,7 @@ updateColumnMutate({ id, data: { position } })
 - Effect 中的清理（事件監聯器、訂閱、計時器）
 
 ### TanStack Query
+
 - Query key 的正確性與一致性
 - 樂觀更新邏輯（rollback 處理、快取失效）
 - 缺少 `enabled` 守衛或 loading/error 狀態處理
@@ -415,18 +428,21 @@ updateColumnMutate({ id, data: { position } })
 - Toast 訊息是否使用繁體中文且透過 `sonner` 呼叫
 
 ### 狀態管理
+
 - Zustand store 誤用（訂閱過多狀態、缺少 selector）
 - Zustand store 是否正確使用 `persist` middleware（需要持久化的資料）
 - Props vs. state vs. 衍生資料——狀態存放位置是否正確？
 - 不必要的狀態重複
 
 ### 樣式與 UI
+
 - Tailwind class 衝突或冗餘（class 排序由 `prettier-plugin-tailwindcss` 處理，不需人工檢查）
 - 響應式 / 無障礙性問題
 - 深色模式一致性（`dark:` variants）
 - Z-index 層級問題
 
 ### DnD (@dnd-kit)
+
 - Sensor 設定一致性
 - sortable vs. draggable 的正確使用
 - 樂觀位置更新與 rollback
@@ -434,16 +450,19 @@ updateColumnMutate({ id, data: { position } })
 - 拖放後是否先同步更新快取再呼叫 mutation
 
 ### 效能
+
 - Bundle size 問題（大型 import、缺少 tree-shaking）
 - 缺少 memoization 的昂貴運算
 - 不必要的網路請求
 
 ### 路由與導航
+
 - `routeTree.gen.ts` 是否被手動編輯（不應該）
 - 新頁面是否在 `routes/` 目錄下建立了對應的 route 檔案
 - Route 檔案命名是否遵循 TanStack Router 慣例
 
 ### 安全性
+
 - 透過 `dangerouslySetInnerHTML` 或未跳脫的使用者輸入造成的 XSS
 - 客戶端狀態或 log 中洩露敏感資料
 

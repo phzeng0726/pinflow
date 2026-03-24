@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
 import { TooltipProvider } from '../src/components/ui/tooltip'
 import { PinnedCardItem } from '../src/features/pin/PinnedCardItem'
 import type { PinnedCard } from '../src/types'
@@ -8,8 +8,8 @@ const card: PinnedCard = {
   id: 1,
   title: '開發看板拖曳功能',
   description: '使用 React DnD 實現卡片在不同欄位間拖曳',
-  column_id: 2,
-  column_name: '進行中',
+  columnId: 2,
+  columnName: '進行中',
 }
 
 function renderCard(props: {

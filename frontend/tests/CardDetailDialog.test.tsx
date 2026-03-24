@@ -1,47 +1,47 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CardDetailDialog } from '../src/features/card/CardDetailDialog'
 import * as api from '../src/lib/api'
 import type { Card } from '../src/types'
 
 const mockCard: Card = {
   id: 1,
-  column_id: 1,
+  columnId: 1,
   title: 'Test Card',
   description: 'A description',
   position: 1,
-  is_pinned: false,
-  start_time: null,
-  end_time: null,
+  isPinned: false,
+  startTime: null,
+  endTime: null,
   tags: [{ id: 1, name: 'urgent' }],
   checklists: [
     {
       id: 1,
-      card_id: 1,
+      cardId: 1,
       title: 'My Checklist',
       items: [
         {
           id: 1,
-          checklist_id: 1,
+          checklistId: 1,
           text: 'Step one',
           completed: false,
           position: 1,
         },
         {
           id: 2,
-          checklist_id: 1,
+          checklistId: 1,
           text: 'Step two',
           completed: true,
           position: 2,
         },
       ],
-      completed_count: 1,
-      total_count: 2,
+      completedCount: 1,
+      totalCount: 2,
     },
   ],
-  created_at: '2026-01-01T00:00:00Z',
-  updated_at: '2026-01-01T00:00:00Z',
+  createdAt: '2026-01-01T00:00:00Z',
+  updatedAt: '2026-01-01T00:00:00Z',
 }
 
 function wrapper(ui: React.ReactElement) {
@@ -112,7 +112,7 @@ describe('ChecklistItem toggle', () => {
   it('calls updateChecklistItem when checkbox toggled', async () => {
     const updateMock = vi.spyOn(api, 'updateChecklistItem').mockResolvedValue({
       id: 1,
-      checklist_id: 1,
+      checklistId: 1,
       text: 'Step one',
       completed: true,
       position: 1,

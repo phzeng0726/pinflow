@@ -146,7 +146,7 @@ export function useBoardDnd(params: UseBoardDndParams) {
         cards: [
           ...(col.cards ?? []).filter((c) => c.id !== dragged.id),
           ...(col.id === targetColumnId
-            ? [{ ...dragged, column_id: targetColumnId, position }]
+            ? [{ ...dragged, columnId: targetColumnId, position }]
             : []),
         ],
       })),
@@ -154,9 +154,9 @@ export function useBoardDnd(params: UseBoardDndParams) {
 
     moveCardMutate({ id: dragged.id, columnId: targetColumnId, position })
 
-    if (onMoveOutAutoPin && targetColumnId !== dragged.column_id) {
-      const sourceCol = columns.find((c) => c.id === dragged.column_id)
-      if (sourceCol?.auto_pin && dragged.is_pinned) {
+    if (onMoveOutAutoPin && targetColumnId !== dragged.columnId) {
+      const sourceCol = columns.find((c) => c.id === dragged.columnId)
+      if (sourceCol?.autoPin && dragged.isPinned) {
         onMoveOutAutoPin(dragged)
       }
     }

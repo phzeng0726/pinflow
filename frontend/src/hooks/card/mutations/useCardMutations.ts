@@ -52,7 +52,7 @@ export function useCardMutations(boardId?: number) {
     mutationFn: (id: number) => api.togglePin(id),
     onSuccess: async (data) => {
       await Promise.all([invalidateBoardDetail(), invalidatePinned()])
-      toast.success(data.is_pinned ? '已釘選' : '已取消釘選')
+      toast.success(data.isPinned ? '已釘選' : '已取消釘選')
     },
     onError: () => toast.error('切換釘選失敗'),
   })

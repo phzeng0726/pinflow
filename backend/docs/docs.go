@@ -991,7 +991,7 @@ const docTemplate = `{
                 "tags": [
                     "columns"
                 ],
-                "summary": "Update a column (rename, auto_pin, position)",
+                "summary": "Update a column (rename, autoPin, position)",
                 "parameters": [
                     {
                         "type": "integer",
@@ -1273,31 +1273,31 @@ const docTemplate = `{
                         "$ref": "#/definitions/dto.ChecklistResponse"
                     }
                 },
-                "column_id": {
+                "columnId": {
                     "type": "integer"
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
                 "description": {
                     "type": "string"
                 },
-                "end_time": {
+                "endTime": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "is_pinned": {
+                "isPinned": {
                     "type": "boolean"
                 },
                 "position": {
                     "type": "number"
                 },
-                "start_time": {
+                "startTime": {
                     "type": "string"
                 },
-                "story_point": {
+                "storyPoint": {
                     "type": "integer"
                 },
                 "tags": {
@@ -1309,7 +1309,7 @@ const docTemplate = `{
                 "title": {
                     "type": "string"
                 },
-                "updated_at": {
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -1317,7 +1317,7 @@ const docTemplate = `{
         "dto.ChecklistItemResponse": {
             "type": "object",
             "properties": {
-                "checklist_id": {
+                "checklistId": {
                     "type": "integer"
                 },
                 "completed": {
@@ -1337,10 +1337,10 @@ const docTemplate = `{
         "dto.ChecklistResponse": {
             "type": "object",
             "properties": {
-                "card_id": {
+                "cardId": {
                     "type": "integer"
                 },
-                "completed_count": {
+                "completedCount": {
                     "type": "integer"
                 },
                 "id": {
@@ -1358,7 +1358,7 @@ const docTemplate = `{
                 "title": {
                     "type": "string"
                 },
-                "total_count": {
+                "totalCount": {
                     "type": "integer"
                 }
             }
@@ -1455,27 +1455,27 @@ const docTemplate = `{
         "dto.DuplicateCardRequest": {
             "type": "object",
             "required": [
-                "target_column_id",
+                "targetColumnId",
                 "title"
             ],
             "properties": {
-                "copy_checklists": {
+                "copyChecklists": {
                     "type": "boolean"
                 },
-                "copy_schedule": {
+                "copySchedule": {
                     "type": "boolean"
                 },
-                "copy_tags": {
+                "copyTags": {
                     "type": "boolean"
                 },
                 "pin": {
                     "type": "boolean"
                 },
-                "position_index": {
+                "position": {
                     "description": "1-based; 0 = append to end",
                     "type": "integer"
                 },
-                "target_column_id": {
+                "targetColumnId": {
                     "type": "integer"
                 },
                 "title": {
@@ -1486,11 +1486,11 @@ const docTemplate = `{
         "dto.MoveCardRequest": {
             "type": "object",
             "required": [
-                "column_id",
+                "columnId",
                 "position"
             ],
             "properties": {
-                "column_id": {
+                "columnId": {
                     "type": "integer"
                 },
                 "position": {
@@ -1501,10 +1501,10 @@ const docTemplate = `{
         "dto.PinnedCardResponse": {
             "type": "object",
             "properties": {
-                "column_id": {
+                "columnId": {
                     "type": "integer"
                 },
-                "column_name": {
+                "columnName": {
                     "type": "string"
                 },
                 "description": {
@@ -1555,13 +1555,13 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 2000
                 },
-                "end_time": {
+                "endTime": {
                     "type": "string"
                 },
-                "start_time": {
+                "startTime": {
                     "type": "string"
                 },
-                "story_point": {
+                "storyPoint": {
                     "type": "integer"
                 },
                 "title": {
@@ -1599,7 +1599,7 @@ const docTemplate = `{
         "dto.UpdateColumnRequest": {
             "type": "object",
             "properties": {
-                "auto_pin": {
+                "autoPin": {
                     "type": "boolean"
                 },
                 "name": {
@@ -1633,7 +1633,7 @@ const docTemplate = `{
                         "$ref": "#/definitions/model.Column"
                     }
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
                 "id": {
@@ -1642,7 +1642,7 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "updated_at": {
+                "updatedAt: {
                     "type": "string"
                 }
             }
@@ -1656,31 +1656,31 @@ const docTemplate = `{
                         "$ref": "#/definitions/model.Checklist"
                     }
                 },
-                "column_id": {
+                "columnId": {
                     "type": "integer"
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
                 "description": {
                     "type": "string"
                 },
-                "end_time": {
+                "endTime": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "is_pinned": {
+                "isPinned": {
                     "type": "boolean"
                 },
                 "position": {
                     "type": "number"
                 },
-                "start_time": {
+                "startTime": {
                     "type": "string"
                 },
-                "story_point": {
+                "storyPoint": {
                     "type": "integer"
                 },
                 "tags": {
@@ -1692,7 +1692,7 @@ const docTemplate = `{
                 "title": {
                     "type": "string"
                 },
-                "updated_at": {
+                "updatedAt: {
                     "type": "string"
                 }
             }
@@ -1700,7 +1700,7 @@ const docTemplate = `{
         "model.Checklist": {
             "type": "object",
             "properties": {
-                "card_id": {
+                "cardId": {
                     "type": "integer"
                 },
                 "id": {
@@ -1723,7 +1723,7 @@ const docTemplate = `{
         "model.ChecklistItem": {
             "type": "object",
             "properties": {
-                "checklist_id": {
+                "checklistId": {
                     "type": "integer"
                 },
                 "completed": {
@@ -1743,10 +1743,10 @@ const docTemplate = `{
         "model.Column": {
             "type": "object",
             "properties": {
-                "auto_pin": {
+                "autoPin": {
                     "type": "boolean"
                 },
-                "board_id": {
+                "boardId": {
                     "type": "integer"
                 },
                 "cards": {
@@ -1755,7 +1755,7 @@ const docTemplate = `{
                         "$ref": "#/definitions/model.Card"
                     }
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
                 "id": {
@@ -1767,7 +1767,7 @@ const docTemplate = `{
                 "position": {
                     "type": "number"
                 },
-                "updated_at": {
+                "updatedAt: {
                     "type": "string"
                 }
             }

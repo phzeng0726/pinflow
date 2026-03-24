@@ -76,5 +76,5 @@ export const duplicateCardSchema = z.object({
   pin: z.boolean(),
   selectedBoardId: z.number(),
   selectedColumnId: z.number().min(1, '請選擇目標欄位'),
-  positionIndex: z.number(),
+  position: z.number(),
 })

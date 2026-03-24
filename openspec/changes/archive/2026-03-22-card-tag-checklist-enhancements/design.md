@@ -3,6 +3,7 @@
 PinFlow 目前 Card 沒有工作量估算機制，Tag 只支援建立/附加/移除且無顏色區分，Checklist 標題建立後不可修改。這些限制讓看板管理不夠靈活。
 
 現有架構：
+
 - Backend：Go + Gin + GORM + SQLite，三層架構（repository → service → handler）
 - Frontend：React 19 + TanStack Query hooks + shadcn/ui + Tailwind v3
 - 既有 CRUD pattern 成熟，新功能可沿用現有模式
@@ -10,12 +11,14 @@ PinFlow 目前 Card 沒有工作量估算機制，Tag 只支援建立/附加/移
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Card 可設定 story point（可選正整數，預設按鈕快速輸入）
 - Tag 建立/編輯時可選顏色（Tailwind 調色盤）
 - Tag 可編輯名稱與顏色、可刪除
 - Checklist 標題可 inline 編輯
 
 **Non-Goals:**
+
 - Story point 的統計/加總/報表功能（未來再做）
 - Tag 自訂任意色碼（只提供預定義色票）
 - Checklist item 拖曳排序改進（現有 position 機制不在此次範圍）
@@ -66,10 +69,11 @@ PinFlow 目前 Card 沒有工作量估算機制，Tag 只支援建立/附加/移
 | PATCH | `/api/v1/checklists/:id` | 更新 checklist（title） |
 
 既有端點修改：
+
 - `POST /api/v1/tags`：request body 新增 `color` 欄位
-- `PATCH /api/v1/cards/:id`：request body 新增 `story_point` 欄位
+- `PATCH /api/v1/cards/:id`：request body 新增 `storyPoint` 欄位
 - 所有回傳 Tag 的 DTO 加入 `color` 欄位
-- 所有回傳 Card 的 DTO 加入 `story_point` 欄位
+- 所有回傳 Card 的 DTO 加入 `storyPoint` 欄位
 
 ## Risks / Trade-offs
 

@@ -1,3 +1,4 @@
+import type { EditColumnForm, NewColumnForm } from '@/lib/schemas'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import * as api from '../../../lib/api'
@@ -10,7 +11,7 @@ export function useColumnMutations(boardId: number) {
     qc.invalidateQueries({ queryKey: queryKeys.boards.detail(boardId) })
 
   const create = useMutation({
-    mutationFn: (name: string) => api.createColumn(boardId, name),
+    mutationFn: (form: NewColumnForm) => api.createColumn(boardId, form),
     onSuccess: async () => {
       await invalidateBoardDetail()
       toast.success('欄位已建立')
@@ -19,17 +20,26 @@ export function useColumnMutations(boardId: number) {
   })
 
   const update = useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: number
-      data: { name?: string; auto_pin?: boolean; position?: number }
-    }) => api.updateColumn(id, data),
+    mutationFn: (props: { id: number; form: EditColumnForm }) => {
+      const { id, form } = props
+      return api.updateColumn(id, form)
+    },
+    onSuccess: async () => {
+      await invalidateBoardDetail()
+      toast.success('欄位已更新')
+    },
     onError: () => toast.error('更新欄位失敗'),
-    onSettled: async () => {
+  })
+
+  const move = useMutation({
+    mutationFn: (props: { id: number; position: number }) => {
+      const { id, position } = props
+      return api.moveColumn(id, position)
+    },
+    onSuccess: async () => {
       await invalidateBoardDetail()
     },
+    onError: () => toast.error('移動欄位失敗'),
   })
 
   const remove = useMutation({
@@ -44,6 +54,7 @@ export function useColumnMutations(boardId: number) {
   return {
     createColumn: create,
     updateColumn: update,
+    moveColumn: move,
     deleteColumn: remove,
   }
 }

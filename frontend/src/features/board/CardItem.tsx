@@ -1,3 +1,4 @@
+import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -17,8 +18,8 @@ import {
 import { cardSchema } from '../../lib/schemas'
 import { cn } from '../../lib/utils'
 import type { Card } from '../../types'
-import { getTagColorClasses } from '../card/ColorPicker'
 import { CardDetailDialog } from '../card/CardDetailDialog'
+import { getTagColorClasses } from '../card/ColorPicker'
 import { CardContextMenu } from './CardContextMenu'
 
 type CardFormValues = z.infer<typeof cardSchema>
@@ -27,21 +28,15 @@ interface CardItemProps {
   card: Card
   boardId: number
   columnAutoPin: boolean
-  onTogglePin: (id: number) => void
-  onDelete: (id: number) => void
-  onUpdate: (
-    id: number,
-    title: string,
-    description: string,
-    storyPoint?: number | null,
-  ) => void
 }
 
 export function CardItem(props: CardItemProps) {
-  const { card, boardId, onTogglePin, onDelete, onUpdate } = props
+  const { card, boardId } = props
 
   const [showDetail, setShowDetail] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
+
+  const { updateCard } = useCardMutations(boardId)
 
   const { register, handleSubmit, reset } = useForm<CardFormValues>({
     defaultValues: { title: card.title },
@@ -76,12 +71,17 @@ export function CardItem(props: CardItemProps) {
   }
 
   const onSubmit = ({ title }: CardFormValues) => {
-    onUpdate(card.id, title, card.description, card.story_point)
+    updateCard.mutate({
+      id: card.id,
+      title,
+      description: card.description,
+      storyPoint: card.story_point,
+    })
     setShowMenu(false)
   }
 
   const handleCancel = () => {
-    reset({ title: card.title })
+    reset()
     setShowMenu(false)
   }
 
@@ -176,7 +176,7 @@ export function CardItem(props: CardItemProps) {
                         className={cn(
                           'rounded px-1.5 py-0.5 text-xs',
                           tag.color &&
-                            `${colorCls.bg} text-white border-transparent`,
+                            `${colorCls.bg} border-transparent text-white`,
                         )}
                       >
                         {tag.name}
@@ -262,8 +262,6 @@ export function CardItem(props: CardItemProps) {
           boardId={boardId}
           open={showMenu}
           onOpenChange={setShowMenu}
-          onTogglePin={onTogglePin}
-          onDelete={onDelete}
         />
       </div>
 

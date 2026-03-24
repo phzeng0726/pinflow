@@ -1,11 +1,9 @@
-import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
-import { Plus, Trash2, LayoutDashboard, Sun, Moon } from 'lucide-react'
-import { useForm } from 'react-hook-form'
+import { type NewOrEditBoardForm, newOrEditBoardSchema } from '@/lib/schemas'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useBoards } from '../../hooks/board/queries/useBoards'
-import { useBoardMutations } from '../../hooks/board/mutations/useBoardMutations'
-import { useThemeStore } from '../../stores/themeStore'
+import { useNavigate } from '@tanstack/react-router'
+import { LayoutDashboard, Moon, Plus, Sun, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import {
@@ -13,10 +11,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '../../components/ui/tooltip'
-import { boardSchema } from '../../lib/schemas'
-import type { z } from 'zod'
-
-type BoardForm = z.infer<typeof boardSchema>
+import { useBoardMutations } from '../../hooks/board/mutations/useBoardMutations'
+import { useBoards } from '../../hooks/board/queries/useBoards'
+import { useThemeStore } from '../../stores/themeStore'
 
 export function BoardListPage() {
   const { data: boards = [], isLoading } = useBoards()
@@ -31,12 +28,12 @@ export function BoardListPage() {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<BoardForm>({
-    resolver: zodResolver(boardSchema),
+  } = useForm<NewOrEditBoardForm>({
+    resolver: zodResolver(newOrEditBoardSchema),
   })
 
-  const onSubmit = async (data: BoardForm) => {
-    await createBoard.mutateAsync(data.name)
+  const onSubmit = async (form: NewOrEditBoardForm) => {
+    await createBoard.mutateAsync(form)
     reset()
     setCreating(false)
   }

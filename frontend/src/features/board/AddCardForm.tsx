@@ -1,3 +1,4 @@
+import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
@@ -10,14 +11,17 @@ import { cardSchema } from '../../lib/schemas'
 type CardForm = z.infer<typeof cardSchema>
 
 interface AddCardFormProps {
-  onAdd: (title: string, description: string) => void
+  boardId: number
+  columnId: number
 }
 
 export function AddCardForm(props: AddCardFormProps) {
-  const { onAdd } = props
+  const { boardId, columnId } = props
 
   const [open, setOpen] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
+
+  const { createCard } = useCardMutations(boardId)
 
   const { register, handleSubmit, reset, watch } = useForm<CardForm>({
     resolver: zodResolver(cardSchema),
@@ -26,7 +30,11 @@ export function AddCardForm(props: AddCardFormProps) {
   const titleValue = watch('title')
 
   const onSubmit = (data: CardForm) => {
-    onAdd(data.title, data.description ?? '')
+    createCard.mutate({
+      columnId: columnId,
+      title: data.title,
+      description: data.description ?? '',
+    })
     reset()
     setOpen(false)
   }

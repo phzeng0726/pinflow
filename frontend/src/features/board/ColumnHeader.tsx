@@ -1,9 +1,10 @@
+import { useColumnMutations } from '@/hooks/column/mutations/useColumnMutations'
+import { type EditColumnForm, editColumnSchema } from '@/lib/schemas'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Check, MoreHorizontal, Pencil, Pin, Trash2, X } from 'lucide-react'
 import type { HTMLAttributes } from 'react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import type { z } from 'zod'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,20 +18,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '../../components/ui/tooltip'
-import { columnSchema } from '../../lib/schemas'
 import { cn } from '../../lib/utils'
 import type { Column } from '../../types'
-
-type ColumnForm = z.infer<typeof columnSchema>
-
-interface ColumnHeaderProps {
-  column: Column
-  cardCount: number
-  onRename: (id: number, name: string) => void
-  onToggleAutoPin: (id: number, current: boolean) => void
-  onDelete: (id: number) => void
-  dragHandleProps?: HTMLAttributes<HTMLElement>
-}
 
 const COLUMN_COLORS = [
   'bg-red-500',
@@ -41,28 +30,33 @@ const COLUMN_COLORS = [
   'bg-purple-500',
 ]
 
+interface ColumnHeaderProps {
+  boardId: number
+  column: Column
+  cardCount: number
+  dragHandleProps?: HTMLAttributes<HTMLElement>
+}
+
 export function ColumnHeader(props: ColumnHeaderProps) {
-  const {
-    column,
-    cardCount,
-    onRename,
-    onToggleAutoPin,
-    onDelete,
-    dragHandleProps,
-  } = props
+  const { boardId, column, cardCount, dragHandleProps } = props
 
   const [editing, setEditing] = useState(false)
+  const { updateColumn, deleteColumn } = useColumnMutations(boardId)
 
-  const { register, handleSubmit, reset } = useForm<ColumnForm>({
-    resolver: zodResolver(columnSchema),
+  const { register, handleSubmit, reset } = useForm<EditColumnForm>({
+    resolver: zodResolver(editColumnSchema),
     defaultValues: { name: column.name },
   })
 
   const colorClass = COLUMN_COLORS[column.id % COLUMN_COLORS.length]
 
-  const handleRename = (data: ColumnForm) => {
-    onRename(column.id, data.name)
+  const handleUpdateColumn = (form: EditColumnForm) => {
+    updateColumn.mutate({ id: column.id, form })
     setEditing(false)
+  }
+
+  const handleDeleteColumn = (id: number) => {
+    deleteColumn.mutate(id)
   }
 
   return (
@@ -74,7 +68,7 @@ export function ColumnHeader(props: ColumnHeaderProps) {
         <span className={cn('h-2.5 w-2.5 shrink-0 rounded-full', colorClass)} />
         {editing ? (
           <form
-            onSubmit={handleSubmit(handleRename)}
+            onSubmit={handleSubmit(handleUpdateColumn)}
             className="flex flex-1 gap-1"
           >
             <Input
@@ -140,7 +134,7 @@ export function ColumnHeader(props: ColumnHeaderProps) {
               重新命名
             </DropdownMenuItem>
             <DropdownMenuItem
-              onSelect={() => onToggleAutoPin(column.id, column.auto_pin)}
+              onSelect={() => handleUpdateColumn({ autoPin: !column.auto_pin })}
             >
               <Pin
                 className={cn(
@@ -152,7 +146,7 @@ export function ColumnHeader(props: ColumnHeaderProps) {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onSelect={() => onDelete(column.id)}
+              onSelect={() => handleDeleteColumn(column.id)}
               className="text-red-500 focus:text-red-500"
             >
               <Trash2 className="h-3.5 w-3.5" />

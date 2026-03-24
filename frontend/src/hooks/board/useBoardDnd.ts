@@ -15,7 +15,7 @@ import { queryKeys } from '../queryKeys'
 interface UseBoardDndParams {
   boardId: number
   columns: Column[]
-  updateColumnMutate: (args: { id: number; data: { position: number } }) => void
+  moveColumnMutate: (args: { id: number; position: number }) => void
   moveCardMutate: (args: {
     id: number
     columnId: number
@@ -28,7 +28,7 @@ export function useBoardDnd(params: UseBoardDndParams) {
   const {
     boardId,
     columns,
-    updateColumnMutate,
+    moveColumnMutate,
     moveCardMutate,
     onMoveOutAutoPin,
   } = params
@@ -99,7 +99,7 @@ export function useBoardDnd(params: UseBoardDndParams) {
         ),
       }))
 
-      updateColumnMutate({ id: draggedCol.id, data: { position } })
+      moveColumnMutate({ id: draggedCol.id, position })
       return
     }
 

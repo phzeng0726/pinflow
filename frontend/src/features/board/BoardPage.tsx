@@ -1,18 +1,11 @@
-import { cn } from '@/lib/utils'
-import { DndContext, DragOverlay, useDroppable } from '@dnd-kit/core'
+import { DndContext, DragOverlay } from '@dnd-kit/core'
 import {
   SortableContext,
   horizontalListSortingStrategy,
-  useSortable,
-  verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { ArrowLeft, Moon, Pin, Plus, Sun } from 'lucide-react'
-import { Fragment, useEffect, useRef, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import type { z } from 'zod'
+import { useEffect, useRef, useState } from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +17,6 @@ import {
   AlertDialogTitle,
 } from '../../components/ui/alert-dialog'
 import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
 import {
   Tooltip,
   TooltipContent,
@@ -35,65 +27,29 @@ import { useBoardDnd } from '../../hooks/board/useBoardDnd'
 import { useCardMutations } from '../../hooks/card/mutations/useCardMutations'
 import { usePinnedCards } from '../../hooks/card/queries/usePinnedCards'
 import { useColumnMutations } from '../../hooks/column/mutations/useColumnMutations'
-import { columnSchema } from '../../lib/schemas'
 import { useThemeStore } from '../../stores/themeStore'
-import type { Card, Column } from '../../types'
-import { AddCardForm } from './AddCardForm'
-import { CardItem } from './CardItem'
-import { ColumnHeader } from './ColumnHeader'
-
-type ColumnForm = z.infer<typeof columnSchema>
+import type { Card } from '../../types'
+import { AddColumnForm } from './AddColumnForm'
+import { ColumnView } from './ColumnView'
 
 export function BoardPage() {
+  const navigate = useNavigate()
   const { boardId } = useParams({ from: '/boards/$boardId' })
   const id = Number(boardId)
-  const navigate = useNavigate()
+
   const { data: board, isLoading } = useBoardDetail(id)
   const { data: pinned = [] } = usePinnedCards()
   const theme = useThemeStore((s) => s.theme)
   const toggleTheme = useThemeStore((s) => s.toggle)
 
-  const { createColumn, updateColumn, deleteColumn } = useColumnMutations(id)
-  const { createCard, moveCard, togglePin, updateCard, deleteCard } =
-    useCardMutations(id)
-
+  const [addingColumn, setAddingColumn] = useState(false)
+  const [pinPopoverOpen, setPinPopoverOpen] = useState(false)
   const [pendingUnpinCard, setPendingUnpinCard] = useState<Card | null>(null)
 
-  const handleMoveOutAutoPin = (card: Card) => setPendingUnpinCard(card)
-  const handleConfirmUnpin = () => {
-    if (!pendingUnpinCard) return
-    togglePin.mutate(pendingUnpinCard.id, {
-      onSettled: () => setPendingUnpinCard(null),
-    })
-  }
-  const handleDismissUnpin = () => setPendingUnpinCard(null)
-
-  const [pinPopoverOpen, setPinPopoverOpen] = useState(false)
   const pinPopoverRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    if (!pinPopoverOpen) return
-    const handler = (e: MouseEvent) => {
-      if (
-        pinPopoverRef.current &&
-        !pinPopoverRef.current.contains(e.target as Node)
-      ) {
-        setPinPopoverOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [pinPopoverOpen])
-
-  const [addingColumn, setAddingColumn] = useState(false)
-
-  const {
-    register: registerCol,
-    handleSubmit: handleSubmitCol,
-    reset: resetCol,
-  } = useForm<ColumnForm>({
-    resolver: zodResolver(columnSchema),
-  })
+  const { moveColumn } = useColumnMutations(id)
+  const { moveCard, togglePin } = useCardMutations(id)
 
   const columns = [...(board?.columns ?? [])].sort(
     (a, b) => a.position - b.position,
@@ -111,10 +67,31 @@ export function BoardPage() {
   } = useBoardDnd({
     boardId: id,
     columns,
-    updateColumnMutate: updateColumn.mutate,
+    moveColumnMutate: moveColumn.mutate,
     moveCardMutate: moveCard.mutate,
-    onMoveOutAutoPin: handleMoveOutAutoPin,
+    onMoveOutAutoPin: (card: Card) => setPendingUnpinCard(card),
   })
+
+  const handleCardUnpin = () => {
+    if (!pendingUnpinCard) return
+    togglePin.mutate(pendingUnpinCard.id, {
+      onSettled: () => setPendingUnpinCard(null),
+    })
+  }
+
+  useEffect(() => {
+    if (!pinPopoverOpen) return
+    const handler = (e: MouseEvent) => {
+      if (
+        pinPopoverRef.current &&
+        !pinPopoverRef.current.contains(e.target as Node)
+      ) {
+        setPinPopoverOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [pinPopoverOpen])
 
   if (isLoading)
     return (
@@ -128,12 +105,6 @@ export function BoardPage() {
         看板不存在
       </div>
     )
-
-  const handleAddColumn = async (data: ColumnForm) => {
-    await createColumn.mutateAsync(data.name)
-    resetCol()
-    setAddingColumn(false)
-  }
 
   return (
     <div className="flex h-screen flex-col bg-gray-100 dark:bg-gray-900">
@@ -242,31 +213,6 @@ export function BoardPage() {
         </div>
       </div>
 
-      <AlertDialog
-        open={!!pendingUnpinCard}
-        onOpenChange={(open) => {
-          if (!open) handleDismissUnpin()
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>移出自動釘選欄位</AlertDialogTitle>
-            <AlertDialogDescription>
-              此卡片仍處於釘選狀態，是否同時取消釘選？
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>保持釘選</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmUnpin}
-              disabled={togglePin.isPending}
-            >
-              取消釘選
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       {/* Columns */}
       <div className="flex-1 overflow-x-auto p-4">
         <DndContext
@@ -283,66 +229,19 @@ export function BoardPage() {
               {columns.map((col) => (
                 <ColumnView
                   key={col.id}
+                  boardId={id}
                   column={col}
                   overId={overId}
                   activeCardDndId={activeCardDndId}
-                  onRename={(colId, name) =>
-                    updateColumn.mutate({ id: colId, data: { name } })
-                  }
-                  onToggleAutoPin={(colId, current) =>
-                    updateColumn.mutate({
-                      id: colId,
-                      data: { auto_pin: !current },
-                    })
-                  }
-                  onDeleteColumn={(colId) => deleteColumn.mutate(colId)}
-                  onAddCard={(colId, title, description) =>
-                    createCard.mutate({ columnId: colId, title, description })
-                  }
-                  onTogglePin={(cardId) => togglePin.mutate(cardId)}
-                  onDeleteCard={(cardId) => deleteCard.mutate(cardId)}
-                  onUpdateCard={(cardId, title, description, storyPoint) =>
-                    updateCard.mutate({
-                      id: cardId,
-                      title,
-                      description,
-                      storyPoint,
-                    })
-                  }
                 />
               ))}
 
-              {/* Add column */}
               <div className="w-64 shrink-0">
                 {addingColumn ? (
-                  <form
-                    onSubmit={handleSubmitCol(handleAddColumn)}
-                    className="space-y-2 rounded-xl bg-gray-200 p-3 dark:bg-gray-700"
-                  >
-                    <Input
-                      placeholder="欄位名稱"
-                      {...registerCol('name')}
-                      autoFocus
-                      className="text-sm"
-                    />
-                    <div className="flex gap-1">
-                      <Button type="submit" size="sm" className="h-7 text-xs">
-                        新增
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          resetCol()
-                          setAddingColumn(false)
-                        }}
-                        className="h-7 text-xs"
-                      >
-                        取消
-                      </Button>
-                    </div>
-                  </form>
+                  <AddColumnForm
+                    board={board}
+                    setAddingColumn={setAddingColumn}
+                  />
                 ) : (
                   <button
                     onClick={() => setAddingColumn(true)}
@@ -356,6 +255,7 @@ export function BoardPage() {
             </div>
           </SortableContext>
 
+          {/* 拖拉當下抓著的那個項目長怎樣 */}
           <DragOverlay dropAnimation={null}>
             {activeCard && (
               <div className="w-60 rotate-2 cursor-grabbing rounded-lg border bg-white p-3 opacity-95 shadow-2xl dark:border-gray-600 dark:bg-gray-700">
@@ -377,132 +277,32 @@ export function BoardPage() {
           </DragOverlay>
         </DndContext>
       </div>
-    </div>
-  )
-}
 
-// ─── Insertion Line ───────────────────────────────────────────────────────────
-
-function InsertionLine() {
-  return (
-    <div className="pointer-events-none -my-0.5 flex items-center gap-1 px-1">
-      <div className="h-2 w-2 shrink-0 rounded-full bg-blue-500" />
-      <div className="h-0.5 flex-1 rounded-full bg-blue-500" />
-    </div>
-  )
-}
-
-// ─── ColumnView ───────────────────────────────────────────────────────────────
-
-interface ColumnViewProps {
-  column: Column
-  overId: string | null
-  activeCardDndId: string | null
-  onRename: (id: number, name: string) => void
-  onToggleAutoPin: (id: number, current: boolean) => void
-  onDeleteColumn: (id: number) => void
-  onAddCard: (columnId: number, title: string, description: string) => void
-  onTogglePin: (id: number) => void
-  onDeleteCard: (id: number) => void
-  onUpdateCard: (
-    id: number,
-    title: string,
-    description: string,
-    storyPoint?: number | null,
-  ) => void
-}
-
-function ColumnView(props: ColumnViewProps) {
-  const {
-    column,
-    overId,
-    activeCardDndId,
-    onRename,
-    onToggleAutoPin,
-    onDeleteColumn,
-    onAddCard,
-    onTogglePin,
-    onDeleteCard,
-    onUpdateCard,
-  } = props
-
-  const cards = (column.cards ?? []).sort((a, b) => a.position - b.position)
-  const cardIds = cards.map((c) => `card-${c.id}`)
-  const colDropId = `column-drop-${column.id}`
-
-  const { setNodeRef: setDropRef, isOver } = useDroppable({ id: colDropId })
-
-  const {
-    attributes: colAttributes,
-    listeners: colListeners,
-    setNodeRef: setSortRef,
-    transform: colTransform,
-    isDragging: isColDragging,
-  } = useSortable({ id: `col-${column.id}`, data: { type: 'column', column } })
-
-  const colStyle = {
-    transform: CSS.Translate.toString(colTransform),
-    transition: undefined as string | undefined,
-    opacity: isColDragging ? 0.4 : 1,
-  }
-
-  const isDragging = activeCardDndId !== null
-
-  return (
-    <div
-      ref={setSortRef}
-      style={colStyle}
-      {...colAttributes}
-      className="flex max-h-[calc(100vh-140px)] w-64 shrink-0 flex-col rounded-xl bg-gray-200 dark:bg-gray-800"
-    >
-      <ColumnHeader
-        column={column}
-        cardCount={cards.length}
-        onRename={onRename}
-        onToggleAutoPin={onToggleAutoPin}
-        onDelete={onDeleteColumn}
-        dragHandleProps={colListeners}
-      />
-      <div
-        ref={setDropRef}
-        className={cn(
-          'min-h-[60px] flex-1 overflow-y-auto rounded-lg px-2 pb-2 transition-colors',
-          isOver && cards.length === 0 && 'bg-blue-50 dark:bg-blue-900/20',
-        )}
+      {/* 卡片移出自動釘選欄位時跳提醒框 */}
+      <AlertDialog
+        open={!!pendingUnpinCard}
+        onOpenChange={(open) => {
+          if (!open) setPendingUnpinCard(null)
+        }}
       >
-        <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
-          <div className="space-y-2 pt-1">
-            {cards.map((card) => {
-              const dndId = `card-${card.id}`
-              const showLineBefore =
-                isDragging && overId === dndId && activeCardDndId !== dndId
-              return (
-                <Fragment key={card.id}>
-                  {showLineBefore && <InsertionLine />}
-                  <CardItem
-                    card={card}
-                    boardId={column.board_id}
-                    columnAutoPin={column.auto_pin}
-                    onTogglePin={onTogglePin}
-                    onDelete={onDeleteCard}
-                    onUpdate={onUpdateCard}
-                  />
-                </Fragment>
-              )
-            })}
-            {isDragging &&
-              isOver &&
-              cards.length > 0 &&
-              overId === colDropId && <InsertionLine />}
-          </div>
-        </SortableContext>
-        {isDragging && isOver && cards.length === 0 && <InsertionLine />}
-      </div>
-      <div className="px-2 pb-2">
-        <AddCardForm
-          onAdd={(title, desc) => onAddCard(column.id, title, desc)}
-        />
-      </div>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>移出自動釘選欄位</AlertDialogTitle>
+            <AlertDialogDescription>
+              此卡片仍處於釘選狀態，是否同時取消釘選？
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>保持釘選</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCardUnpin}
+              disabled={togglePin.isPending}
+            >
+              取消釘選
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

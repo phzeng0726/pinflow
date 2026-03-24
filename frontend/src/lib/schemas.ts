@@ -1,12 +1,23 @@
 import { z } from 'zod'
 
-export const boardSchema = z.object({
+export const newOrEditBoardSchema = z.object({
   name: z.string().min(1, '請輸入看板名稱'),
 })
 
-export const columnSchema = z.object({
+export type NewOrEditBoardForm = z.infer<typeof newOrEditBoardSchema>
+
+export const newColumnSchema = z.object({
   name: z.string().min(1, '請輸入欄位名稱'),
 })
+
+export type NewColumnForm = z.infer<typeof newColumnSchema>
+
+export const editColumnSchema = z.object({
+  name: z.string().optional(),
+  autoPin: z.boolean().optional(),
+})
+
+export type EditColumnForm = z.infer<typeof editColumnSchema>
 
 export const cardSchema = z.object({
   title: z.string().min(1, '請輸入標題'),

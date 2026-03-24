@@ -1,3 +1,4 @@
+import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { Copy, Pin, PinOff, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import {
@@ -25,15 +26,23 @@ interface CardContextMenuProps {
   boardId: number
   open: boolean
   onOpenChange: (open: boolean) => void
-  onTogglePin: (id: number) => void
-  onDelete: (id: number) => void
 }
 
 export function CardContextMenu(props: CardContextMenuProps) {
-  const { card, boardId, open, onOpenChange, onTogglePin, onDelete } = props
+  const { card, boardId, open, onOpenChange } = props
+
+  const { togglePin, deleteCard } = useCardMutations(boardId)
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showDuplicate, setShowDuplicate] = useState(false)
+
+  const handlePinCard = (cardId: number) => {
+    togglePin.mutate(cardId)
+  }
+
+  const handleDeleteCard = (cardId: number) => {
+    deleteCard.mutate(cardId)
+  }
 
   return (
     <>
@@ -60,7 +69,7 @@ export function CardContextMenu(props: CardContextMenuProps) {
         >
           <DropdownMenuItem
             onSelect={() => {
-              onTogglePin(card.id)
+              handlePinCard(card.id)
               onOpenChange(false)
             }}
           >
@@ -122,7 +131,7 @@ export function CardContextMenu(props: CardContextMenuProps) {
             <AlertDialogAction
               className="bg-red-500 hover:bg-red-600"
               onClick={() => {
-                onDelete(card.id)
+                handleDeleteCard(card.id)
                 setShowDeleteConfirm(false)
               }}
             >

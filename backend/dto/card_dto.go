@@ -8,8 +8,8 @@ type CreateCardRequest struct {
 }
 
 type UpdateCardRequest struct {
-	Title       string     `json:"title" binding:"required,min=1,max=200"`
-	Description string     `json:"description" binding:"max=2000"`
+	Title       *string    `json:"title" binding:"omitempty,min=1,max=200"`
+	Description *string    `json:"description" binding:"omitempty,max=2000"`
 	StoryPoint  *int       `json:"storyPoint"`
 	StartTime   *time.Time `json:"startTime"`
 	EndTime     *time.Time `json:"endTime"`

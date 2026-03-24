@@ -43,6 +43,20 @@ export function CardItem(props: CardItemProps) {
   const cardRef = useRef<HTMLDivElement | null>(null)
   const [cardRect, setCardRect] = useState<DOMRect | null>(null)
 
+  const tags = card.tags ?? []
+  const checklists = card.checklists ?? []
+  const hasSchedule = !!card.startTime || !!card.endTime
+  const totalItems = checklists.reduce(
+    (n, cl) => n + (cl.totalCount ?? cl.items?.length ?? 0),
+    0,
+  )
+  const completedItems = checklists.reduce(
+    (n, cl) =>
+      n +
+      (cl.completedCount ?? cl.items?.filter((i) => i.completed).length ?? 0),
+    0,
+  )
+
   const {
     attributes,
     listeners,
@@ -67,15 +81,12 @@ export function CardItem(props: CardItemProps) {
     setShowMenu(true)
   }
 
-  const onSubmit = (form: EditCardForm) => {
-    updateCard.mutate({
+  const onSubmit = async (form: EditCardForm) => {
+    await updateCard.mutateAsync({
       id: card.id,
       form: {
         title: form.title,
         description: form.description,
-        storyPoint: card.storyPoint ?? undefined,
-        startTime: card.startTime ?? undefined,
-        endTime: card.endTime ?? undefined,
       },
     })
     setShowMenu(false)
@@ -85,20 +96,6 @@ export function CardItem(props: CardItemProps) {
     reset()
     setShowMenu(false)
   }
-
-  const tags = card.tags ?? []
-  const checklists = card.checklists ?? []
-  const hasSchedule = !!card.startTime || !!card.endTime
-  const totalItems = checklists.reduce(
-    (n, cl) => n + (cl.totalCount ?? cl.items?.length ?? 0),
-    0,
-  )
-  const completedItems = checklists.reduce(
-    (n, cl) =>
-      n +
-      (cl.completedCount ?? cl.items?.filter((i) => i.completed).length ?? 0),
-    0,
-  )
 
   return (
     <>

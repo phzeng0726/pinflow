@@ -10,6 +10,8 @@ import (
 	"pinflow/service"
 )
 
+func strPtr(s string) *string { return &s }
+
 // --- Tag repository tests ---
 
 func TestTagRepository_CreateOrGet(t *testing.T) {
@@ -104,7 +106,7 @@ func TestCardService_UpdateCard_ScheduleValidation(t *testing.T) {
 	start := time.Now()
 	end := start.Add(-1 * time.Hour) // end before start
 
-	_, err := svc.UpdateCard(card.ID, "Card", "", nil, &start, &end)
+	_, err := svc.UpdateCard(card.ID, strPtr("Card"), strPtr(""), nil, &start, &end)
 	if err == nil {
 		t.Fatal("expected error when endTime < startTime")
 	}
@@ -127,7 +129,7 @@ func TestCardService_UpdateCard_ScheduleSet(t *testing.T) {
 	start := time.Now()
 	end := start.Add(2 * time.Hour)
 
-	updated, err := svc.UpdateCard(card.ID, "Card", "", nil, &start, &end)
+	updated, err := svc.UpdateCard(card.ID, strPtr("Card"), strPtr(""), nil, &start, &end)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -228,7 +230,7 @@ func TestCardService_UpdateCard_StoryPoint(t *testing.T) {
 
 	// Set story point
 	sp := 5
-	updated, err := svc.UpdateCard(card.ID, "Card", "", &sp, nil, nil)
+	updated, err := svc.UpdateCard(card.ID, strPtr("Card"), strPtr(""), &sp, nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -236,8 +238,9 @@ func TestCardService_UpdateCard_StoryPoint(t *testing.T) {
 		t.Errorf("expected storyPoint=5, got %v", updated.StoryPoint)
 	}
 
-	// Clear story point
-	updated, err = svc.UpdateCard(card.ID, "Card", "", nil, nil, nil)
+	// Clear story point (send 0 as clear signal)
+	zero := 0
+	updated, err = svc.UpdateCard(card.ID, strPtr("Card"), strPtr(""), &zero, nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -261,7 +264,7 @@ func TestCardService_UpdateCard_StoryPointNegative(t *testing.T) {
 	_ = cardRepo.Create(card)
 
 	sp := -1
-	_, err := svc.UpdateCard(card.ID, "Card", "", &sp, nil, nil)
+	_, err := svc.UpdateCard(card.ID, strPtr("Card"), strPtr(""), &sp, nil, nil)
 	if err == nil {
 		t.Fatal("expected error for negative story point")
 	}

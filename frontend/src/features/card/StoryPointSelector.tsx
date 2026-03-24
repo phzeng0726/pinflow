@@ -24,7 +24,7 @@ export function StoryPointSelector(props: StoryPointSelectorProps) {
       form: {
         title: card.title,
         description: card.description,
-        storyPoint: sp ?? undefined,
+        storyPoint: sp ?? 0, // 0 = 清除信號
         startTime: card.startTime ?? undefined,
         endTime: card.endTime ?? undefined,
       },

@@ -15,15 +15,17 @@ export const createCard = async (columnId: number, form: NewCardForm) => {
   return res.data
 }
 
-// TODO 後端 description 應該是 optional
+// TODO 後端所有欄位都設為 optional
 export const updateCard = async (id: number, form: EditCardForm) => {
-  const res = await client.patch<Card>(`/cards/${id}`, {
-    title: form.title,
-    description: form.description,
-    storyPoint: form.storyPoint ?? null,
-    startTime: form.startTime ?? null,
-    endTime: form.endTime ?? null,
-  })
+  const payload: Partial<EditCardForm> = {}
+
+  if (form.title !== undefined) payload.title = form.title
+  if (form.description !== undefined) payload.description = form.description
+  if (form.storyPoint !== undefined) payload.storyPoint = form.storyPoint
+  if (form.startTime !== undefined) payload.startTime = form.startTime
+  if (form.endTime !== undefined) payload.endTime = form.endTime
+
+  const res = await client.patch<Card>(`/cards/${id}`, payload)
   return res.data
 }
 

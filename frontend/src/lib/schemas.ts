@@ -31,25 +31,25 @@ export const newCardSchema = z.object({
 
 export type NewCardForm = z.infer<typeof newCardSchema>
 
-export const editCardSchema = z.object({
-  title: z.string().min(1, '請輸入標題'),
-  description: z.string().optional(),
-  storyPoint: z.number().optional(),
-  startTime: z.string().optional(),
-  endTime: z.string().optional(),
-})
+const timeField = z
+  .string()
+  .transform((v) => (v === '' ? undefined : v))
+  .optional()
 
-export type EditCardForm = z.infer<typeof editCardSchema>
-
-export const scheduleSchema = z
+export const editCardSchema = z
   .object({
-    startTime: z.string().optional(),
-    endTime: z.string().optional(),
+    title: z.string().optional(),
+    description: z.string().optional(),
+    storyPoint: z.number().optional(),
+    startTime: timeField,
+    endTime: timeField,
   })
   .refine((d) => !(d.startTime && d.endTime && d.endTime < d.startTime), {
     message: '結束時間必須晚於開始時間',
     path: ['endTime'],
   })
+
+export type EditCardForm = z.infer<typeof editCardSchema>
 
 export const tagInputSchema = z.object({
   input: z.string(),

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Trello-style kanban with desktop pin overlay",
   "main": "electron/main.js",
-  "author": "Pinflow",
+  "author": "PinFlow",
   "license": "MIT",
   "scripts": {
     "electron:dev": "cross-env ELECTRON_DEV=1 electron .",
@@ -17,7 +17,7 @@
   },
   "build": {
     "appId": "com.pinflow.app",
-    "productName": "Pinflow",
+    "productName": "PinFlow",
     "directories": {
       "output": "dist-electron"
     },
@@ -29,7 +29,9 @@
       {
         "from": "electron/resources/",
         "to": ".",
-        "filter": ["pinflow-backend*"]
+        "filter": [
+          "pinflow-backend*"
+        ]
       }
     ],
     "win": {

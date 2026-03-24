@@ -1,4 +1,4 @@
-// @title           Pinflow API
+// @title           PinFlow API
 // @version         1.0
 // @description     Kanban board with pin mode API
 // @host            localhost:34115
@@ -48,7 +48,7 @@ func main() {
 
 	router := api.NewRouter(boardH, columnH, cardH, tagH, checklistH, checklistItemH)
 
-	log.Println("Starting Pinflow API on :34115")
+	log.Println("Starting PinFlow API on :34115")
 	if err := router.Run(":34115"); err != nil {
 		log.Fatalf("failed to start server: %v", err)
 	}

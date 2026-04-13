@@ -14,6 +14,7 @@ type CardService interface {
 	CreateCard(columnID uint, title, description string) (*model.Card, error)
 	GetCardDetail(id uint) (*dto.CardResponse, error)
 	UpdateCard(id uint, title, description *string, storyPoint *int, priority *int, startTime, endTime *time.Time) (*model.Card, error)
+	UpdateSchedule(id uint, startTime, endTime *time.Time) (*model.Card, error)
 	MoveCard(id uint, columnID uint, position float64) (*model.Card, error)
 	TogglePin(id uint) (*model.Card, error)
 	GetPinnedCards() ([]dto.PinnedCardResponse, error)
@@ -120,6 +121,22 @@ func (s *cardService) UpdateCard(id uint, title, description *string, storyPoint
 		card.StartTime = startTime
 		card.EndTime = endTime
 	}
+	if err := s.cardRepo.Update(card); err != nil {
+		return nil, err
+	}
+	return card, nil
+}
+
+func (s *cardService) UpdateSchedule(id uint, startTime, endTime *time.Time) (*model.Card, error) {
+	if startTime != nil && endTime != nil && endTime.Before(*startTime) {
+		return nil, errors.New("endTime must be after startTime")
+	}
+	card, err := s.cardRepo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	card.StartTime = startTime
+	card.EndTime = endTime
 	if err := s.cardRepo.Update(card); err != nil {
 		return nil, err
 	}

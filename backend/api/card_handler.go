@@ -104,6 +104,41 @@ func (h *CardHandler) UpdateCard(c *gin.Context) {
 	c.JSON(http.StatusOK, card)
 }
 
+// UpdateSchedule godoc
+// @Summary     Set or clear a card's start/end schedule
+// @Tags        cards
+// @Accept      json
+// @Produce     json
+// @Param       id path int true "Card ID"
+// @Param       body body dto.UpdateScheduleRequest true "Schedule data (null clears the field)"
+// @Success     200 {object} dto.CardResponse
+// @Failure     400 {object} map[string]string
+// @Failure     404 {object} map[string]string
+// @Failure     422 {object} map[string]string
+// @Router      /cards/{id}/schedule [patch]
+func (h *CardHandler) UpdateSchedule(c *gin.Context) {
+	id, err := parseUintParam(c, "id")
+	if err != nil {
+		return
+	}
+	var req dto.UpdateScheduleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+	card, err := h.svc.UpdateSchedule(id, req.StartTime, req.EndTime)
+	if err != nil {
+		if err.Error() == "endTime must be after startTime" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	resp := service.ToCardResponse(card)
+	c.JSON(http.StatusOK, resp)
+}
+
 // MoveCard godoc
 // @Summary     Move a card to another column or reorder
 // @Tags        cards

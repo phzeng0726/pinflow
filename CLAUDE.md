@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Always prefer Edit over Write for existing files.
 - Always use forward slashes in file paths, not backslashes.
 - When running /opsx:apply or any OpenSpec-related task, mark each task as completed immediately after finishing it.
-- After completing Plan Mode planning, ask the user if they want to create a spec using /opsx:new. If yes, use the sonnet model (claude-sonnet-4-6) for spec creation and /opsx:apply, unless the user specifies otherwise.
+- Every Plan Mode response MUST end with: "是否要使用 /opsx:new 建立 spec？如需建立，將使用 claude-sonnet-4-6 model。"
 
 ## Project Overview
 

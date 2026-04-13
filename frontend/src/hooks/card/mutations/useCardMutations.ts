@@ -73,6 +73,26 @@ export function useCardMutations(boardId?: number) {
     onError: () => toast.error('更新卡片失敗'),
   })
 
+  const updateSchedule = useMutation({
+    mutationFn: ({
+      id,
+      startTime,
+      endTime,
+    }: {
+      id: number
+      startTime: string | null
+      endTime: string | null
+    }) => api.updateCardSchedule(id, startTime, endTime),
+    onSuccess: async (_data, variables) => {
+      await Promise.all([
+        invalidateBoardDetail(),
+        invalidateCardDetail(variables.id),
+        invalidatePinned(),
+      ])
+    },
+    onError: () => toast.error('更新時程失敗'),
+  })
+
   const remove = useMutation({
     mutationFn: (id: number) => api.deleteCard(id),
     onSuccess: async () => {
@@ -97,6 +117,7 @@ export function useCardMutations(boardId?: number) {
     moveCard: move,
     togglePin,
     updateCard: update,
+    updateSchedule,
     deleteCard: remove,
     duplicateCard: duplicate,
     togglePinFromPin: togglePin,

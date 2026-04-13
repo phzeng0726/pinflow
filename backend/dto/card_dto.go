@@ -16,6 +16,11 @@ type UpdateCardRequest struct {
 	EndTime     *time.Time `json:"endTime"`
 }
 
+type UpdateScheduleRequest struct {
+	StartTime *time.Time `json:"startTime"`
+	EndTime   *time.Time `json:"endTime"`
+}
+
 type MoveCardRequest struct {
 	ColumnID uint    `json:"columnId" binding:"required"`
 	Position float64 `json:"position" binding:"required"`

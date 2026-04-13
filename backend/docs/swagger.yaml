@@ -241,6 +241,13 @@ definitions:
       position:
         type: number
     type: object
+  dto.UpdateScheduleRequest:
+    properties:
+      endTime:
+        type: string
+      startTime:
+        type: string
+    type: object
   dto.UpdateTagRequest:
     properties:
       color:
@@ -757,6 +764,50 @@ paths:
               type: string
             type: object
       summary: Toggle pin status of a card
+      tags:
+      - cards
+  /cards/{id}/schedule:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Schedule data (null clears the field)
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateScheduleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Set or clear a card's start/end schedule
       tags:
       - cards
   /cards/{id}/tags:

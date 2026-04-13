@@ -16,7 +16,7 @@ import { Label } from '@radix-ui/react-label'
 import { Notebook, X } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { PriorityPopover } from './PriorityPopover'
-import { ScheduleSection } from './ScheduleSection'
+import { SchedulePopover } from './SchedulePopover'
 import { StoryPointPopover } from './StoryPointPopover'
 
 interface CardDetailDialogProps {
@@ -128,6 +128,14 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                   <PriorityPopover boardId={boardId} card={card} />
                 </div>
 
+                {/* Schedule */}
+                <div>
+                  <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
+                    Schedule
+                  </Label>
+                  <SchedulePopover boardId={boardId} card={card} />
+                </div>
+
                 {/* Tags */}
                 <div className="min-w-0 flex-1">
                   <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
@@ -169,8 +177,6 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                   </div>
                 </div>
               </div>
-
-              <ScheduleSection boardId={boardId} card={card} />
 
               <div className="space-y-2">
                 <Label className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">

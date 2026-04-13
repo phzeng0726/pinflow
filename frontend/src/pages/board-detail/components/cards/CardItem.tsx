@@ -18,7 +18,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { Card } from '@/types'
 import { CardDetailDialog } from './CardDetailDialog'
-import { getTagColorClasses } from '@/pages/board-detail/components/tags/ColorPicker'
+import { getTagColorClasses } from '@/pages/board-detail/components/tags/tagColors'
 import { CardContextMenu } from './CardContextMenu'
 
 interface CardItemProps {

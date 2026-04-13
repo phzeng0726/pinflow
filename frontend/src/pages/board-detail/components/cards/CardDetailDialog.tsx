@@ -1,18 +1,22 @@
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
+import { useCardDetail } from '@/hooks/card/queries/useCardDetail'
+import { useTagMutations } from '@/hooks/tag/mutations/useTagMutations'
 import { type EditCardForm, editCardSchema } from '@/lib/schemas'
+import { cn } from '@/lib/utils'
+import { ChecklistSection } from '@/pages/board-detail/components/checklists/ChecklistSection'
+import { TagsPopover } from '@/pages/board-detail/components/tags/TagsPopover'
+import { getTagColorClasses } from '@/pages/board-detail/components/tags/tagColors'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Label } from '@radix-ui/react-label'
 import { Notebook, X } from 'lucide-react'
 import { useForm } from 'react-hook-form'
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
-import { useCardDetail } from '@/hooks/card/queries/useCardDetail'
-import { ChecklistSection } from '@/pages/board-detail/components/checklists/ChecklistSection'
 import { ScheduleSection } from './ScheduleSection'
-import { StoryPointSelector } from './StoryPointSelector'
-import { TagSection } from '@/pages/board-detail/components/tags/TagSection'
+import { StoryPointPopover } from './StoryPointPopover'
 
 interface CardDetailDialogProps {
   boardId: number
@@ -24,6 +28,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
   const { boardId, cardId, onClose } = props
   const { data: card, isLoading } = useCardDetail(cardId)
   const { updateCard } = useCardMutations(boardId)
+  const { detachTag } = useTagMutations(boardId)
 
   const {
     register,
@@ -93,10 +98,69 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
         {/* 內容區 */}
         <div className="p-6">
           <div className="space-y-4">
-            {/* 其他組件 */}
             <div className="space-y-6">
-              <StoryPointSelector boardId={boardId} card={card} />
-              <TagSection boardId={boardId} card={card} />
+              {/* Number, SP 與 Tags 並排 */}
+              <div className="flex gap-6">
+                {/* Card Number */}
+                <div>
+                  <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
+                    Card Number
+                  </Label>
+                  <div className="flex h-8 items-center justify-center rounded border border-gray-300 bg-gray-100 px-2 text-sm font-medium dark:border-gray-600 dark:bg-gray-700">
+                    # {card.id}
+                  </div>
+                </div>
+
+                {/* Story Points */}
+                <div>
+                  <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
+                    Story Points
+                  </Label>
+                  <StoryPointPopover boardId={boardId} card={card} />
+                </div>
+
+                {/* Tags */}
+                <div className="min-w-0 flex-1">
+                  <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
+                    Tags
+                  </Label>
+                  <div className="flex flex-wrap items-center gap-1">
+                    {(card.tags ?? []).map((tag) => {
+                      const colorCls = getTagColorClasses(tag.color)
+                      return (
+                        <Badge
+                          key={tag.id}
+                          variant="secondary"
+                          className={cn(
+                            'flex h-8 items-center gap-1 rounded px-2 py-0.5 text-xs',
+                            tag.color &&
+                              `${colorCls.bg} border-transparent text-white`,
+                          )}
+                        >
+                          {tag.name}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              detachTag.mutate({
+                                cardId: card.id,
+                                tagId: tag.id,
+                              })
+                            }
+                            className={cn(
+                              'ml-0.5 h-3 w-3 p-0 opacity-60 hover:opacity-100',
+                              tag.color ? 'text-white' : '',
+                            )}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      )
+                    })}
+                    <TagsPopover boardId={boardId} card={card} />
+                  </div>
+                </div>
+              </div>
+
               <ScheduleSection boardId={boardId} card={card} />
 
               <div className="space-y-2">

@@ -7,7 +7,7 @@ import {
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { cn } from '@/lib/utils'
 import type { Card } from '@/types'
-import { Plus } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 import { useState } from 'react'
 
 const STORY_POINTS = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
@@ -69,10 +69,20 @@ export function StoryPointPopover(props: StoryPointPopoverProps) {
           {hasValue ? card.storyPoint : <Plus className="h-3.5 w-3.5" />}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-52 p-3" align="start">
-        <p className="mb-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
-          Story Points
-        </p>
+      <PopoverContent className="w-52 p-0" align="start">
+        <div className="flex items-center justify-between border-b px-3 py-2 dark:border-gray-700">
+          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Story Points
+          </span>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="px-3 py-3">
         <div className="grid grid-cols-5 gap-1">
           {STORY_POINTS.map((sp) => (
             <button
@@ -99,6 +109,7 @@ export function StoryPointPopover(props: StoryPointPopoverProps) {
             REMOVE
           </button>
         )}
+        </div>
       </PopoverContent>
     </Popover>
   )

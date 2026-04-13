@@ -128,6 +128,7 @@ export function CardItem(props: CardItemProps) {
           'group relative select-none',
           'cursor-pointer active:cursor-grabbing',
           showMenu && 'z-[9995] shadow-lg ring-2 ring-blue-500',
+          'hover:bg-gray-50 dark:hover:bg-gray-600',
         )}
       >
         {showMenu ? (

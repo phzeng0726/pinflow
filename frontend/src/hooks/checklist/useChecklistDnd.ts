@@ -6,10 +6,10 @@ import {
 } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
 import { useQueryClient } from '@tanstack/react-query'
-import * as api from '../../lib/api'
-import { midPosition } from '../../lib/utils'
-import type { Card, Checklist } from '../../types'
-import { queryKeys } from '../queryKeys'
+import * as api from '@/lib/api'
+import { midPosition } from '@/lib/utils'
+import type { Card, Checklist } from '@/types'
+import { queryKeys } from '@/hooks/queryKeys'
 
 interface UseChecklistDndParams {
   boardId: number

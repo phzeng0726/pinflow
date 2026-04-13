@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 interface DateTimePickerProps {
   value?: string | null
   onChange: (isoString: string | null) => void
+  onClose?: () => void
   placeholder?: string
   disabled?: boolean
 }
@@ -20,10 +21,16 @@ interface DateTimePickerProps {
 export function DateTimePicker({
   value,
   onChange,
+  onClose,
   placeholder = '選擇日期時間',
   disabled,
 }: DateTimePickerProps) {
   const [open, setOpen] = useState(false)
+
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next)
+    if (!next) onClose?.()
+  }
 
   const parsedDate = value ? new Date(value) : undefined
   const hours = parsedDate ? parsedDate.getHours() : 0
@@ -54,7 +61,7 @@ export function DateTimePicker({
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"

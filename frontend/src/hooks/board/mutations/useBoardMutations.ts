@@ -1,7 +1,8 @@
+import type { NewOrEditBoardForm } from '@/lib/schemas'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import * as api from '../../../lib/api'
-import { queryKeys } from '../../queryKeys'
+import * as api from '@/lib/api'
+import { queryKeys } from '@/hooks/queryKeys'
 
 export function useBoardMutations() {
   const qc = useQueryClient()
@@ -12,7 +13,7 @@ export function useBoardMutations() {
     qc.invalidateQueries({ queryKey: queryKeys.boards.detail(id) })
 
   const create = useMutation({
-    mutationFn: (name: string) => api.createBoard(name),
+    mutationFn: (form: NewOrEditBoardForm) => api.createBoard(form),
     onSuccess: async () => {
       await invalidateBoardAll()
       toast.success('看板已建立')
@@ -21,8 +22,10 @@ export function useBoardMutations() {
   })
 
   const update = useMutation({
-    mutationFn: ({ id, name }: { id: number; name: string }) =>
-      api.updateBoard(id, name),
+    mutationFn: (props: { id: number; form: NewOrEditBoardForm }) => {
+      const { id, form } = props
+      return api.updateBoard(id, form)
+    },
     onSuccess: async (data) => {
       await Promise.all([invalidateBoardAll(), invalidateBoardDetail(data.id)])
       toast.success('看板已更新')

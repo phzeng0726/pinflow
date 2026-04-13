@@ -1,11 +1,11 @@
 ## 1. Backend — Card Story Point
 
 - [x] 1.1 Add `StoryPoint *int` field to Card model (`backend/model/card.go`)
-- [x] 1.2 Add `story_point` to Card DTOs (request/response in `backend/dto/`)
-- [x] 1.3 Update CardService and CardRepository to handle story_point in create/update
-- [x] 1.4 Add validation: story_point must be positive integer or null
+- [x] 1.2 Add `storyPoint` to Card DTOs (request/response in `backend/dto/`)
+- [x] 1.3 Update CardService and CardRepository to handle storyPoint in create/update
+- [x] 1.4 Add validation: storyPoint must be positive integer or null
 - [x] 1.5 Run `swag init` to regenerate Swagger docs
-- [x] 1.6 Write tests for story_point CRUD (`backend/tests/`)
+- [x] 1.6 Write tests for storyPoint CRUD (`backend/tests/`)
 
 ## 2. Backend — Tag Color + Edit + Delete
 
@@ -33,7 +33,7 @@
 
 ## 4. Frontend — Types & API Layer
 
-- [x] 4.1 Update `Card` type in `types/index.ts`: add `story_point?: number | null`
+- [x] 4.1 Update `Card` type in `types/index.ts`: add `storyPoint?: number | null`
 - [x] 4.2 Update `Tag` type in `types/index.ts`: add `color: string`
 - [x] 4.3 Add `updateTag(id, data)` and `deleteTag(id)` to `lib/api/tags.ts`
 - [x] 4.4 Add `updateChecklist(id, data)` to `lib/api/checklists.ts`

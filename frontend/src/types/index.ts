@@ -2,19 +2,19 @@ export interface Board {
   id: number
   name: string
   columns?: Column[]
-  created_at: string
-  updated_at: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Column {
   id: number
-  board_id: number
+  boardId: number
   name: string
   position: number
-  auto_pin: boolean
+  autoPin: boolean
   cards?: Card[]
-  created_at: string
-  updated_at: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Tag {
@@ -25,7 +25,7 @@ export interface Tag {
 
 export interface ChecklistItem {
   id: number
-  checklist_id: number
+  checklistId: number
   text: string
   completed: boolean
   position: number
@@ -33,37 +33,38 @@ export interface ChecklistItem {
 
 export interface Checklist {
   id: number
-  card_id: number
+  cardId: number
   title: string
   position: number
   items: ChecklistItem[]
-  completed_count?: number
-  total_count?: number
+  completedCount?: number
+  totalCount?: number
 }
 
 export interface Card {
   id: number
-  column_id: number
+  columnId: number
   title: string
   description: string
   position: number
-  is_pinned: boolean
-  story_point: number | null
-  start_time: string | null
-  end_time: string | null
+  isPinned: boolean
+  storyPoint: number | null
+  priority: number | null
+  startTime: string | null
+  endTime: string | null
   tags: Tag[]
   checklists: Checklist[]
-  created_at: string
-  updated_at: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface DuplicateCardRequest {
   title: string
-  target_column_id: number
-  position_index: number
-  copy_tags: boolean
-  copy_checklists: boolean
-  copy_schedule: boolean
+  targetColumnId: number
+  position: number
+  copyTags: boolean
+  copyChecklists: boolean
+  copySchedule: boolean
   pin: boolean
 }
 
@@ -71,6 +72,6 @@ export interface PinnedCard {
   id: number
   title: string
   description: string
-  column_id: number
-  column_name: string
+  columnId: number
+  columnName: string
 }

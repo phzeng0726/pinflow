@@ -13,23 +13,25 @@ definitions:
         items:
           $ref: '#/definitions/dto.ChecklistResponse'
         type: array
-      column_id:
+      columnId:
         type: integer
-      created_at:
+      createdAt:
         type: string
       description:
         type: string
-      end_time:
+      endTime:
         type: string
       id:
         type: integer
-      is_pinned:
+      isPinned:
         type: boolean
       position:
         type: number
-      start_time:
+      priority:
+        type: integer
+      startTime:
         type: string
-      story_point:
+      storyPoint:
         type: integer
       tags:
         items:
@@ -37,12 +39,12 @@ definitions:
         type: array
       title:
         type: string
-      updated_at:
+      updatedAt:
         type: string
     type: object
   dto.ChecklistItemResponse:
     properties:
-      checklist_id:
+      checklistId:
         type: integer
       completed:
         type: boolean
@@ -55,9 +57,9 @@ definitions:
     type: object
   dto.ChecklistResponse:
     properties:
-      card_id:
+      cardId:
         type: integer
-      completed_count:
+      completedCount:
         type: integer
       id:
         type: integer
@@ -69,7 +71,7 @@ definitions:
         type: number
       title:
         type: string
-      total_count:
+      totalCount:
         type: integer
     type: object
   dto.CreateBoardRequest:
@@ -136,40 +138,40 @@ definitions:
     type: object
   dto.DuplicateCardRequest:
     properties:
-      copy_checklists:
+      copyChecklists:
         type: boolean
-      copy_schedule:
+      copySchedule:
         type: boolean
-      copy_tags:
+      copyTags:
         type: boolean
       pin:
         type: boolean
-      position_index:
+      position:
         description: 1-based; 0 = append to end
         type: integer
-      target_column_id:
+      targetColumnId:
         type: integer
       title:
         type: string
     required:
-    - target_column_id
+    - targetColumnId
     - title
     type: object
   dto.MoveCardRequest:
     properties:
-      column_id:
+      columnId:
         type: integer
       position:
         type: number
     required:
-    - column_id
+    - columnId
     - position
     type: object
   dto.PinnedCardResponse:
     properties:
-      column_id:
+      columnId:
         type: integer
-      column_name:
+      columnName:
         type: string
       description:
         type: string
@@ -201,18 +203,18 @@ definitions:
       description:
         maxLength: 2000
         type: string
-      end_time:
+      endTime:
         type: string
-      start_time:
+      priority:
+        type: integer
+      startTime:
         type: string
-      story_point:
+      storyPoint:
         type: integer
       title:
         maxLength: 200
         minLength: 1
         type: string
-    required:
-    - title
     type: object
   dto.UpdateChecklistItemRequest:
     properties:
@@ -232,12 +234,19 @@ definitions:
     type: object
   dto.UpdateColumnRequest:
     properties:
-      auto_pin:
+      autoPin:
         type: boolean
       name:
         type: string
       position:
         type: number
+    type: object
+  dto.UpdateScheduleRequest:
+    properties:
+      endTime:
+        type: string
+      startTime:
+        type: string
     type: object
   dto.UpdateTagRequest:
     properties:
@@ -270,23 +279,25 @@ definitions:
         items:
           $ref: '#/definitions/model.Checklist'
         type: array
-      column_id:
+      columnId:
         type: integer
-      created_at:
+      createdAt:
         type: string
       description:
         type: string
-      end_time:
+      endTime:
         type: string
       id:
         type: integer
-      is_pinned:
+      isPinned:
         type: boolean
       position:
         type: number
-      start_time:
+      priority:
+        type: integer
+      startTime:
         type: string
-      story_point:
+      storyPoint:
         type: integer
       tags:
         items:
@@ -294,12 +305,12 @@ definitions:
         type: array
       title:
         type: string
-      updated_at:
+      updatedAt:
         type: string
     type: object
   model.Checklist:
     properties:
-      card_id:
+      cardId:
         type: integer
       id:
         type: integer
@@ -314,7 +325,7 @@ definitions:
     type: object
   model.ChecklistItem:
     properties:
-      checklist_id:
+      checklistId:
         type: integer
       completed:
         type: boolean
@@ -327,15 +338,15 @@ definitions:
     type: object
   model.Column:
     properties:
-      auto_pin:
+      autoPin:
         type: boolean
-      board_id:
+      boardId:
         type: integer
       cards:
         items:
           $ref: '#/definitions/model.Card'
         type: array
-      created_at:
+      createdAt:
         type: string
       id:
         type: integer
@@ -343,7 +354,7 @@ definitions:
         type: string
       position:
         type: number
-      updated_at:
+      updatedAt:
         type: string
     type: object
   model.Tag:
@@ -359,7 +370,7 @@ host: localhost:34115
 info:
   contact: {}
   description: Kanban board with pin mode API
-  title: Pinflow API
+  title: PinFlow API
   version: "1.0"
 paths:
   /boards:
@@ -584,7 +595,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.Card'
+            $ref: '#/definitions/dto.CardResponse'
         "400":
           description: Bad Request
           schema:
@@ -603,7 +614,7 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Update a card's title, description, and schedule
+      summary: Update a card's title, description, story points, priority, and schedule
       tags:
       - cards
   /cards/{id}/checklists:
@@ -753,6 +764,50 @@ paths:
               type: string
             type: object
       summary: Toggle pin status of a card
+      tags:
+      - cards
+  /cards/{id}/schedule:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Schedule data (null clears the field)
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateScheduleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Set or clear a card's start/end schedule
       tags:
       - cards
   /cards/{id}/tags:
@@ -1028,7 +1083,7 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Update a column (rename, auto_pin, position)
+      summary: Update a column (rename, autoPin, position)
       tags:
       - columns
   /columns/{id}/cards:

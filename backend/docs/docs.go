@@ -354,7 +354,7 @@ const docTemplate = `{
                 "tags": [
                     "cards"
                 ],
-                "summary": "Update a card's title, description, and schedule",
+                "summary": "Update a card's title, description, story points, priority, and schedule",
                 "parameters": [
                     {
                         "type": "integer",
@@ -377,7 +377,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.Card"
+                            "$ref": "#/definitions/dto.CardResponse"
                         }
                     },
                     "400": {
@@ -628,6 +628,73 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/cards/{id}/schedule": {
+            "patch": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cards"
+                ],
+                "summary": "Set or clear a card's start/end schedule",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Card ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Schedule data (null clears the field)",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateScheduleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -991,7 +1058,7 @@ const docTemplate = `{
                 "tags": [
                     "columns"
                 ],
-                "summary": "Update a column (rename, auto_pin, position)",
+                "summary": "Update a column (rename, autoPin, position)",
                 "parameters": [
                     {
                         "type": "integer",
@@ -1273,31 +1340,34 @@ const docTemplate = `{
                         "$ref": "#/definitions/dto.ChecklistResponse"
                     }
                 },
-                "column_id": {
+                "columnId": {
                     "type": "integer"
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
                 "description": {
                     "type": "string"
                 },
-                "end_time": {
+                "endTime": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "is_pinned": {
+                "isPinned": {
                     "type": "boolean"
                 },
                 "position": {
                     "type": "number"
                 },
-                "start_time": {
+                "priority": {
+                    "type": "integer"
+                },
+                "startTime": {
                     "type": "string"
                 },
-                "story_point": {
+                "storyPoint": {
                     "type": "integer"
                 },
                 "tags": {
@@ -1309,7 +1379,7 @@ const docTemplate = `{
                 "title": {
                     "type": "string"
                 },
-                "updated_at": {
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -1317,7 +1387,7 @@ const docTemplate = `{
         "dto.ChecklistItemResponse": {
             "type": "object",
             "properties": {
-                "checklist_id": {
+                "checklistId": {
                     "type": "integer"
                 },
                 "completed": {
@@ -1337,10 +1407,10 @@ const docTemplate = `{
         "dto.ChecklistResponse": {
             "type": "object",
             "properties": {
-                "card_id": {
+                "cardId": {
                     "type": "integer"
                 },
-                "completed_count": {
+                "completedCount": {
                     "type": "integer"
                 },
                 "id": {
@@ -1358,7 +1428,7 @@ const docTemplate = `{
                 "title": {
                     "type": "string"
                 },
-                "total_count": {
+                "totalCount": {
                     "type": "integer"
                 }
             }
@@ -1455,27 +1525,27 @@ const docTemplate = `{
         "dto.DuplicateCardRequest": {
             "type": "object",
             "required": [
-                "target_column_id",
+                "targetColumnId",
                 "title"
             ],
             "properties": {
-                "copy_checklists": {
+                "copyChecklists": {
                     "type": "boolean"
                 },
-                "copy_schedule": {
+                "copySchedule": {
                     "type": "boolean"
                 },
-                "copy_tags": {
+                "copyTags": {
                     "type": "boolean"
                 },
                 "pin": {
                     "type": "boolean"
                 },
-                "position_index": {
+                "position": {
                     "description": "1-based; 0 = append to end",
                     "type": "integer"
                 },
-                "target_column_id": {
+                "targetColumnId": {
                     "type": "integer"
                 },
                 "title": {
@@ -1486,11 +1556,11 @@ const docTemplate = `{
         "dto.MoveCardRequest": {
             "type": "object",
             "required": [
-                "column_id",
+                "columnId",
                 "position"
             ],
             "properties": {
-                "column_id": {
+                "columnId": {
                     "type": "integer"
                 },
                 "position": {
@@ -1501,10 +1571,10 @@ const docTemplate = `{
         "dto.PinnedCardResponse": {
             "type": "object",
             "properties": {
-                "column_id": {
+                "columnId": {
                     "type": "integer"
                 },
-                "column_name": {
+                "columnName": {
                     "type": "string"
                 },
                 "description": {
@@ -1547,21 +1617,21 @@ const docTemplate = `{
         },
         "dto.UpdateCardRequest": {
             "type": "object",
-            "required": [
-                "title"
-            ],
             "properties": {
                 "description": {
                     "type": "string",
                     "maxLength": 2000
                 },
-                "end_time": {
+                "endTime": {
                     "type": "string"
                 },
-                "start_time": {
+                "priority": {
+                    "type": "integer"
+                },
+                "startTime": {
                     "type": "string"
                 },
-                "story_point": {
+                "storyPoint": {
                     "type": "integer"
                 },
                 "title": {
@@ -1599,7 +1669,7 @@ const docTemplate = `{
         "dto.UpdateColumnRequest": {
             "type": "object",
             "properties": {
-                "auto_pin": {
+                "autoPin": {
                     "type": "boolean"
                 },
                 "name": {
@@ -1607,6 +1677,17 @@ const docTemplate = `{
                 },
                 "position": {
                     "type": "number"
+                }
+            }
+        },
+        "dto.UpdateScheduleRequest": {
+            "type": "object",
+            "properties": {
+                "endTime": {
+                    "type": "string"
+                },
+                "startTime": {
+                    "type": "string"
                 }
             }
         },
@@ -1656,31 +1737,34 @@ const docTemplate = `{
                         "$ref": "#/definitions/model.Checklist"
                     }
                 },
-                "column_id": {
+                "columnId": {
                     "type": "integer"
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
                 "description": {
                     "type": "string"
                 },
-                "end_time": {
+                "endTime": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "is_pinned": {
+                "isPinned": {
                     "type": "boolean"
                 },
                 "position": {
                     "type": "number"
                 },
-                "start_time": {
+                "priority": {
+                    "type": "integer"
+                },
+                "startTime": {
                     "type": "string"
                 },
-                "story_point": {
+                "storyPoint": {
                     "type": "integer"
                 },
                 "tags": {
@@ -1692,7 +1776,7 @@ const docTemplate = `{
                 "title": {
                     "type": "string"
                 },
-                "updated_at": {
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -1700,7 +1784,7 @@ const docTemplate = `{
         "model.Checklist": {
             "type": "object",
             "properties": {
-                "card_id": {
+                "cardId": {
                     "type": "integer"
                 },
                 "id": {
@@ -1723,7 +1807,7 @@ const docTemplate = `{
         "model.ChecklistItem": {
             "type": "object",
             "properties": {
-                "checklist_id": {
+                "checklistId": {
                     "type": "integer"
                 },
                 "completed": {
@@ -1743,10 +1827,10 @@ const docTemplate = `{
         "model.Column": {
             "type": "object",
             "properties": {
-                "auto_pin": {
+                "autoPin": {
                     "type": "boolean"
                 },
-                "board_id": {
+                "boardId": {
                     "type": "integer"
                 },
                 "cards": {
@@ -1755,7 +1839,7 @@ const docTemplate = `{
                         "$ref": "#/definitions/model.Card"
                     }
                 },
-                "created_at": {
+                "createdAt": {
                     "type": "string"
                 },
                 "id": {
@@ -1767,7 +1851,7 @@ const docTemplate = `{
                 "position": {
                     "type": "number"
                 },
-                "updated_at": {
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -1795,7 +1879,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:34115",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "Pinflow API",
+	Title:            "PinFlow API",
 	Description:      "Kanban board with pin mode API",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

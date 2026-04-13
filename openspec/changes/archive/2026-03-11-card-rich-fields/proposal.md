@@ -5,7 +5,7 @@ Cards currently only support a title and description, which limits their usefuln
 ## What Changes
 
 - Add **tags** field to cards (many-to-many, user-defined labels)
-- Add **start_time** and **end_time** datetime fields to cards
+- Add **startTime** and **endTime** datetime fields to cards
 - Add **Checklist** entity (a card can have multiple checklists)
 - Add **ChecklistItem** (subtask) entity under each checklist, with completion toggle
 - Add a **Card Detail Dialog** in the frontend for viewing/editing all rich fields
@@ -22,7 +22,7 @@ Cards currently only support a title and description, which limits their usefuln
 
 ### Modified Capabilities
 
-- `card-management`: Card model and CRUD now includes tags, start_time, end_time; card response DTO expanded
+- `card-management`: Card model and CRUD now includes tags, startTime, endTime; card response DTO expanded
 
 ## Impact
 

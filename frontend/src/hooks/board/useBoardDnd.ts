@@ -8,14 +8,14 @@ import {
 } from '@dnd-kit/core'
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { midPosition } from '../../lib/utils'
-import type { Board, Card, Column } from '../../types'
-import { queryKeys } from '../queryKeys'
+import { midPosition } from '@/lib/utils'
+import type { Board, Card, Column } from '@/types'
+import { queryKeys } from '@/hooks/queryKeys'
 
 interface UseBoardDndParams {
   boardId: number
   columns: Column[]
-  updateColumnMutate: (args: { id: number; data: { position: number } }) => void
+  moveColumnMutate: (args: { id: number; position: number }) => void
   moveCardMutate: (args: {
     id: number
     columnId: number
@@ -28,7 +28,7 @@ export function useBoardDnd(params: UseBoardDndParams) {
   const {
     boardId,
     columns,
-    updateColumnMutate,
+    moveColumnMutate,
     moveCardMutate,
     onMoveOutAutoPin,
   } = params
@@ -99,7 +99,7 @@ export function useBoardDnd(params: UseBoardDndParams) {
         ),
       }))
 
-      updateColumnMutate({ id: draggedCol.id, data: { position } })
+      moveColumnMutate({ id: draggedCol.id, position })
       return
     }
 
@@ -146,7 +146,7 @@ export function useBoardDnd(params: UseBoardDndParams) {
         cards: [
           ...(col.cards ?? []).filter((c) => c.id !== dragged.id),
           ...(col.id === targetColumnId
-            ? [{ ...dragged, column_id: targetColumnId, position }]
+            ? [{ ...dragged, columnId: targetColumnId, position }]
             : []),
         ],
       })),
@@ -154,9 +154,9 @@ export function useBoardDnd(params: UseBoardDndParams) {
 
     moveCardMutate({ id: dragged.id, columnId: targetColumnId, position })
 
-    if (onMoveOutAutoPin && targetColumnId !== dragged.column_id) {
-      const sourceCol = columns.find((c) => c.id === dragged.column_id)
-      if (sourceCol?.auto_pin && dragged.is_pinned) {
+    if (onMoveOutAutoPin && targetColumnId !== dragged.columnId) {
+      const sourceCol = columns.find((c) => c.id === dragged.columnId)
+      if (sourceCol?.autoPin && dragged.isPinned) {
         onMoveOutAutoPin(dragged)
       }
     }

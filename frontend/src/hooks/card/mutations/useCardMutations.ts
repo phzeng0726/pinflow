@@ -1,8 +1,9 @@
+import type { EditCardForm, NewCardForm } from '@/lib/schemas'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import * as api from '../../../lib/api'
-import type { DuplicateCardRequest } from '../../../types'
-import { queryKeys } from '../../queryKeys'
+import * as api from '@/lib/api'
+import type { DuplicateCardRequest } from '@/types'
+import { queryKeys } from '@/hooks/queryKeys'
 
 export function useCardMutations(boardId?: number) {
   const qc = useQueryClient()
@@ -17,15 +18,10 @@ export function useCardMutations(boardId?: number) {
     qc.invalidateQueries({ queryKey: queryKeys.cards.pinned() })
 
   const create = useMutation({
-    mutationFn: ({
-      columnId,
-      title,
-      description,
-    }: {
-      columnId: number
-      title: string
-      description: string
-    }) => api.createCard(columnId, title, description),
+    mutationFn: (props: { columnId: number; form: NewCardForm }) => {
+      const { columnId, form } = props
+      return api.createCard(columnId, form)
+    },
     onSuccess: async () => {
       await Promise.all([invalidateBoardDetail(), invalidatePinned()])
       toast.success('卡片已建立')
@@ -56,27 +52,16 @@ export function useCardMutations(boardId?: number) {
     mutationFn: (id: number) => api.togglePin(id),
     onSuccess: async (data) => {
       await Promise.all([invalidateBoardDetail(), invalidatePinned()])
-      toast.success(data.is_pinned ? '已釘選' : '已取消釘選')
+      toast.success(data.isPinned ? '已釘選' : '已取消釘選')
     },
     onError: () => toast.error('切換釘選失敗'),
   })
 
   const update = useMutation({
-    mutationFn: ({
-      id,
-      title,
-      description,
-      storyPoint,
-      startTime,
-      endTime,
-    }: {
-      id: number
-      title: string
-      description: string
-      storyPoint?: number | null
-      startTime?: string | null
-      endTime?: string | null
-    }) => api.updateCard(id, title, description, storyPoint, startTime, endTime),
+    mutationFn: (props: { id: number; form: EditCardForm }) => {
+      const { id, form } = props
+      return api.updateCard(id, form)
+    },
     onSuccess: async (_data, variables) => {
       await Promise.all([
         invalidateBoardDetail(),
@@ -86,6 +71,26 @@ export function useCardMutations(boardId?: number) {
       toast.success('卡片已更新')
     },
     onError: () => toast.error('更新卡片失敗'),
+  })
+
+  const updateSchedule = useMutation({
+    mutationFn: ({
+      id,
+      startTime,
+      endTime,
+    }: {
+      id: number
+      startTime: string | null
+      endTime: string | null
+    }) => api.updateCardSchedule(id, startTime, endTime),
+    onSuccess: async (_data, variables) => {
+      await Promise.all([
+        invalidateBoardDetail(),
+        invalidateCardDetail(variables.id),
+        invalidatePinned(),
+      ])
+    },
+    onError: () => toast.error('更新時程失敗'),
   })
 
   const remove = useMutation({
@@ -112,6 +117,7 @@ export function useCardMutations(boardId?: number) {
     moveCard: move,
     togglePin,
     updateCard: update,
+    updateSchedule,
     deleteCard: remove,
     duplicateCard: duplicate,
     togglePinFromPin: togglePin,

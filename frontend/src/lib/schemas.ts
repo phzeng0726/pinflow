@@ -1,32 +1,56 @@
 import { z } from 'zod'
 
-export const boardSchema = z.object({
+// ─── Board ──────────────────────────────────────────────────────────────────
+
+export const newOrEditBoardSchema = z.object({
   name: z.string().min(1, '請輸入看板名稱'),
 })
 
-export const columnSchema = z.object({
+export type NewOrEditBoardForm = z.infer<typeof newOrEditBoardSchema>
+
+// ─── Column ──────────────────────────────────────────────────────────────────
+
+export const newColumnSchema = z.object({
   name: z.string().min(1, '請輸入欄位名稱'),
 })
 
-export const cardSchema = z.object({
-  title: z.string().min(1, '請輸入標題'),
-  description: z.string().optional(),
+export type NewColumnForm = z.infer<typeof newColumnSchema>
+
+export const editColumnSchema = z.object({
+  name: z.string().optional(),
+  autoPin: z.boolean().optional(),
 })
 
-export const cardDetailSchema = z.object({
+export type EditColumnForm = z.infer<typeof editColumnSchema>
+
+// ─── Card ──────────────────────────────────────────────────────────────────
+
+export const newCardSchema = z.object({
   title: z.string().min(1, '請輸入標題'),
-  desc: z.string().optional(),
 })
 
-export const scheduleSchema = z
+export type NewCardForm = z.infer<typeof newCardSchema>
+
+const timeField = z
+  .string()
+  .transform((v) => (v === '' ? undefined : v))
+  .optional()
+
+export const editCardSchema = z
   .object({
-    startTime: z.string().optional(),
-    endTime: z.string().optional(),
+    title: z.string().optional(),
+    description: z.string().optional(),
+    storyPoint: z.number().optional(),
+    priority: z.number().optional(),
+    startTime: timeField,
+    endTime: timeField,
   })
   .refine((d) => !(d.startTime && d.endTime && d.endTime < d.startTime), {
     message: '結束時間必須晚於開始時間',
     path: ['endTime'],
   })
+
+export type EditCardForm = z.infer<typeof editCardSchema>
 
 export const tagInputSchema = z.object({
   input: z.string(),
@@ -53,5 +77,5 @@ export const duplicateCardSchema = z.object({
   pin: z.boolean(),
   selectedBoardId: z.number(),
   selectedColumnId: z.number().min(1, '請選擇目標欄位'),
-  positionIndex: z.number(),
+  position: z.number(),
 })

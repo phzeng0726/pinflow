@@ -24,7 +24,7 @@
 
 - [x] 4.1 Create `service/tag_service.go` with CreateOrGet, ListAll, AttachToCard, DetachFromCard
 - [x] 4.2 Create `service/checklist_service.go` with CreateChecklist, DeleteChecklist, CreateItem, UpdateItem, DeleteItem
-- [x] 4.3 Update `CardService.UpdateCard` to handle schedule fields with end_time > start_time validation
+- [x] 4.3 Update `CardService.UpdateCard` to handle schedule fields with endTime > startTime validation
 
 ## 5. Backend: API Handlers & Routes
 
@@ -43,7 +43,7 @@
 ## 7. Frontend: TypeScript Types
 
 - [x] 7.1 Update `src/types/index.ts` to add `Tag`, `Checklist`, `ChecklistItem` types
-- [x] 7.2 Update `Card` type to include `tags`, `start_time`, `end_time`, `checklists`
+- [x] 7.2 Update `Card` type to include `tags`, `startTime`, `endTime`, `checklists`
 
 ## 8. Frontend: API Hooks
 
@@ -57,7 +57,7 @@
 - [x] 9.1 Create `src/features/card/CardDetailDialog.tsx` shell with Dialog (shadcn/ui or custom modal)
 - [x] 9.2 Add title/description display (read-only or inline-edit) in dialog
 - [x] 9.3 Implement tag section: display tag chips, tag search/create input, remove button
-- [x] 9.4 Implement schedule section: datetime pickers for start_time and end_time with save button
+- [x] 9.4 Implement schedule section: datetime pickers for startTime and endTime with save button
 - [x] 9.5 Implement checklist section: list checklists with items, completion toggles, text editing, delete buttons
 - [x] 9.6 Implement "Add checklist" button with title input
 - [x] 9.7 Implement "Add item" per checklist with text input
@@ -67,7 +67,7 @@
 
 - [x] 10.1 Add a detail trigger (icon or clickable title) to the board card component to open `CardDetailDialog`
 - [x] 10.2 Show tag chips on board card summary view (limited display, e.g., max 3 tags)
-- [x] 10.3 Show schedule indicator on board card if start_time or end_time is set
+- [x] 10.3 Show schedule indicator on board card if startTime or endTime is set
 - [x] 10.4 Show checklist progress bar/count on board card if checklists exist
 
 ## 11. Frontend: Tests

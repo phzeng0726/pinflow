@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import * as api from '../../../lib/api'
-import { queryKeys } from '../../queryKeys'
+import * as api from '@/lib/api'
+import { queryKeys } from '@/hooks/queryKeys'
 
 export function useChecklistMutations(boardId: number, cardId: number) {
   const qc = useQueryClient()

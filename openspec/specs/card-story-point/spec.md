@@ -1,46 +1,106 @@
 ## Requirements
 
 ### Requirement: Card story point field
-The system SHALL support an optional `story_point` field on Card. The value MUST be a positive integer or null (unset). The field SHALL be included in all Card response DTOs.
+
+The system SHALL support an optional `storyPoint` field on Card. The value MUST be a positive integer or null (unset). The field SHALL be included in all Card response DTOs.
 
 #### Scenario: Create card without story point
-- **WHEN** user creates a card without specifying `story_point`
-- **THEN** the card is created with `story_point: null`
+
+- **WHEN** user creates a card without specifying `storyPoint`
+- **THEN** the card is created with `storyPoint: null`
 
 #### Scenario: Update card with story point
-- **WHEN** user sends PATCH /api/cards/:id with `{"story_point": 5}`
-- **THEN** system updates the card's story point and returns the updated card with `"story_point": 5`
+
+- **WHEN** user sends PATCH /api/cards/:id with `{"storyPoint": 5}`
+- **THEN** system updates the card's story point and returns the updated card with `"storyPoint": 5`
 
 #### Scenario: Clear story point
-- **WHEN** user sends PATCH /api/cards/:id with `{"story_point": null}`
-- **THEN** system clears the story point and returns the updated card with `"story_point": null`
+
+- **WHEN** user sends PATCH /api/cards/:id with `{"storyPoint": null}`
+- **THEN** system clears the story point and returns the updated card with `"storyPoint": null`
 
 #### Scenario: Invalid story point value
-- **WHEN** user sends PATCH /api/cards/:id with `{"story_point": -1}` or a non-integer value
+
+- **WHEN** user sends PATCH /api/cards/:id with `{"storyPoint": -1}` or a non-integer value
 - **THEN** system returns HTTP 400 with validation error
 
 ### Requirement: Story point button UI
+
 The frontend SHALL display a set of predefined story point buttons (1, 3, 5, 7, 9, 11, 13, 15, 17, 19) in the CardDetailDialog. The currently selected value SHALL be visually highlighted. A clear button SHALL allow removing the story point.
 
 #### Scenario: Select story point via button
+
 - **WHEN** user clicks the "5" story point button
-- **THEN** system sends PATCH to update story_point to 5 and highlights the "5" button
+- **THEN** system sends PATCH to update storyPoint to 5 and highlights the "5" button
 
 #### Scenario: Clear story point via button
+
 - **WHEN** user clicks the clear/reset button
-- **THEN** system sends PATCH to set story_point to null and no button is highlighted
+- **THEN** system sends PATCH to set storyPoint to null and no button is highlighted
 
 #### Scenario: Display current story point
-- **WHEN** card has story_point = 7
+
+- **WHEN** card has storyPoint = 7
 - **THEN** the "7" button is visually highlighted in the story point selector
 
+### Requirement: SP trigger button reflects current value
+The system SHALL display a single button that triggers the SP popover. When a story point is assigned, the button SHALL display the numeric value with a blue filled style. When no story point is assigned, the button SHALL display a `+` icon with an outline style.
+
+#### Scenario: Button shows current SP value
+- **WHEN** the card has `storyPoint = 5`
+- **THEN** the trigger button shows "5" with blue background
+
+#### Scenario: Button shows add icon when no SP
+- **WHEN** the card has no story point (`storyPoint` is null or 0)
+- **THEN** the trigger button shows a `+` icon with outline style
+
+### Requirement: SP popover content
+The system SHALL display a popover containing a grid of selectable SP values `[1, 3, 5, 7, 9, 11, 13, 15, 17, 19]`, a header "Story Points", and a REMOVE button.
+
+#### Scenario: Popover opens on trigger click
+- **WHEN** user clicks the SP trigger button
+- **THEN** a popover opens containing the SP number grid
+
+#### Scenario: Currently selected SP is highlighted
+- **WHEN** the popover is open and the card has `storyPoint = 3`
+- **THEN** the "3" button is rendered with the selected (blue filled) style
+
+#### Scenario: REMOVE button visibility
+- **WHEN** the popover is open and the card has a story point assigned
+- **THEN** a REMOVE button is visible at the bottom of the popover
+
+#### Scenario: REMOVE button hidden when no SP
+- **WHEN** the popover is open and the card has no story point
+- **THEN** the REMOVE button is not rendered
+
+### Requirement: Selecting an SP value updates the card and closes the popover
+The system SHALL call `updateCard` with the selected value when a number button is clicked, then close the popover.
+
+#### Scenario: User selects a new SP value
+- **WHEN** user clicks a number button (e.g., "7") in the popover
+- **THEN** `updateCard` is called with `storyPoint: 7` and the popover closes
+
+#### Scenario: User clicks the already-selected SP value
+- **WHEN** user clicks the number that matches the current `card.storyPoint`
+- **THEN** `updateCard` is called with `storyPoint: 0` (clear) and the popover closes
+
+### Requirement: REMOVE clears the story point and closes the popover
+The system SHALL call `updateCard` with `storyPoint: 0` when REMOVE is clicked, then close the popover.
+
+#### Scenario: User clicks REMOVE
+- **WHEN** user clicks the REMOVE button in the popover
+- **THEN** `updateCard` is called with `storyPoint: 0` and the popover closes
+
 ### Requirement: Story point display on card item
+
 The frontend SHALL display the story point value (if set) on the CardItem component in the Kanban board.
 
 #### Scenario: Card with story point in board view
-- **WHEN** a card has story_point = 3
+
+- **WHEN** a card has storyPoint = 3
 - **THEN** the card item shows "3" as a badge/label
 
 #### Scenario: Card without story point in board view
-- **WHEN** a card has story_point = null
+
+- **WHEN** a card has storyPoint = null
 - **THEN** no story point indicator is shown on the card item

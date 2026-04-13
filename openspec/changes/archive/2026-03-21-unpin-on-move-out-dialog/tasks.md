@@ -1,8 +1,8 @@
 ## 1. 擴充 useBoardDnd hook
 
 - [x] 1.1 在 `UseBoardDndParams` interface 新增 `onMoveOutAutoPin?: (card: Card) => void` 可選 callback 參數
-- [x] 1.2 在 `handleDragEnd` 的卡片 move 邏輯中，於 `moveCardMutate` 呼叫後取得來源 column（從 `columns` 找 `dragged.column_id`）
-- [x] 1.3 判斷條件：來源 column `auto_pin === true` 且目標 column 不同且 `dragged.is_pinned === true`，若符合則呼叫 `onMoveOutAutoPin(dragged)`
+- [x] 1.2 在 `handleDragEnd` 的卡片 move 邏輯中，於 `moveCardMutate` 呼叫後取得來源 column（從 `columns` 找 `dragged.columnId`）
+- [x] 1.3 判斷條件：來源 column `autoPin === true` 且目標 column 不同且 `dragged.isPinned === true`，若符合則呼叫 `onMoveOutAutoPin(dragged)`
 
 ## 2. BoardPage 新增 dialog 狀態與邏輯
 

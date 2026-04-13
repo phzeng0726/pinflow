@@ -13,7 +13,8 @@ import (
 type CardService interface {
 	CreateCard(columnID uint, title, description string) (*model.Card, error)
 	GetCardDetail(id uint) (*dto.CardResponse, error)
-	UpdateCard(id uint, title, description string, storyPoint *int, startTime, endTime *time.Time) (*model.Card, error)
+	UpdateCard(id uint, title, description *string, storyPoint *int, priority *int, startTime, endTime *time.Time) (*model.Card, error)
+	UpdateSchedule(id uint, startTime, endTime *time.Time) (*model.Card, error)
 	MoveCard(id uint, columnID uint, position float64) (*model.Card, error)
 	TogglePin(id uint) (*model.Card, error)
 	GetPinnedCards() ([]dto.PinnedCardResponse, error)
@@ -79,23 +80,61 @@ func (s *cardService) GetCardDetail(id uint) (*dto.CardResponse, error) {
 	return &resp, nil
 }
 
-func (s *cardService) UpdateCard(id uint, title, description string, storyPoint *int, startTime, endTime *time.Time) (*model.Card, error) {
-	if strings.TrimSpace(title) == "" {
+func (s *cardService) UpdateCard(id uint, title, description *string, storyPoint *int, priority *int, startTime, endTime *time.Time) (*model.Card, error) {
+	if title != nil && strings.TrimSpace(*title) == "" {
 		return nil, errors.New("card title is required")
 	}
-	if storyPoint != nil && *storyPoint <= 0 {
-		return nil, errors.New("story_point must be a positive integer")
+	if storyPoint != nil && *storyPoint < 0 {
+		return nil, errors.New("storyPoint must be a positive integer")
+	}
+	if priority != nil && *priority != 0 && (*priority < 1 || *priority > 5) {
+		return nil, errors.New("priority must be between 1 and 5")
 	}
 	if startTime != nil && endTime != nil && endTime.Before(*startTime) {
-		return nil, errors.New("end_time must be after start_time")
+		return nil, errors.New("endTime must be after startTime")
 	}
 	card, err := s.cardRepo.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
-	card.Title = strings.TrimSpace(title)
-	card.Description = description
-	card.StoryPoint = storyPoint
+	if title != nil {
+		card.Title = strings.TrimSpace(*title)
+	}
+	if description != nil {
+		card.Description = *description
+	}
+	if storyPoint != nil {
+		if *storyPoint == 0 {
+			card.StoryPoint = nil // 0 = 清除
+		} else {
+			card.StoryPoint = storyPoint
+		}
+	}
+	if priority != nil {
+		if *priority == 0 {
+			card.Priority = nil // 0 = 清除
+		} else {
+			card.Priority = priority
+		}
+	}
+	if startTime != nil || endTime != nil {
+		card.StartTime = startTime
+		card.EndTime = endTime
+	}
+	if err := s.cardRepo.Update(card); err != nil {
+		return nil, err
+	}
+	return card, nil
+}
+
+func (s *cardService) UpdateSchedule(id uint, startTime, endTime *time.Time) (*model.Card, error) {
+	if startTime != nil && endTime != nil && endTime.Before(*startTime) {
+		return nil, errors.New("endTime must be after startTime")
+	}
+	card, err := s.cardRepo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
 	card.StartTime = startTime
 	card.EndTime = endTime
 	if err := s.cardRepo.Update(card); err != nil {
@@ -142,6 +181,7 @@ func ToCardResponse(card *model.Card) dto.CardResponse {
 		Position:    card.Position,
 		IsPinned:    card.IsPinned,
 		StoryPoint:  card.StoryPoint,
+		Priority:    card.Priority,
 		StartTime:   card.StartTime,
 		EndTime:     card.EndTime,
 		Tags:        tags,
@@ -228,7 +268,7 @@ func (s *cardService) DuplicateCard(id uint, req dto.DuplicateCardRequest) (*dto
 		return nil, err
 	}
 	var position float64
-	if req.PositionIndex <= 0 || req.PositionIndex > len(targetCards) {
+	if req.Position <= 0 || req.Position > len(targetCards) {
 		// Append to end
 		if len(targetCards) == 0 {
 			position = 1.0
@@ -238,10 +278,10 @@ func (s *cardService) DuplicateCard(id uint, req dto.DuplicateCardRequest) (*dto
 	} else {
 		// Insert at 1-based index
 		var before float64
-		if req.PositionIndex > 1 {
-			before = targetCards[req.PositionIndex-2].Position
+		if req.Position > 1 {
+			before = targetCards[req.Position-2].Position
 		}
-		after := targetCards[req.PositionIndex-1].Position
+		after := targetCards[req.Position-1].Position
 		position = (before + after) / 2.0
 	}
 

@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 import type { Card, Tag } from '@/types'
 import { ArrowLeft, Check, Pencil, Plus, X } from 'lucide-react'
 import { useState } from 'react'
-import { TAG_COLORS, getTagColorClasses } from './tagColors'
+import { TAG_COLORS, getTagColorClasses } from '@/pages/board-detail/components/styleConfig'
 
 type View =
   | 'list'

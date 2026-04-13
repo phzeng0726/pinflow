@@ -1,12 +1,3 @@
-import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
-import { editCardSchema, type EditCardForm } from '@/lib/schemas'
-import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Calendar, CheckSquare, Flame, Pencil, X } from 'lucide-react'
-import { useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { useForm } from 'react-hook-form'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -15,11 +6,24 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
+import { editCardSchema, type EditCardForm } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
+import {
+  getPriorityConfig,
+  getTagColorClasses,
+} from '@/pages/board-detail/components/styleConfig'
 import type { Card } from '@/types'
-import { CardDetailDialog } from './CardDetailDialog'
-import { getTagColorClasses } from '@/pages/board-detail/components/tags/tagColors'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { format, parseISO } from 'date-fns'
+import { Calendar, CheckSquare, Flame, Pencil, X } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { useForm } from 'react-hook-form'
 import { CardContextMenu } from './CardContextMenu'
+import { CardDetailDialog } from './CardDetailDialog'
 
 interface CardItemProps {
   card: Card
@@ -46,6 +50,16 @@ export function CardItem(props: CardItemProps) {
   const tags = card.tags ?? []
   const checklists = card.checklists ?? []
   const hasSchedule = !!card.startTime || !!card.endTime
+
+  const scheduleUrgencyClass = (() => {
+    const referenceIso = card.endTime ?? card.startTime
+    if (!referenceIso) return 'text-gray-400'
+    const diff =
+      (parseISO(referenceIso).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+    if (diff < 0) return 'text-red-500'
+    if (diff <= 3) return 'text-orange-500'
+    return 'text-gray-400'
+  })()
   const totalItems = checklists.reduce(
     (n, cl) => n + (cl.totalCount ?? cl.items?.length ?? 0),
     0,
@@ -197,20 +211,25 @@ export function CardItem(props: CardItemProps) {
                   {card.description}
                 </p>
               )}
-              {(card.storyPoint != null || hasSchedule || totalItems > 0) && (
+              {(card.storyPoint != null ||
+                hasSchedule ||
+                totalItems > 0 ||
+                (card.priority != null && card.priority > 0)) && (
                 <div className="mt-1.5 flex items-center gap-2">
-                  {card.storyPoint != null && (
-                    <span className="flex items-center gap-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
-                      <Flame className="h-3 w-3" />
-                      {card.storyPoint}
-                    </span>
-                  )}
                   {hasSchedule && (
-                    <span className="flex items-center gap-0.5 text-xs text-gray-400">
+                    <span
+                      className={cn(
+                        'flex items-center gap-0.5 text-xs',
+                        scheduleUrgencyClass,
+                      )}
+                    >
                       <Calendar className="h-3 w-3" />
                       {card.startTime
-                        ? new Date(card.startTime).toLocaleDateString()
-                        : ''}
+                        ? format(parseISO(card.startTime), 'M/d')
+                        : format(parseISO(card.endTime!), 'M/d')}
+                      {card.startTime &&
+                        card.endTime &&
+                        ` – ${format(parseISO(card.endTime), 'M/d')}`}
                     </span>
                   )}
                   {totalItems > 0 && (
@@ -226,6 +245,23 @@ export function CardItem(props: CardItemProps) {
                       {completedItems}/{totalItems}
                     </span>
                   )}
+                  {card.priority != null &&
+                    card.priority > 0 &&
+                    (() => {
+                      const p = getPriorityConfig(card.priority)
+                      return p ? (
+                        <span className={cn('text-xs font-bold', p.textClass)}>
+                          P{p.value}
+                        </span>
+                      ) : null
+                    })()}
+                  {card.storyPoint != null && (
+                    <span className="flex items-center gap-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
+                      <Flame className="h-3 w-3" />
+                      {card.storyPoint}
+                    </span>
+                  )}
+
                   <span className="text-xs text-gray-400">#{card.id}</span>
                 </div>
               )}

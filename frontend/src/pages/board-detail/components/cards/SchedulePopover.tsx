@@ -20,7 +20,7 @@ interface SchedulePopoverProps {
 function formatShortDate(iso: string | null | undefined): string | null {
   if (!iso) return null
   try {
-    return format(parseISO(iso), 'M/d')
+    return format(parseISO(iso), 'yyyy/M/d')
   } catch {
     return null
   }

@@ -5,43 +5,11 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
+import { PRIORITIES } from '@/pages/board-detail/components/styleConfig'
 import { cn } from '@/lib/utils'
 import type { Card } from '@/types'
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
-
-const PRIORITIES = [
-  {
-    value: 1,
-    label: 'Highest',
-    activeClass:
-      'bg-red-500 text-white hover:bg-red-600 dark:bg-red-500 dark:hover:bg-red-600',
-  },
-  {
-    value: 2,
-    label: 'Critical',
-    activeClass:
-      'bg-orange-500 text-white hover:bg-orange-600 dark:bg-orange-500 dark:hover:bg-orange-600',
-  },
-  {
-    value: 3,
-    label: 'High',
-    activeClass:
-      'bg-yellow-400 text-white hover:bg-yellow-500 dark:bg-yellow-400 dark:hover:bg-yellow-500',
-  },
-  {
-    value: 4,
-    label: 'Medium',
-    activeClass:
-      'bg-green-500 text-white hover:bg-green-600 dark:bg-green-500 dark:hover:bg-green-600',
-  },
-  {
-    value: 5,
-    label: 'Low',
-    activeClass:
-      'bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-500 dark:hover:bg-blue-600',
-  },
-]
 
 interface PriorityPopoverProps {
   boardId: number

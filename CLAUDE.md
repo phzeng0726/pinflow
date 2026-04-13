@@ -10,8 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Always prefer Edit over Write for existing files.
 - Always use forward slashes in file paths, not backslashes.
 - When running /opsx:apply or any OpenSpec-related task, mark each task as completed immediately after finishing it.
-
----
+- After completing Plan Mode planning, ask the user if they want to create a spec using /opsx:new. If yes, use the sonnet model (claude-sonnet-4-6) for spec creation and /opsx:apply, unless the user specifies otherwise.
 
 ## Project Overview
 
@@ -22,8 +21,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Backend  | `backend/`  | Go, Gin, file-based JSON storage, Swagger                             |
 | Frontend | `frontend/` | React 19, Vite, Tailwind v3, TanStack Query+Router, Zustand, @dnd-kit |
 | Electron | `electron/` | Wraps frontend SPA + spawns Go backend, NSIS Windows target           |
-
----
 
 ## Commands
 
@@ -43,7 +40,7 @@ cd backend && swag init                 # regenerate Swagger docs (run after han
 cd frontend && pnpm dev                 # dev server on :5173 (proxies /api → :34115)
 cd frontend && pnpm build               # production build → frontend/dist/
 cd frontend && pnpm test                # vitest
-cd frontend && pnpm test -- --run src/pages/board-detail/components/cards/CardItem.test.tsx  # single file
+cd frontend && pnpm test -- --run src/pages/board-detail/components/cards/CardItem.test.tsx
 ```
 
 ### Electron
@@ -51,8 +48,6 @@ cd frontend && pnpm test -- --run src/pages/board-detail/components/cards/CardIt
 ```bash
 cd electron && npm start                # runs Electron (requires built frontend + backend running)
 ```
-
----
 
 ## Architecture
 
@@ -75,120 +70,87 @@ pinflow-workspace/
 - `--workspace` flag sets the workspace path (default `./pinflow-workspace`)
 - In-memory store with write-through to JSON files (`backend/store/`)
 - Workspace is Git-syncable for multi-device portability
-- Migration from old SQLite: `cd backend && go run ./cmd/migrate --db pinflow.db --out <workspace-path>`
 
 ### Backend Layers
 
 ```
 store/      → FileStore: in-memory data + JSON file persistence
 model/      → Data structs (Board, Column, Card, Tag, Checklist, ChecklistItem)
-repository/ → File-based repository implementations (interfaces + NewFile*Repository)
-service/    → Business logic (interfaces + implementations); auto-pin logic lives here
+repository/ → File-based repository implementations
+service/    → Business logic; auto-pin logic lives here
 dto/        → Request/Response types for JSON binding
 api/        → Gin handlers + router.go
-docs/       → Swagger auto-generated (do not edit manually)
 tests/      → All tests (repository, service, handler layers)
-cmd/migrate → One-time SQLite → file workspace migration tool (uses GORM)
 ```
 
-Import paths use module name `pinflow` (e.g. `pinflow/service`, `pinflow/repository`, `pinflow/store`).
+Import paths use module name `pinflow`. Gin v1.12.0 requires go 1.25+.
 
-**Key backend decisions:**
-
-- Gin v1.12.0 requires go 1.25+
-- Auto-pin logic: `CardService.MoveCard` and `CreateCard` check `Column.AutoPin`
-- Position ordering: float64 midpoint (`midPosition` util in `frontend/src/lib/utils.ts`)
-- FileStore uses `sync.RWMutex` for thread-safe concurrent access
-- Card files embed checklists and store tag associations as `tag_ids` array
+**Key decisions:** Auto-pin: `CardService.MoveCard` and `CreateCard` check `Column.AutoPin`. FileStore uses `sync.RWMutex`.
 
 ### Frontend Architecture
 
 ```
 src/
   pages/
-    board-list/     → BoardListPage (看板列表頁)
-    board-detail/   → BoardPage (看板詳細頁)
-      components/
-        cards/      → CardItem, CardContextMenu, AddCardForm, CardDetailDialog, DuplicateCardDialog, ScheduleSection, StoryPointSelector
-        columns/    → ColumnView, ColumnHeader, AddColumnForm
-        tags/       → TagSection, ColorPicker
-        checklists/ → ChecklistBlock, ChecklistSection
-    pin/            → PinWindow
-      components/   → PinnedCardItem, PinOverlay
+    board-list/     → BoardListPage
+    board-detail/   → BoardPage + cards/columns/tags/checklists components
+    pin/            → PinWindow + PinnedCardItem/PinOverlay
   hooks/
     queryKeys.ts    → All query keys (single source of truth)
-    <domain>/
-      queries/      → One query hook per file (e.g. useBoards.ts, useBoardDetail.ts)
-      mutations/    → One mutation hook per domain (e.g. useBoardMutations.ts)
-    board/useBoardDnd.ts → DnD logic with sync optimistic cache updates
-  stores/           → Zustand: themeStore (dark/light), pinStore
-  lib/
-    api/            → Axios calls split by domain (client.ts, boards.ts, cards.ts, …, index.ts re-exports)
-    schemas.ts      → Zod schemas (react-hook-form validation)
-    utils.ts        → cn(), midPosition()
-  routes/           → TanStack Router file-based; routeTree.gen.ts auto-generated by TanStackRouterVite plugin
+    <domain>/queries/   → One query hook per file
+    <domain>/mutations/ → One mutation hook per domain
+    board/useBoardDnd.ts → DnD logic with optimistic cache updates
+  stores/           → Zustand: themeStore, pinStore
+  lib/api/          → Axios calls split by domain (re-exported via index.ts)
+  routes/           → TanStack Router file-based; routeTree.gen.ts auto-generated
   types/            → TypeScript interfaces matching backend DTOs
 ```
 
-**Frontend import convention:**
-
-- 同一資料夾內互相引用 → 使用 `./`（如 `./client`）
-- 跨目錄引用（`../` 或更深層）→ 一律改用 `@/` alias（如 `@/hooks/...`、`@/pages/...`、`@/lib/...`）
+**Import convention:**
+- 同一資料夾內互相引用 → `./`；跨目錄 → 一律用 `@/` alias
 - MUST NOT 在任何前端檔案使用 `../` 或 `../../` 跨目錄 import
 
-**Key frontend decisions:**
-
+**Key decisions:**
 - Tailwind v3 (not v4) — required for shadcn/ui compatibility
-- `vitest.config.ts` is separate from `vite.config.ts` (vite build chokes on `test` key)
-- DnD: `PointerSensor` with `activationConstraint: { distance: 5 }` — pointer moves < 5px = click, ≥ 5px = drag
-- In Electron mode, `window.electronAPI` is injected by preload; API base URL switches to `http://localhost:34115/api/v1`
-- Pin window: web mode = `PinOverlay` floating div; Electron mode = separate `BrowserWindow` with `alwaysOnTop: true`
+- `vitest.config.ts` is separate from `vite.config.ts`
+- DnD: `PointerSensor` with `activationConstraint: { distance: 5 }`
+- Electron: `window.electronAPI` injected by preload; API base → `http://localhost:34115/api/v1`
+- Pin window: web = `PinOverlay` div; Electron = `BrowserWindow` with `alwaysOnTop: true`
 
 ### API Route Map
 
 ```
-GET    /api/health
-GET    /swagger/*any
-
-/api/v1/boards          → CRUD
-/api/v1/boards/:id/columns  → POST (create column)
-/api/v1/columns/:id     → PATCH, DELETE
-/api/v1/columns/:id/cards   → POST (create card)
-/api/v1/cards/pinned    → GET (must be before /:id)
-/api/v1/cards/:id       → GET, PATCH, DELETE
-/api/v1/cards/:id/move  → PATCH
-/api/v1/cards/:id/pin   → PATCH
-/api/v1/cards/:id/tags  → POST, DELETE /:tagId
+GET /api/health
+/api/v1/boards              → CRUD
+/api/v1/boards/:id/columns  → POST
+/api/v1/columns/:id         → PATCH, DELETE
+/api/v1/columns/:id/cards   → POST
+/api/v1/cards/pinned        → GET (must be before /:id)
+/api/v1/cards/:id           → GET, PATCH, DELETE
+/api/v1/cards/:id/move      → PATCH
+/api/v1/cards/:id/pin       → PATCH
+/api/v1/cards/:id/tags      → POST, DELETE /:tagId
 /api/v1/cards/:id/duplicate → POST
 /api/v1/cards/:id/checklists → GET, POST
-/api/v1/tags            → GET, POST
-/api/v1/checklists/:id  → DELETE
+/api/v1/tags                → GET, POST
+/api/v1/checklists/:id      → DELETE
 /api/v1/checklists/:id/items → POST
-/api/v1/checklist-items/:id  → PATCH, DELETE
+/api/v1/checklist-items/:id → PATCH, DELETE
 ```
 
 ### Adding a New Endpoint
 
-1. Add method to service interface + implement on struct
-2. Add handler with Swagger godoc
-3. Register route in `api/router.go`
-4. Run `swag init` in `backend/`
-5. Add API call to `frontend/src/lib/api/<domain>.ts` (re-exported via `index.ts`)
-6. Add query hook in `hooks/<domain>/queries/` or mutation in `hooks/<domain>/mutations/`
-
----
+1. Add service interface method + implementation
+2. Add handler with Swagger godoc, register in `api/router.go`
+3. Run `swag init` in `backend/`
+4. Add API call to `frontend/src/lib/api/<domain>.ts` (re-exported via `index.ts`)
+5. Add query/mutation hook in `hooks/<domain>/queries/` or `mutations/`
 
 ## Development Workflow
 
-**Full local dev:**
-
 ```bash
-# Terminal 1
-cd backend && go run . --workspace ../../pinflow-workspace
-
-# Terminal 2
-cd frontend && pnpm dev
-# → open http://localhost:5173
+# Terminal 1: cd backend && go run . --workspace ../../pinflow-workspace
+# Terminal 2: cd frontend && pnpm dev  →  http://localhost:5173
 ```
 
-**Shell note:** Go tools (`wails`, `swag`, `golangci-lint`) are already on PATH — do not prefix commands with `export PATH=...`.
+Go tools (`swag`, `golangci-lint`) are already on PATH.

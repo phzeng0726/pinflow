@@ -41,6 +41,7 @@ export const editCardSchema = z
     title: z.string().optional(),
     description: z.string().optional(),
     storyPoint: z.number().optional(),
+    priority: z.number().optional(),
     startTime: timeField,
     endTime: timeField,
   })

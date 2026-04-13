@@ -11,6 +11,7 @@ type UpdateCardRequest struct {
 	Title       *string    `json:"title" binding:"omitempty,min=1,max=200"`
 	Description *string    `json:"description" binding:"omitempty,max=2000"`
 	StoryPoint  *int       `json:"storyPoint"`
+	Priority    *int       `json:"priority"`
 	StartTime   *time.Time `json:"startTime"`
 	EndTime     *time.Time `json:"endTime"`
 }
@@ -46,6 +47,7 @@ type CardResponse struct {
 	Position    float64             `json:"position"`
 	IsPinned    bool                `json:"isPinned"`
 	StoryPoint  *int                `json:"storyPoint"`
+	Priority    *int                `json:"priority"`
 	StartTime   *time.Time          `json:"startTime"`
 	EndTime     *time.Time          `json:"endTime"`
 	Tags        []TagResponse       `json:"tags"`

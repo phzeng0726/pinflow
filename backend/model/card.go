@@ -10,6 +10,7 @@ type Card struct {
 	Position    float64     `json:"position"`
 	IsPinned    bool        `json:"isPinned"`
 	StoryPoint  *int        `json:"storyPoint"`
+	Priority    *int        `json:"priority"`
 	StartTime   *time.Time  `json:"startTime"`
 	EndTime     *time.Time  `json:"endTime"`
 	Tags        []Tag       `json:"tags"`

@@ -49,6 +49,7 @@ export interface Card {
   position: number
   isPinned: boolean
   storyPoint: number | null
+  priority: number | null
   startTime: string | null
   endTime: string | null
   tags: Tag[]

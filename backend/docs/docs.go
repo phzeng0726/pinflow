@@ -354,7 +354,7 @@ const docTemplate = `{
                 "tags": [
                     "cards"
                 ],
-                "summary": "Update a card's title, description, and schedule",
+                "summary": "Update a card's title, description, story points, priority, and schedule",
                 "parameters": [
                     {
                         "type": "integer",
@@ -377,7 +377,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.Card"
+                            "$ref": "#/definitions/dto.CardResponse"
                         }
                     },
                     "400": {
@@ -1294,6 +1294,9 @@ const docTemplate = `{
                 "position": {
                     "type": "number"
                 },
+                "priority": {
+                    "type": "integer"
+                },
                 "startTime": {
                     "type": "string"
                 },
@@ -1547,9 +1550,6 @@ const docTemplate = `{
         },
         "dto.UpdateCardRequest": {
             "type": "object",
-            "required": [
-                "title"
-            ],
             "properties": {
                 "description": {
                     "type": "string",
@@ -1557,6 +1557,9 @@ const docTemplate = `{
                 },
                 "endTime": {
                     "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
                 },
                 "startTime": {
                     "type": "string"
@@ -1633,7 +1636,7 @@ const docTemplate = `{
                         "$ref": "#/definitions/model.Column"
                     }
                 },
-                "createdAt": {
+                "created_at": {
                     "type": "string"
                 },
                 "id": {
@@ -1642,7 +1645,7 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "updatedAt: {
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -1677,6 +1680,9 @@ const docTemplate = `{
                 "position": {
                     "type": "number"
                 },
+                "priority": {
+                    "type": "integer"
+                },
                 "startTime": {
                     "type": "string"
                 },
@@ -1692,7 +1698,7 @@ const docTemplate = `{
                 "title": {
                     "type": "string"
                 },
-                "updatedAt: {
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -1767,7 +1773,7 @@ const docTemplate = `{
                 "position": {
                     "type": "number"
                 },
-                "updatedAt: {
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -1795,7 +1801,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:34115",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "Pinflow API",
+	Title:            "PinFlow API",
 	Description:      "Kanban board with pin mode API",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

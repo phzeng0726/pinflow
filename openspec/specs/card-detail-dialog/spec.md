@@ -8,11 +8,15 @@ The system SHALL provide a dialog/modal that opens when the user clicks a detail
 - **THEN** system opens a full-screen or large modal dialog showing all card fields
 
 ### Requirement: Dialog displays rich fields
-The dialog SHALL display title, description, tags, start time, end time, and all checklists with their items.
+The dialog SHALL display title, description, story points, priority, tags, start time, end time, and all checklists with their items. The Priority selector SHALL be placed between Story Points and Tags.
 
 #### Scenario: All fields visible
-- **WHEN** dialog opens for a card with tags, schedule, and checklists
-- **THEN** all sections (tags, schedule, checklists) are visible and populated
+- **WHEN** dialog opens for a card with tags, schedule, priority, and checklists
+- **THEN** all sections (story points, priority, tags, schedule, checklists) are visible and populated
+
+#### Scenario: Priority section position
+- **WHEN** the dialog opens
+- **THEN** the Priority trigger button is rendered between the Story Points section and the Tags section
 
 ### Requirement: Inline tag editing in dialog
 The dialog SHALL allow the user to add tags (from existing global tags or by creating a new one) and remove tags from the card without closing the dialog.

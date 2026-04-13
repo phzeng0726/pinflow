@@ -15,6 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Label } from '@radix-ui/react-label'
 import { Notebook, X } from 'lucide-react'
 import { useForm } from 'react-hook-form'
+import { PriorityPopover } from './PriorityPopover'
 import { ScheduleSection } from './ScheduleSection'
 import { StoryPointPopover } from './StoryPointPopover'
 
@@ -117,6 +118,14 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                     Story Points
                   </Label>
                   <StoryPointPopover boardId={boardId} card={card} />
+                </div>
+
+                {/* Priority */}
+                <div>
+                  <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
+                    Priority
+                  </Label>
+                  <PriorityPopover boardId={boardId} card={card} />
                 </div>
 
                 {/* Tags */}

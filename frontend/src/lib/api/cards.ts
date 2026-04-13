@@ -22,6 +22,7 @@ export const updateCard = async (id: number, form: EditCardForm) => {
   if (form.title !== undefined) payload.title = form.title
   if (form.description !== undefined) payload.description = form.description
   if (form.storyPoint !== undefined) payload.storyPoint = form.storyPoint
+  if (form.priority !== undefined) payload.priority = form.priority
   if (form.startTime !== undefined) payload.startTime = form.startTime
   if (form.endTime !== undefined) payload.endTime = form.endTime
 

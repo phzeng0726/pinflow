@@ -67,13 +67,13 @@ func (h *CardHandler) GetCard(c *gin.Context) {
 }
 
 // UpdateCard godoc
-// @Summary     Update a card's title, description, and schedule
+// @Summary     Update a card's title, description, story points, priority, and schedule
 // @Tags        cards
 // @Accept      json
 // @Produce     json
 // @Param       id path int true "Card ID"
 // @Param       body body dto.UpdateCardRequest true "Card data"
-// @Success     200 {object} model.Card
+// @Success     200 {object} dto.CardResponse
 // @Failure     400 {object} map[string]string
 // @Failure     404 {object} map[string]string
 // @Failure     422 {object} map[string]string
@@ -88,9 +88,13 @@ func (h *CardHandler) UpdateCard(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	card, err := h.svc.UpdateCard(id, req.Title, req.Description, req.StoryPoint, req.StartTime, req.EndTime)
+	if req.Priority != nil && *req.Priority != 0 && (*req.Priority < 1 || *req.Priority > 5) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "priority must be between 1 and 5"})
+		return
+	}
+	card, err := h.svc.UpdateCard(id, req.Title, req.Description, req.StoryPoint, req.Priority, req.StartTime, req.EndTime)
 	if err != nil {
-		if err.Error() == "endTime must be after startTime" {
+		if err.Error() == "endTime must be after startTime" || err.Error() == "priority must be between 1 and 5" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

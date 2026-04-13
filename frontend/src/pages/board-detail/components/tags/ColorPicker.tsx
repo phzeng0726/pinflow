@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react'
-import { cn } from '../../lib/utils'
+import { cn } from '@/lib/utils'
 
 export const TAG_COLORS: { key: string; bg: string; ring: string }[] = [
   { key: '', bg: 'bg-gray-200 dark:bg-gray-600', ring: 'ring-gray-400' },

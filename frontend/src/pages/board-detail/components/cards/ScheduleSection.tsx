@@ -2,10 +2,10 @@ import { type EditCardForm, editCardSchema } from '@/lib/schemas'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Calendar } from 'lucide-react'
 import { Controller, useForm } from 'react-hook-form'
-import { DateTimePicker } from '../../components/ui/date-time-picker'
-import { Label } from '../../components/ui/label'
-import { useCardMutations } from '../../hooks/card/mutations/useCardMutations'
-import type { Card } from '../../types'
+import { DateTimePicker } from '@/components/ui/date-time-picker'
+import { Label } from '@/components/ui/label'
+import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
+import type { Card } from '@/types'
 
 interface ScheduleSectionProps {
   boardId: number

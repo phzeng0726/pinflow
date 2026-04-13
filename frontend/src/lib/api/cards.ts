@@ -1,5 +1,5 @@
-import type { Card, DuplicateCardRequest, PinnedCard } from '../../types'
-import type { EditCardForm, NewCardForm } from '../schemas'
+import type { Card, DuplicateCardRequest, PinnedCard } from '@/types'
+import type { EditCardForm, NewCardForm } from '@/lib/schemas'
 import { client } from './client'
 
 export const getCard = async (id: number) => {

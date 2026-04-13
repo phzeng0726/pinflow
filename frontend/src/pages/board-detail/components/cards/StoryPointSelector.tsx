@@ -1,9 +1,9 @@
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import type { Card } from '@/types'
 import { Flame, X } from 'lucide-react'
-import { Button } from '../../components/ui/button'
-import { Label } from '../../components/ui/label'
-import { cn } from '../../lib/utils'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
 
 const STORY_POINTS = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
 

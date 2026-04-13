@@ -8,9 +8,9 @@ import {
 } from '@dnd-kit/core'
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { midPosition } from '../../lib/utils'
-import type { Board, Card, Column } from '../../types'
-import { queryKeys } from '../queryKeys'
+import { midPosition } from '@/lib/utils'
+import type { Board, Card, Column } from '@/types'
+import { queryKeys } from '@/hooks/queryKeys'
 
 interface UseBoardDndParams {
   boardId: number

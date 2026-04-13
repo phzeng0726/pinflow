@@ -2,9 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> **語言規則（Language Rules）**
-> - 一律用**繁體中文**回答問題
-> - Git commit message 一律使用**英文**
+## Rules
+
+- Always respond in Traditional Chinese (繁體中文).
+- Always write Git Commit Message in English.
+- Do not read or modify `.env*` files unless explicitly requested.
+- Always prefer Edit over Write for existing files.
+- Always use forward slashes in file paths, not backslashes.
+- When running /opsx:apply or any OpenSpec-related task, mark each task as completed immediately after finishing it.
 
 ---
 
@@ -12,17 +17,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **PinFlow** — Kanban + Pin board desktop app. Three sub-projects in one repo:
 
-| Layer | Path | Tech |
-|---|---|---|
-| Backend | `backend/` | Go, Gin, file-based JSON storage, Swagger |
+| Layer    | Path        | Tech                                                                  |
+| -------- | ----------- | --------------------------------------------------------------------- |
+| Backend  | `backend/`  | Go, Gin, file-based JSON storage, Swagger                             |
 | Frontend | `frontend/` | React 19, Vite, Tailwind v3, TanStack Query+Router, Zustand, @dnd-kit |
-| Electron | `electron/` | Wraps frontend SPA + spawns Go backend, NSIS Windows target |
+| Electron | `electron/` | Wraps frontend SPA + spawns Go backend, NSIS Windows target           |
 
 ---
 
 ## Commands
 
 ### Backend (Go module root is `backend/`, NOT repo root)
+
 ```bash
 cd backend && go run . --workspace ../../pinflow-workspace  # dev server on :34115
 cd backend && go build ./...            # compile check
@@ -32,14 +38,16 @@ cd backend && swag init                 # regenerate Swagger docs (run after han
 ```
 
 ### Frontend
+
 ```bash
 cd frontend && pnpm dev                 # dev server on :5173 (proxies /api → :34115)
 cd frontend && pnpm build               # production build → frontend/dist/
 cd frontend && pnpm test                # vitest
-cd frontend && pnpm test -- --run src/features/board/CardItem.test.tsx  # single file
+cd frontend && pnpm test -- --run src/pages/board-detail/components/cards/CardItem.test.tsx  # single file
 ```
 
 ### Electron
+
 ```bash
 cd electron && npm start                # runs Electron (requires built frontend + backend running)
 ```
@@ -70,6 +78,7 @@ pinflow-workspace/
 - Migration from old SQLite: `cd backend && go run ./cmd/migrate --db pinflow.db --out <workspace-path>`
 
 ### Backend Layers
+
 ```
 store/      → FileStore: in-memory data + JSON file persistence
 model/      → Data structs (Board, Column, Card, Tag, Checklist, ChecklistItem)
@@ -85,6 +94,7 @@ cmd/migrate → One-time SQLite → file workspace migration tool (uses GORM)
 Import paths use module name `pinflow` (e.g. `pinflow/service`, `pinflow/repository`, `pinflow/store`).
 
 **Key backend decisions:**
+
 - Gin v1.12.0 requires go 1.25+
 - Auto-pin logic: `CardService.MoveCard` and `CreateCard` check `Column.AutoPin`
 - Position ordering: float64 midpoint (`midPosition` util in `frontend/src/lib/utils.ts`)
@@ -92,10 +102,19 @@ Import paths use module name `pinflow` (e.g. `pinflow/service`, `pinflow/reposit
 - Card files embed checklists and store tag associations as `tag_ids` array
 
 ### Frontend Architecture
+
 ```
 src/
-  features/board/   → BoardPage, CardItem, ColumnHeader, AddCardForm (main Kanban UI)
-  features/card/    → CardDetailDialog (full card detail with tags, checklists, schedule)
+  pages/
+    board-list/     → BoardListPage (看板列表頁)
+    board-detail/   → BoardPage (看板詳細頁)
+      components/
+        cards/      → CardItem, CardContextMenu, AddCardForm, CardDetailDialog, DuplicateCardDialog, ScheduleSection, StoryPointSelector
+        columns/    → ColumnView, ColumnHeader, AddColumnForm
+        tags/       → TagSection, ColorPicker
+        checklists/ → ChecklistBlock, ChecklistSection
+    pin/            → PinWindow
+      components/   → PinnedCardItem, PinOverlay
   hooks/
     queryKeys.ts    → All query keys (single source of truth)
     <domain>/
@@ -111,7 +130,14 @@ src/
   types/            → TypeScript interfaces matching backend DTOs
 ```
 
+**Frontend import convention:**
+
+- 同一資料夾內互相引用 → 使用 `./`（如 `./client`）
+- 跨目錄引用（`../` 或更深層）→ 一律改用 `@/` alias（如 `@/hooks/...`、`@/pages/...`、`@/lib/...`）
+- MUST NOT 在任何前端檔案使用 `../` 或 `../../` 跨目錄 import
+
 **Key frontend decisions:**
+
 - Tailwind v3 (not v4) — required for shadcn/ui compatibility
 - `vitest.config.ts` is separate from `vite.config.ts` (vite build chokes on `test` key)
 - DnD: `PointerSensor` with `activationConstraint: { distance: 5 }` — pointer moves < 5px = click, ≥ 5px = drag
@@ -119,6 +145,7 @@ src/
 - Pin window: web mode = `PinOverlay` floating div; Electron mode = separate `BrowserWindow` with `alwaysOnTop: true`
 
 ### API Route Map
+
 ```
 GET    /api/health
 GET    /swagger/*any
@@ -141,6 +168,7 @@ GET    /swagger/*any
 ```
 
 ### Adding a New Endpoint
+
 1. Add method to service interface + implement on struct
 2. Add handler with Swagger godoc
 3. Register route in `api/router.go`
@@ -153,6 +181,7 @@ GET    /swagger/*any
 ## Development Workflow
 
 **Full local dev:**
+
 ```bash
 # Terminal 1
 cd backend && go run . --workspace ../../pinflow-workspace

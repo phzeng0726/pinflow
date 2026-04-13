@@ -1,11 +1,11 @@
 import { Pin, X } from 'lucide-react'
 import type React from 'react'
 import { useEffect } from 'react'
-import { Button } from '../../components/ui/button'
-import { useCardMutations } from '../../hooks/card/mutations/useCardMutations'
-import { usePinnedCards } from '../../hooks/card/queries/usePinnedCards'
-import { usePinStore } from '../../stores/pinStore'
-import { PinnedCardItem } from './PinnedCardItem'
+import { Button } from '@/components/ui/button'
+import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
+import { usePinnedCards } from '@/hooks/card/queries/usePinnedCards'
+import { usePinStore } from '@/stores/pinStore'
+import { PinnedCardItem } from './components/PinnedCardItem'
 
 export function PinWindow() {
   const { data: cards = [] } = usePinnedCards()

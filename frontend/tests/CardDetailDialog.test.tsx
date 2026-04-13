@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { CardDetailDialog } from '../src/features/card/CardDetailDialog'
+import { CardDetailDialog } from '../src/pages/board-detail/components/cards/CardDetailDialog'
 import * as api from '../src/lib/api'
 import type { Card } from '../src/types'
 

@@ -3,9 +3,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Button } from '../../components/ui/button'
-import { Textarea } from '../../components/ui/textarea'
-import { newCardSchema, type NewCardForm } from '../../lib/schemas'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { newCardSchema, type NewCardForm } from '@/lib/schemas'
 
 interface AddCardFormProps {
   boardId: number

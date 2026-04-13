@@ -2,28 +2,28 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import type { z } from 'zod'
-import { Button } from '../../components/ui/button'
-import { Checkbox } from '../../components/ui/checkbox'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '../../components/ui/dialog'
-import { Input } from '../../components/ui/input'
-import { Label } from '../../components/ui/label'
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../components/ui/select'
-import { useBoardDetail } from '../../hooks/board/queries/useBoardDetail'
-import { useBoards } from '../../hooks/board/queries/useBoards'
-import { useCardMutations } from '../../hooks/card/mutations/useCardMutations'
-import { duplicateCardSchema } from '../../lib/schemas'
-import type { Card } from '../../types'
+} from '@/components/ui/select'
+import { useBoardDetail } from '@/hooks/board/queries/useBoardDetail'
+import { useBoards } from '@/hooks/board/queries/useBoards'
+import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
+import { duplicateCardSchema } from '@/lib/schemas'
+import type { Card } from '@/types'
 
 type DuplicateCardForm = z.infer<typeof duplicateCardSchema>
 

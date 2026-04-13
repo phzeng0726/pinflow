@@ -1,4 +1,4 @@
-import type { Checklist, ChecklistItem } from '../../types'
+import type { Checklist, ChecklistItem } from '@/types'
 import { client } from './client'
 
 export const listChecklists = async (cardId: number) => {

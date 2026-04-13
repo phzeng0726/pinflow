@@ -12,21 +12,21 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '../../components/ui/alert-dialog'
-import { Badge } from '../../components/ui/badge'
-import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { Label } from '../../components/ui/label'
+} from '@/components/ui/alert-dialog'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '../../components/ui/popover'
-import { useTagMutations } from '../../hooks/tag/mutations/useTagMutations'
-import { useTags } from '../../hooks/tag/queries/useTags'
-import { tagInputSchema } from '../../lib/schemas'
-import { cn } from '../../lib/utils'
-import type { Card, Tag } from '../../types'
+} from '@/components/ui/popover'
+import { useTagMutations } from '@/hooks/tag/mutations/useTagMutations'
+import { useTags } from '@/hooks/tag/queries/useTags'
+import { tagInputSchema } from '@/lib/schemas'
+import { cn } from '@/lib/utils'
+import type { Card, Tag } from '@/types'
 import { ColorPicker, getTagColorClasses } from './ColorPicker'
 
 type TagInputForm = z.infer<typeof tagInputSchema>

@@ -11,15 +11,15 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../../components/ui/dropdown-menu'
-import { Input } from '../../components/ui/input'
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '../../components/ui/tooltip'
-import { cn } from '../../lib/utils'
-import type { Column } from '../../types'
+} from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
+import type { Column } from '@/types'
 
 const COLUMN_COLORS = [
   'bg-red-500',

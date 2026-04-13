@@ -10,16 +10,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '../../components/ui/alert-dialog'
+} from '@/components/ui/alert-dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../../components/ui/dropdown-menu'
-import type { Card } from '../../types'
-import { DuplicateCardDialog } from '../card/DuplicateCardDialog'
+} from '@/components/ui/dropdown-menu'
+import type { Card } from '@/types'
+import { DuplicateCardDialog } from './DuplicateCardDialog'
 
 interface CardContextMenuProps {
   card: Card

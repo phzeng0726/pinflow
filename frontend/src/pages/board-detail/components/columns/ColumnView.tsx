@@ -7,9 +7,9 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Fragment } from 'react'
-import type { Column } from '../../types'
-import { AddCardForm } from './AddCardForm'
-import { CardItem } from './CardItem'
+import type { Column } from '@/types'
+import { AddCardForm } from '@/pages/board-detail/components/cards/AddCardForm'
+import { CardItem } from '@/pages/board-detail/components/cards/CardItem'
 import { ColumnHeader } from './ColumnHeader'
 
 interface ColumnViewProps {

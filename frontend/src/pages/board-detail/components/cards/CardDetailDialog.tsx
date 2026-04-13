@@ -7,12 +7,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Label } from '@radix-ui/react-label'
 import { Notebook, X } from 'lucide-react'
 import { useForm } from 'react-hook-form'
-import { Dialog, DialogContent, DialogTitle } from '../../components/ui/dialog'
-import { useCardDetail } from '../../hooks/card/queries/useCardDetail'
-import { ChecklistSection } from './ChecklistSection'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { useCardDetail } from '@/hooks/card/queries/useCardDetail'
+import { ChecklistSection } from '@/pages/board-detail/components/checklists/ChecklistSection'
 import { ScheduleSection } from './ScheduleSection'
 import { StoryPointSelector } from './StoryPointSelector'
-import { TagSection } from './TagSection'
+import { TagSection } from '@/pages/board-detail/components/tags/TagSection'
 
 interface CardDetailDialogProps {
   boardId: number

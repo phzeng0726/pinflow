@@ -1,7 +1,7 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { Toaster } from 'sonner'
-import { useThemeStore } from '../stores/themeStore'
+import { useThemeStore } from '@/stores/themeStore'
 
 function Root() {
   const apply = useThemeStore((s) => s.apply)

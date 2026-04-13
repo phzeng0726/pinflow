@@ -1,12 +1,12 @@
 import { PinOff } from 'lucide-react'
-import { Button } from '../../components/ui/button'
+import { Button } from '@/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '../../components/ui/tooltip'
-import { cn } from '../../lib/utils'
-import type { PinnedCard } from '../../types'
+} from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
+import type { PinnedCard } from '@/types'
 
 const COLUMN_COLORS = [
   'border-red-400',

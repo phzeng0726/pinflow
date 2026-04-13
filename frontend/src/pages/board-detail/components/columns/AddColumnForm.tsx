@@ -2,10 +2,10 @@ import { newColumnSchema, type NewColumnForm } from '@/lib/schemas'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { type Dispatch, type SetStateAction } from 'react'
 import { useForm } from 'react-hook-form'
-import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { useColumnMutations } from '../../hooks/column/mutations/useColumnMutations'
-import type { Board } from '../../types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { useColumnMutations } from '@/hooks/column/mutations/useColumnMutations'
+import type { Board } from '@/types'
 
 interface AddColumnFormProps {
   board: Board

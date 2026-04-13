@@ -7,18 +7,18 @@ import { Calendar, CheckSquare, Flame, Pencil, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useForm } from 'react-hook-form'
-import { Badge } from '../../components/ui/badge'
-import { Button } from '../../components/ui/button'
-import { Textarea } from '../../components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '../../components/ui/tooltip'
-import { cn } from '../../lib/utils'
-import type { Card } from '../../types'
-import { CardDetailDialog } from '../card/CardDetailDialog'
-import { getTagColorClasses } from '../card/ColorPicker'
+} from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
+import type { Card } from '@/types'
+import { CardDetailDialog } from './CardDetailDialog'
+import { getTagColorClasses } from '@/pages/board-detail/components/tags/ColorPicker'
 import { CardContextMenu } from './CardContextMenu'
 
 interface CardItemProps {

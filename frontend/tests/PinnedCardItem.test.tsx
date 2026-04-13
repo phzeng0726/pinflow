@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { TooltipProvider } from '../src/components/ui/tooltip'
-import { PinnedCardItem } from '../src/features/pin/PinnedCardItem'
+import { PinnedCardItem } from '../src/pages/pin/components/PinnedCardItem'
 import type { PinnedCard } from '../src/types'
 
 const card: PinnedCard = {

@@ -1,8 +1,8 @@
 import type { NewOrEditBoardForm } from '@/lib/schemas'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import * as api from '../../../lib/api'
-import { queryKeys } from '../../queryKeys'
+import * as api from '@/lib/api'
+import { queryKeys } from '@/hooks/queryKeys'
 
 export function useBoardMutations() {
   const qc = useQueryClient()

@@ -1,5 +1,5 @@
-import type { Board } from '../../types'
-import type { NewOrEditBoardForm } from '../schemas'
+import type { Board } from '@/types'
+import type { NewOrEditBoardForm } from '@/lib/schemas'
 import { client } from './client'
 
 export const getBoards = async () => {

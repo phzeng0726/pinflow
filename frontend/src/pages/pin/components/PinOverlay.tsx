@@ -1,5 +1,5 @@
-import { usePinStore } from '../../stores/pinStore'
-import { PinWindow } from './PinWindow'
+import { usePinStore } from '@/stores/pinStore'
+import { PinWindow } from '@/pages/pin/PinWindow'
 
 /**
  * Web-mode overlay: shows pin window as a floating panel in the bottom-right corner.

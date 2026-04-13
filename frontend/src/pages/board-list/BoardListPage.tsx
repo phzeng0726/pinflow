@@ -4,16 +4,16 @@ import { useNavigate } from '@tanstack/react-router'
 import { LayoutDashboard, Moon, Plus, Sun, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '../../components/ui/tooltip'
-import { useBoardMutations } from '../../hooks/board/mutations/useBoardMutations'
-import { useBoards } from '../../hooks/board/queries/useBoards'
-import { useThemeStore } from '../../stores/themeStore'
+} from '@/components/ui/tooltip'
+import { useBoardMutations } from '@/hooks/board/mutations/useBoardMutations'
+import { useBoards } from '@/hooks/board/queries/useBoards'
+import { useThemeStore } from '@/stores/themeStore'
 
 export function BoardListPage() {
   const { data: boards = [], isLoading } = useBoards()

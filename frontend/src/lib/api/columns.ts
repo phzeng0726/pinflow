@@ -1,5 +1,5 @@
-import type { Column } from '../../types'
-import type { EditColumnForm, NewColumnForm } from '../schemas'
+import type { Column } from '@/types'
+import type { EditColumnForm, NewColumnForm } from '@/lib/schemas'
 import { client } from './client'
 
 export const createColumn = async (boardId: number, form: NewColumnForm) => {

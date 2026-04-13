@@ -1,9 +1,9 @@
 import type { EditCardForm, NewCardForm } from '@/lib/schemas'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import * as api from '../../../lib/api'
-import type { DuplicateCardRequest } from '../../../types'
-import { queryKeys } from '../../queryKeys'
+import * as api from '@/lib/api'
+import type { DuplicateCardRequest } from '@/types'
+import { queryKeys } from '@/hooks/queryKeys'
 
 export function useCardMutations(boardId?: number) {
   const qc = useQueryClient()

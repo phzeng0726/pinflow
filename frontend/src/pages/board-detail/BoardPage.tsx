@@ -15,22 +15,22 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '../../components/ui/alert-dialog'
-import { Button } from '../../components/ui/button'
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '../../components/ui/tooltip'
-import { useBoardDetail } from '../../hooks/board/queries/useBoardDetail'
-import { useBoardDnd } from '../../hooks/board/useBoardDnd'
-import { useCardMutations } from '../../hooks/card/mutations/useCardMutations'
-import { usePinnedCards } from '../../hooks/card/queries/usePinnedCards'
-import { useColumnMutations } from '../../hooks/column/mutations/useColumnMutations'
-import { useThemeStore } from '../../stores/themeStore'
-import type { Card } from '../../types'
-import { AddColumnForm } from './AddColumnForm'
-import { ColumnView } from './ColumnView'
+} from '@/components/ui/tooltip'
+import { useBoardDetail } from '@/hooks/board/queries/useBoardDetail'
+import { useBoardDnd } from '@/hooks/board/useBoardDnd'
+import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
+import { usePinnedCards } from '@/hooks/card/queries/usePinnedCards'
+import { useColumnMutations } from '@/hooks/column/mutations/useColumnMutations'
+import { useThemeStore } from '@/stores/themeStore'
+import type { Card } from '@/types'
+import { AddColumnForm } from '@/pages/board-detail/components/columns/AddColumnForm'
+import { ColumnView } from '@/pages/board-detail/components/columns/ColumnView'
 
 export function BoardPage() {
   const navigate = useNavigate()

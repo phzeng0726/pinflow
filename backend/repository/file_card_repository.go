@@ -162,6 +162,28 @@ func (r *fileCardRepository) FindPinned() ([]model.Card, error) {
 	return cards, nil
 }
 
+func (r *fileCardRepository) Search(query string, limit int) ([]model.Card, error) {
+	cfs := r.s.SearchCards(query, limit)
+	cards := make([]model.Card, 0, len(cfs))
+	for _, cf := range cfs {
+		cards = append(cards, model.Card{
+			ID:          cf.ID,
+			ColumnID:    cf.ColumnID,
+			Title:       cf.Title,
+			Description: cf.Description,
+			Position:    cf.Position,
+			IsPinned:    cf.IsPinned,
+			StoryPoint:  cf.StoryPoint,
+			Priority:    cf.Priority,
+			StartTime:   cf.StartTime,
+			EndTime:     cf.EndTime,
+			CreatedAt:   cf.CreatedAt,
+			UpdatedAt:   cf.UpdatedAt,
+		})
+	}
+	return cards, nil
+}
+
 func (r *fileCardRepository) Delete(id uint) error {
 	return r.s.DeleteCard(id)
 }

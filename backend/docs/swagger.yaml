@@ -17,6 +17,8 @@ definitions:
         type: integer
       createdAt:
         type: string
+      dependencyCount:
+        type: integer
       description:
         type: string
       endTime:
@@ -40,6 +42,21 @@ definitions:
       title:
         type: string
       updatedAt:
+        type: string
+    type: object
+  dto.CardSearchResult:
+    properties:
+      boardId:
+        type: integer
+      boardName:
+        type: string
+      columnId:
+        type: integer
+      columnName:
+        type: string
+      id:
+        type: integer
+      title:
         type: string
     type: object
   dto.ChecklistItemResponse:
@@ -124,6 +141,16 @@ definitions:
     required:
     - name
     type: object
+  dto.CreateDependencyRequest:
+    properties:
+      toCardId:
+        type: integer
+      type:
+        $ref: '#/definitions/model.DependencyType'
+    required:
+    - toCardId
+    - type
+    type: object
   dto.CreateTagRequest:
     properties:
       color:
@@ -135,6 +162,30 @@ definitions:
         type: string
     required:
     - name
+    type: object
+  dto.DependencyCardRef:
+    properties:
+      boardId:
+        type: integer
+      columnId:
+        type: integer
+      id:
+        type: integer
+      title:
+        type: string
+    type: object
+  dto.DependencyResponse:
+    properties:
+      createdAt:
+        type: string
+      fromCard:
+        $ref: '#/definitions/dto.DependencyCardRef'
+      id:
+        type: integer
+      toCard:
+        $ref: '#/definitions/dto.DependencyCardRef'
+      type:
+        $ref: '#/definitions/model.DependencyType'
     type: object
   dto.DuplicateCardRequest:
     properties:
@@ -283,6 +334,8 @@ definitions:
         type: integer
       createdAt:
         type: string
+      dependencyCount:
+        type: integer
       description:
         type: string
       endTime:
@@ -357,6 +410,18 @@ definitions:
       updatedAt:
         type: string
     type: object
+  model.DependencyType:
+    enum:
+    - blocks
+    - parent_of
+    - duplicates
+    - related_to
+    type: string
+    x-enum-varnames:
+    - DependencyTypeBlocks
+    - DependencyTypeParentOf
+    - DependencyTypeDuplicates
+    - DependencyTypeRelatedTo
   model.Tag:
     properties:
       color:
@@ -668,6 +733,81 @@ paths:
       summary: Create a checklist on a card
       tags:
       - checklists
+  /cards/{id}/dependencies:
+    get:
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.DependencyResponse'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List dependencies for a card
+      tags:
+      - dependencies
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: From Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Dependency data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateDependencyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.DependencyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a dependency between two cards
+      tags:
+      - dependencies
   /cards/{id}/duplicate:
     post:
       consumes:
@@ -881,6 +1021,29 @@ paths:
               $ref: '#/definitions/dto.PinnedCardResponse'
             type: array
       summary: Get all pinned cards
+      tags:
+      - cards
+  /cards/search:
+    get:
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      - description: Max results (default 20)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.CardSearchResult'
+            type: array
+      summary: Search cards by title across all boards
       tags:
       - cards
   /checklist-items/{id}:
@@ -1124,6 +1287,26 @@ paths:
       summary: Create a card in a column
       tags:
       - cards
+  /dependencies/{id}:
+    delete:
+      parameters:
+      - description: Dependency ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a dependency
+      tags:
+      - dependencies
   /tags:
     get:
       produces:

@@ -4,9 +4,14 @@ import (
 	"net/http"
 	"pinflow/dto"
 	"pinflow/service"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
+
+func parseUintFromString(s string) (uint64, error) {
+	return strconv.ParseUint(s, 10, 64)
+}
 
 type CardHandler struct {
 	svc service.CardService
@@ -249,4 +254,28 @@ func (h *CardHandler) GetPinnedCards(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, cards)
+}
+
+// SearchCards godoc
+// @Summary     Search cards by title across all boards
+// @Tags        cards
+// @Produce     json
+// @Param       q query string false "Search query"
+// @Param       limit query int false "Max results (default 20)"
+// @Success     200 {array} dto.CardSearchResult
+// @Router      /cards/search [get]
+func (h *CardHandler) SearchCards(c *gin.Context) {
+	query := c.Query("q")
+	limit := 20
+	if l := c.Query("limit"); l != "" {
+		if parsed, err := parseUintFromString(l); err == nil && parsed > 0 {
+			limit = int(parsed)
+		}
+	}
+	results, err := h.svc.Search(query, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, results)
 }

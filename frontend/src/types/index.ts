@@ -41,6 +41,32 @@ export interface Checklist {
   totalCount?: number
 }
 
+export type DependencyType = 'blocks' | 'parent_of' | 'duplicates' | 'related_to'
+
+export interface DependencyCardRef {
+  id: number
+  title: string
+  boardId: number
+  columnId: number
+}
+
+export interface Dependency {
+  id: number
+  fromCard: DependencyCardRef
+  toCard: DependencyCardRef
+  type: DependencyType
+  createdAt: string
+}
+
+export interface CardSearchResult {
+  id: number
+  title: string
+  boardId: number
+  boardName: string
+  columnId: number
+  columnName: string
+}
+
 export interface Card {
   id: number
   columnId: number
@@ -54,6 +80,7 @@ export interface Card {
   endTime: string | null
   tags: Tag[]
   checklists: Checklist[]
+  dependencyCount: number
   createdAt: string
   updatedAt: string
 }

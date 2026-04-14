@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Always prefer Edit over Write for existing files.
 - Always use forward slashes in file paths, not backslashes.
 - When running /opsx:apply or any OpenSpec-related task, mark each task as completed immediately after finishing it.
-- Every Plan Mode response MUST end with: "是否要使用 /opsx:new 建立 spec？如需建立，將使用 claude-sonnet-4-6 model。"
+- When in Plan Mode and you have finished presenting a complete plan (all questions answered, approach finalized), ask the user: "是否要使用 /opsx:new 建立 spec 進行實作？" If the user agrees, switch to `claude-sonnet-4-6` model first, then run `/opsx:new`.
 
 ## Project Overview
 
@@ -107,10 +107,12 @@ src/
 ```
 
 **Import convention:**
+
 - 同一資料夾內互相引用 → `./`；跨目錄 → 一律用 `@/` alias
 - MUST NOT 在任何前端檔案使用 `../` 或 `../../` 跨目錄 import
 
 **Key decisions:**
+
 - Tailwind v3 (not v4) — required for shadcn/ui compatibility
 - `vitest.config.ts` is separate from `vite.config.ts`
 - DnD: `PointerSensor` with `activationConstraint: { distance: 5 }`

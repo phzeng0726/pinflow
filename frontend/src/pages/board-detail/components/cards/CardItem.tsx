@@ -18,7 +18,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { format, parseISO } from 'date-fns'
-import { Calendar, CheckSquare, Flame, Pencil, X } from 'lucide-react'
+import { Calendar, CheckSquare, Flame, Link2, Pencil, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useForm } from 'react-hook-form'
@@ -214,7 +214,8 @@ export function CardItem(props: CardItemProps) {
               {(card.storyPoint != null ||
                 hasSchedule ||
                 totalItems > 0 ||
-                (card.priority != null && card.priority > 0)) && (
+                (card.priority != null && card.priority > 0) ||
+                card.dependencyCount > 0) && (
                 <div className="mt-1.5 flex items-center gap-2">
                   {hasSchedule && (
                     <span
@@ -259,6 +260,13 @@ export function CardItem(props: CardItemProps) {
                     <span className="flex items-center gap-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
                       <Flame className="h-3 w-3" />
                       {card.storyPoint}
+                    </span>
+                  )}
+
+                  {card.dependencyCount > 0 && (
+                    <span className="flex items-center gap-0.5 text-xs text-gray-400">
+                      <Link2 className="h-3 w-3" />
+                      {card.dependencyCount}
                     </span>
                   )}
 

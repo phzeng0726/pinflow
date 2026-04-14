@@ -29,6 +29,7 @@ type CardRepository interface {
 	UpdateColumnAndPosition(id uint, columnID uint, position float64, isPinned bool) error
 	UpdatePinned(id uint, isPinned bool) error
 	FindPinned() ([]model.Card, error)
+	Search(query string, limit int) ([]model.Card, error)
 	Delete(id uint) error
 }
 
@@ -51,6 +52,13 @@ type ChecklistRepository interface {
 	MaxPositionByCard(cardID uint) (float64, error)
 	Update(checklist *model.Checklist) error
 	Delete(id uint) error
+}
+
+type DependencyRepository interface {
+	Create(dep *model.Dependency) error
+	Delete(id uint) error
+	ListByCard(cardID uint) ([]model.Dependency, error)
+	CountByCard(cardID uint) (int, error)
 }
 
 type ChecklistItemRepository interface {

@@ -5,20 +5,26 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { useCardDetail } from '@/hooks/card/queries/useCardDetail'
+import { useDependencyMutations } from '@/hooks/dependency/mutations/useDependencyMutations'
+import { useDependencies } from '@/hooks/dependency/queries/useDependencies'
 import { useTagMutations } from '@/hooks/tag/mutations/useTagMutations'
 import { type EditCardForm, editCardSchema } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import { ChecklistSection } from '@/pages/board-detail/components/checklists/ChecklistSection'
-import { TagsPopover } from './TagsPopover'
-import { getTagColorClasses } from '@/pages/board-detail/components/styleConfig'
+import {
+  getTagColorClasses,
+  resolveDependencyView,
+} from '@/pages/board-detail/components/styleConfig'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Label } from '@radix-ui/react-label'
 import { Notebook, X } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { DependencyPopover } from './DependencyPopover'
 import { PriorityPopover } from './PriorityPopover'
 import { SchedulePopover } from './SchedulePopover'
 import { StoryPointPopover } from './StoryPointPopover'
+import { TagsPopover } from './TagsPopover'
 
 interface CardDetailDialogProps {
   boardId: number
@@ -32,6 +38,8 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
   const { updateCard } = useCardMutations(boardId)
   const { detachTag } = useTagMutations(boardId)
   const [tagsOpen, setTagsOpen] = useState(false)
+  const { data: dependencies = [] } = useDependencies(cardId)
+  const { deleteDep } = useDependencyMutations(cardId, boardId)
 
   const {
     register,
@@ -177,7 +185,47 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                         </Badge>
                       )
                     })}
-                    <TagsPopover boardId={boardId} card={card} open={tagsOpen} onOpenChange={setTagsOpen} />
+                    <TagsPopover
+                      boardId={boardId}
+                      card={card}
+                      open={tagsOpen}
+                      onOpenChange={setTagsOpen}
+                    />
+                  </div>
+                </div>
+
+                {/* Dependencies */}
+                <div className="min-w-0 flex-1">
+                  <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
+                    Dependencies
+                  </Label>
+                  <div className="flex flex-wrap items-center gap-1">
+                    {dependencies.map((dep) => {
+                      const { label, otherCardTitle } = resolveDependencyView(
+                        dep,
+                        card.id,
+                      )
+                      return (
+                        <Badge
+                          key={dep.id}
+                          variant="secondary"
+                          className="flex h-8 items-center gap-1 rounded px-2 py-0.5 text-xs"
+                        >
+                          <span className="text-gray-500 dark:text-gray-400">
+                            {label}:
+                          </span>
+                          <span>{otherCardTitle}</span>
+                          <button
+                            type="button"
+                            onClick={() => deleteDep.mutate(dep.id)}
+                            className="ml-0.5 h-3 w-3 opacity-60 hover:opacity-100"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      )
+                    })}
+                    <DependencyPopover boardId={boardId} card={card} />
                   </div>
                 </div>
               </div>

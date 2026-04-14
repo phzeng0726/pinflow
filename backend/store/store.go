@@ -48,10 +48,11 @@ type FileStore struct {
 
 	manifest Manifest
 
-	boards  map[uint]*model.Board
-	columns map[uint]*model.Column
-	cards   map[uint]*CardFile
-	tags    map[uint]*model.Tag
+	boards       map[uint]*model.Board
+	columns      map[uint]*model.Column
+	cards        map[uint]*CardFile
+	tags         map[uint]*model.Tag
+	dependencies map[uint]*model.Dependency
 
 	// Reverse indexes for O(1) lookups
 	columnsByBoard  map[uint][]uint // boardID → []columnID
@@ -68,6 +69,7 @@ func New(basePath string) (*FileStore, error) {
 		columns:         make(map[uint]*model.Column),
 		cards:           make(map[uint]*CardFile),
 		tags:            make(map[uint]*model.Tag),
+		dependencies:    make(map[uint]*model.Dependency),
 		columnsByBoard:  make(map[uint][]uint),
 		cardsByColumn:   make(map[uint][]uint),
 		checklistToCard: make(map[uint]uint),
@@ -77,6 +79,7 @@ func New(basePath string) (*FileStore, error) {
 			NextIDs: map[string]uint{
 				"board": 1, "column": 1, "card": 1,
 				"tag": 1, "checklist": 1, "checklist_item": 1,
+				"dependency": 1,
 			},
 		},
 	}
@@ -124,6 +127,11 @@ func (s *FileStore) load() error {
 		for i := range tags {
 			s.tags[tags[i].ID] = &tags[i]
 		}
+	}
+
+	// Dependencies
+	if err := s.loadDependencies(); err != nil {
+		return err
 	}
 
 	// Boards
@@ -421,6 +429,41 @@ func (s *FileStore) GetCardsByColumn(columnID uint) []CardFile {
 	return result
 }
 
+func (s *FileStore) SearchCards(query string, limit int) []CardFile {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	lower := strings.ToLower(strings.TrimSpace(query))
+	var result []CardFile
+	for _, c := range s.cards {
+		if lower == "" || strings.Contains(strings.ToLower(c.Title), lower) {
+			result = append(result, *copyCard(c))
+		}
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].UpdatedAt.After(result[j].UpdatedAt)
+	})
+	if limit > 0 && len(result) > limit {
+		result = result[:limit]
+	}
+	return result
+}
+
+func (s *FileStore) GetCardBoardID(cardID uint) (boardID uint, ok bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	card, exists := s.cards[cardID]
+	if !exists {
+		return 0, false
+	}
+	col, exists := s.columns[card.ColumnID]
+	if !exists {
+		return 0, false
+	}
+	return col.BoardID, true
+}
+
 func (s *FileStore) GetPinnedCards() []CardFile {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -478,6 +521,8 @@ func (s *FileStore) DeleteCard(id uint) error {
 		return ErrNotFound
 	}
 
+	s.cleanDependenciesByCard(id)
+
 	if col := s.columns[card.ColumnID]; col != nil {
 		os.Remove(s.cardPath(col.BoardID, id))
 	}
@@ -485,6 +530,86 @@ func (s *FileStore) DeleteCard(id uint) error {
 	s.cardsByColumn[card.ColumnID] = removeFromSlice(s.cardsByColumn[card.ColumnID], id)
 	delete(s.cards, id)
 	return nil
+}
+
+// ============================================================
+// Dependency
+// ============================================================
+
+var ErrDependencyConflict = fmt.Errorf("dependency already exists")
+var ErrSelfReference = fmt.Errorf("a card cannot depend on itself")
+
+func (s *FileStore) CreateDependency(d *model.Dependency) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if d.FromCardID == d.ToCardID {
+		return ErrSelfReference
+	}
+
+	// Duplicate check
+	for _, existing := range s.dependencies {
+		if existing.Type == d.Type {
+			if existing.FromCardID == d.FromCardID && existing.ToCardID == d.ToCardID {
+				return ErrDependencyConflict
+			}
+			// related_to is symmetric: also check reverse direction
+			if d.Type == model.DependencyTypeRelatedTo &&
+				existing.FromCardID == d.ToCardID && existing.ToCardID == d.FromCardID {
+				return ErrDependencyConflict
+			}
+		}
+	}
+
+	d.ID = s.NextID("dependency")
+	s.dependencies[d.ID] = d
+	return s.persistDependencies()
+}
+
+func (s *FileStore) DeleteDependency(id uint) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, ok := s.dependencies[id]; !ok {
+		return ErrNotFound
+	}
+	delete(s.dependencies, id)
+	return s.persistDependencies()
+}
+
+func (s *FileStore) ListDependenciesByCard(cardID uint) []model.Dependency {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var result []model.Dependency
+	for _, d := range s.dependencies {
+		if d.FromCardID == cardID || d.ToCardID == cardID {
+			result = append(result, *d)
+		}
+	}
+	return result
+}
+
+func (s *FileStore) CountDependenciesByCard(cardID uint) int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	count := 0
+	for _, d := range s.dependencies {
+		if d.FromCardID == cardID || d.ToCardID == cardID {
+			count++
+		}
+	}
+	return count
+}
+
+func (s *FileStore) cleanDependenciesByCard(cardID uint) {
+	for id, d := range s.dependencies {
+		if d.FromCardID == cardID || d.ToCardID == cardID {
+			delete(s.dependencies, id)
+		}
+	}
+	_ = s.persistDependencies()
 }
 
 // ============================================================
@@ -664,6 +789,33 @@ func (s *FileStore) boardDir(boardID uint) string {
 
 func (s *FileStore) cardPath(boardID, cardID uint) string {
 	return filepath.Join(s.boardDir(boardID), "cards", fmt.Sprintf("card-%d.json", cardID))
+}
+
+func (s *FileStore) dependenciesPath() string {
+	return filepath.Join(s.basePath, "dependencies.json")
+}
+
+func (s *FileStore) loadDependencies() error {
+	dp := s.dependenciesPath()
+	if !fileExists(dp) {
+		return nil
+	}
+	var deps []model.Dependency
+	if err := readJSON(dp, &deps); err != nil {
+		return fmt.Errorf("dependencies: %w", err)
+	}
+	for i := range deps {
+		s.dependencies[deps[i].ID] = &deps[i]
+	}
+	return nil
+}
+
+func (s *FileStore) persistDependencies() error {
+	deps := make([]model.Dependency, 0, len(s.dependencies))
+	for _, d := range s.dependencies {
+		deps = append(deps, *d)
+	}
+	return writeJSON(s.dependenciesPath(), deps)
 }
 
 // ============================================================

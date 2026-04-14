@@ -9,7 +9,7 @@ import { useCommentMutations } from '@/hooks/comment/mutations/useCommentMutatio
 import type { Comment } from '@/types'
 import { formatDistanceToNow } from 'date-fns'
 import { MessageSquare } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 interface CommentSectionProps {
   cardId: number
@@ -97,10 +97,7 @@ function CommentItem({
           <span>•</span>
           <Popover open={deleteOpen} onOpenChange={setDeleteOpen}>
             <PopoverTrigger asChild>
-              <button
-                type="button"
-                className="hover:text-red-500"
-              >
+              <button type="button" className="hover:text-red-500">
                 Delete
               </button>
             </PopoverTrigger>
@@ -140,12 +137,29 @@ export function CommentSection({
   comments,
 }: CommentSectionProps) {
   const [newText, setNewText] = useState('')
+  const [isEditing, setIsEditing] = useState(false)
   const { create, update, remove } = useCommentMutations(cardId, boardId)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const handleOpen = () => {
+    setIsEditing(true)
+
+    // 等 DOM render 再 focus
+    setTimeout(() => {
+      textareaRef.current?.focus()
+    }, 0)
+  }
 
   const handleCreate = () => {
     const trimmed = newText.trim()
     if (!trimmed) return
-    create.mutate(trimmed, { onSuccess: () => setNewText('') })
+
+    create.mutate(trimmed, {
+      onSuccess: () => {
+        setNewText('')
+        setIsEditing(false)
+      },
+    })
   }
 
   const sorted = [...comments].sort(
@@ -166,29 +180,41 @@ export function CommentSection({
       </div>
 
       {/* 輸入區 */}
-      <div className="border-b p-3 dark:border-gray-700">
-        <Textarea
-          value={newText}
-          onChange={(e) => setNewText(e.target.value)}
-          placeholder="Write a comment..."
-          rows={3}
-          className="mb-2 resize-none text-sm"
-        />
-        <Button
-          size="sm"
-          onClick={handleCreate}
-          disabled={create.isPending || !newText.trim()}
-        >
-          Save
-        </Button>
+      <div className="p-3">
+        {isEditing ? (
+          <>
+            <Textarea
+              ref={textareaRef}
+              value={newText}
+              onChange={(e) => setNewText(e.target.value)}
+              placeholder="Write a comment..."
+              rows={3}
+              className="mb-2 resize-none text-sm"
+              onBlur={() => setIsEditing(false)}
+            />
+            <Button
+              size="sm"
+              onMouseDown={(e) => e.preventDefault()} // 避免 Textarea 的 onBlur 觸發
+              onClick={handleCreate}
+              disabled={create.isPending || !newText.trim()}
+            >
+              Save
+            </Button>
+          </>
+        ) : (
+          <div
+            onClick={handleOpen}
+            className="w-full cursor-pointer rounded-md border px-3 py-2 text-left text-sm text-muted-foreground hover:bg-accent dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+          >
+            Write a comment...
+          </div>
+        )}
       </div>
 
       {/* 留言列表 */}
       <div className="flex-1 space-y-2 overflow-y-auto p-3">
         {sorted.length === 0 && (
-          <p className="py-4 text-center text-xs text-gray-400">
-            尚無留言
-          </p>
+          <p className="py-4 text-center text-xs text-gray-400">尚無留言</p>
         )}
         {sorted.map((comment) => (
           <CommentItem

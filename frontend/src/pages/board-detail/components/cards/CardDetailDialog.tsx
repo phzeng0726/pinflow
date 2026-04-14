@@ -84,7 +84,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
         <DialogTitle className="sr-only">卡片詳情</DialogTitle>
 
         {/* 頂部標題區 */}
-        <div className="flex items-start gap-3 border-b p-6 dark:border-gray-700">
+        <div className="flex items-start gap-3 border-b px-6 py-3 dark:border-gray-700">
           <div className="flex-1">
             <Input
               {...register('title')}

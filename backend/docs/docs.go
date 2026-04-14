@@ -279,6 +279,42 @@ const docTemplate = `{
                 }
             }
         },
+        "/cards/search": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cards"
+                ],
+                "summary": "Search cards by title across all boards",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Max results (default 20)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.CardSearchResult"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/cards/{id}": {
             "get": {
                 "produces": [
@@ -478,6 +514,120 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/cards/{id}/dependencies": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dependencies"
+                ],
+                "summary": "List dependencies for a card",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Card ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.DependencyResponse"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dependencies"
+                ],
+                "summary": "Create a dependency between two cards",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "From Card ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Dependency data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateDependencyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.DependencyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1163,6 +1313,37 @@ const docTemplate = `{
                 }
             }
         },
+        "/dependencies/{id}": {
+            "delete": {
+                "tags": [
+                    "dependencies"
+                ],
+                "summary": "Delete a dependency",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Dependency ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/tags": {
             "get": {
                 "produces": [
@@ -1346,6 +1527,9 @@ const docTemplate = `{
                 "createdAt": {
                     "type": "string"
                 },
+                "dependencyCount": {
+                    "type": "integer"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -1380,6 +1564,29 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CardSearchResult": {
+            "type": "object",
+            "properties": {
+                "boardId": {
+                    "type": "integer"
+                },
+                "boardName": {
+                    "type": "string"
+                },
+                "columnId": {
+                    "type": "integer"
+                },
+                "columnName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "title": {
                     "type": "string"
                 }
             }
@@ -1505,6 +1712,21 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CreateDependencyRequest": {
+            "type": "object",
+            "required": [
+                "toCardId",
+                "type"
+            ],
+            "properties": {
+                "toCardId": {
+                    "type": "integer"
+                },
+                "type": {
+                    "$ref": "#/definitions/model.DependencyType"
+                }
+            }
+        },
         "dto.CreateTagRequest": {
             "type": "object",
             "required": [
@@ -1519,6 +1741,43 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 100,
                     "minLength": 1
+                }
+            }
+        },
+        "dto.DependencyCardRef": {
+            "type": "object",
+            "properties": {
+                "boardId": {
+                    "type": "integer"
+                },
+                "columnId": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.DependencyResponse": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "fromCard": {
+                    "$ref": "#/definitions/dto.DependencyCardRef"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "toCard": {
+                    "$ref": "#/definitions/dto.DependencyCardRef"
+                },
+                "type": {
+                    "$ref": "#/definitions/model.DependencyType"
                 }
             }
         },
@@ -1743,6 +2002,9 @@ const docTemplate = `{
                 "createdAt": {
                     "type": "string"
                 },
+                "dependencyCount": {
+                    "type": "integer"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -1855,6 +2117,21 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "model.DependencyType": {
+            "type": "string",
+            "enum": [
+                "blocks",
+                "parent_of",
+                "duplicates",
+                "related_to"
+            ],
+            "x-enum-varnames": [
+                "DependencyTypeBlocks",
+                "DependencyTypeParentOf",
+                "DependencyTypeDuplicates",
+                "DependencyTypeRelatedTo"
+            ]
         },
         "model.Tag": {
             "type": "object",

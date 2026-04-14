@@ -18,6 +18,7 @@ type CardService interface {
 	MoveCard(id uint, columnID uint, position float64) (*model.Card, error)
 	TogglePin(id uint) (*model.Card, error)
 	GetPinnedCards() ([]dto.PinnedCardResponse, error)
+	Search(query string, limit int) ([]dto.CardSearchResult, error)
 	DeleteCard(id uint) error
 	DuplicateCard(id uint, req dto.DuplicateCardRequest) (*dto.CardResponse, error)
 }
@@ -25,24 +26,30 @@ type CardService interface {
 type cardService struct {
 	cardRepo          repository.CardRepository
 	columnRepo        repository.ColumnRepository
+	boardRepo         repository.BoardRepository
 	tagRepo           repository.TagRepository
 	checklistRepo     repository.ChecklistRepository
 	checklistItemRepo repository.ChecklistItemRepository
+	depRepo           repository.DependencyRepository
 }
 
 func NewCardService(
 	cardRepo repository.CardRepository,
 	columnRepo repository.ColumnRepository,
+	boardRepo repository.BoardRepository,
 	tagRepo repository.TagRepository,
 	checklistRepo repository.ChecklistRepository,
 	checklistItemRepo repository.ChecklistItemRepository,
+	depRepo repository.DependencyRepository,
 ) CardService {
 	return &cardService{
 		cardRepo:          cardRepo,
 		columnRepo:        columnRepo,
+		boardRepo:         boardRepo,
 		tagRepo:           tagRepo,
 		checklistRepo:     checklistRepo,
 		checklistItemRepo: checklistItemRepo,
+		depRepo:           depRepo,
 	}
 }
 
@@ -77,6 +84,11 @@ func (s *cardService) GetCardDetail(id uint) (*dto.CardResponse, error) {
 		return nil, err
 	}
 	resp := ToCardResponse(card)
+	if s.depRepo != nil {
+		if count, err := s.depRepo.CountByCard(id); err == nil {
+			resp.DependencyCount = count
+		}
+	}
 	return &resp, nil
 }
 
@@ -244,6 +256,33 @@ func (s *cardService) GetPinnedCards() ([]dto.PinnedCardResponse, error) {
 			Description: c.Description,
 			ColumnID:    c.ColumnID,
 			ColumnName:  colName,
+		})
+	}
+	return result, nil
+}
+
+func (s *cardService) Search(query string, limit int) ([]dto.CardSearchResult, error) {
+	cards, err := s.cardRepo.Search(query, limit)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]dto.CardSearchResult, 0, len(cards))
+	for _, card := range cards {
+		col, err := s.columnRepo.FindByID(card.ColumnID)
+		if err != nil {
+			continue
+		}
+		boardName := ""
+		if board, err := s.boardRepo.FindByID(col.BoardID); err == nil {
+			boardName = board.Name
+		}
+		result = append(result, dto.CardSearchResult{
+			ID:         card.ID,
+			Title:      card.Title,
+			BoardID:    col.BoardID,
+			BoardName:  boardName,
+			ColumnID:   col.ID,
+			ColumnName: col.Name,
 		})
 	}
 	return result, nil

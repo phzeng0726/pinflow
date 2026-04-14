@@ -45,6 +45,7 @@ func (r *fileBoardRepository) FindByID(id uint) (*model.Board, error) {
 		modelCards := make([]model.Card, 0, len(cards))
 		for _, cf := range cards {
 			card := cardFileToModel(&cf, r.s)
+			card.DependencyCount = r.s.CountDependenciesByCard(card.ID)
 			modelCards = append(modelCards, card)
 		}
 		cols[ci].Cards = modelCards

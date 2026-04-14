@@ -1,3 +1,89 @@
+// ── Dependency Relations ──────────────────────────────────────────────────────
+
+import type { Dependency, DependencyType } from '@/types'
+
+export type DependencyRelationKey =
+  | 'blocks'
+  | 'is_blocked_by'
+  | 'is_parent_to'
+  | 'is_child_to'
+  | 'duplicates'
+  | 'is_related_to'
+
+export interface DependencyRelationConfig {
+  key: DependencyRelationKey
+  label: string
+  description: string
+  canonicalType: DependencyType
+  flip: boolean // if true, fromCard=target, toCard=thisCard
+}
+
+export const DEPENDENCY_RELATIONS: DependencyRelationConfig[] = [
+  {
+    key: 'blocks',
+    label: 'Blocks',
+    description: 'Must be resolved before the other',
+    canonicalType: 'blocks',
+    flip: false,
+  },
+  {
+    key: 'is_blocked_by',
+    label: 'Is blocked by',
+    description: 'Waiting on the other',
+    canonicalType: 'blocks',
+    flip: true,
+  },
+  {
+    key: 'is_parent_to',
+    label: 'Is parent to',
+    description: 'Parent of the other',
+    canonicalType: 'parent_of',
+    flip: false,
+  },
+  {
+    key: 'is_child_to',
+    label: 'Is child to',
+    description: 'A subtask of the other',
+    canonicalType: 'parent_of',
+    flip: true,
+  },
+  {
+    key: 'duplicates',
+    label: 'Duplicates',
+    description: 'Same as the other',
+    canonicalType: 'duplicates',
+    flip: false,
+  },
+  {
+    key: 'is_related_to',
+    label: 'Is related to',
+    description: 'Related to the other',
+    canonicalType: 'related_to',
+    flip: false,
+  },
+]
+
+/** Given a dependency and the current card's ID, return the label and "other" card ref */
+export function resolveDependencyView(
+  dep: Dependency,
+  thisCardId: number,
+): { label: string; otherCardId: number; otherCardTitle: string } {
+  const isFrom = dep.fromCard.id === thisCardId
+
+  const labelMap: Record<DependencyType, { asFrom: string; asTo: string }> = {
+    blocks: { asFrom: 'Blocks', asTo: 'Is blocked by' },
+    parent_of: { asFrom: 'Is parent to', asTo: 'Is child to' },
+    duplicates: { asFrom: 'Duplicates', asTo: 'Is duplicated by' },
+    related_to: { asFrom: 'Is related to', asTo: 'Is related to' },
+  }
+
+  const entry = labelMap[dep.type]
+  const label = isFrom ? entry.asFrom : entry.asTo
+  const other = isFrom ? dep.toCard : dep.fromCard
+
+  return { label, otherCardId: other.id, otherCardTitle: other.title }
+}
+
 // ── Tag Colors ────────────────────────────────────────────────────────────────
 
 export const TAG_COLORS: { key: string; bg: string; ring: string }[] = [

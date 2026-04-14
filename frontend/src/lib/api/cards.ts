@@ -1,4 +1,4 @@
-import type { Card, DuplicateCardRequest, PinnedCard } from '@/types'
+import type { Card, CardSearchResult, DuplicateCardRequest, PinnedCard } from '@/types'
 import type { EditCardForm, NewCardForm } from '@/lib/schemas'
 import { client } from './client'
 
@@ -71,5 +71,12 @@ export const getPinnedCards = async () => {
 
 export const duplicateCard = async (id: number, data: DuplicateCardRequest) => {
   const res = await client.post<Card>(`/cards/${id}/duplicate`, data)
+  return res.data
+}
+
+export const searchCards = async (query: string, limit = 20) => {
+  const res = await client.get<CardSearchResult[]>('/cards/search', {
+    params: { q: query, limit },
+  })
   return res.data
 }

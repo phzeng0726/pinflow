@@ -17,6 +17,7 @@ type RouterDeps struct {
 	TagH           *TagHandler
 	ChecklistH     *ChecklistHandler
 	ChecklistItemH *ChecklistItemHandler
+	DependencyH    *DependencyHandler
 }
 
 func NewRouter(
@@ -26,6 +27,7 @@ func NewRouter(
 	tagH *TagHandler,
 	checklistH *ChecklistHandler,
 	checklistItemH *ChecklistItemHandler,
+	dependencyH *DependencyHandler,
 ) *gin.Engine {
 	r := gin.Default()
 
@@ -64,6 +66,7 @@ func NewRouter(
 		cards := v1.Group("/cards")
 		{
 			cards.GET("/pinned", cardH.GetPinnedCards)
+			cards.GET("/search", cardH.SearchCards)
 			cards.GET("/:id", cardH.GetCard)
 			cards.PATCH("/:id", cardH.UpdateCard)
 			cards.PATCH("/:id/move", cardH.MoveCard)
@@ -75,6 +78,13 @@ func NewRouter(
 			cards.DELETE("/:id/tags/:tagId", tagH.DetachTag)
 			cards.GET("/:id/checklists", checklistH.ListChecklists)
 			cards.POST("/:id/checklists", checklistH.CreateChecklist)
+			cards.GET("/:id/dependencies", dependencyH.ListDependencies)
+			cards.POST("/:id/dependencies", dependencyH.CreateDependency)
+		}
+
+		dependencies := v1.Group("/dependencies")
+		{
+			dependencies.DELETE("/:id", dependencyH.DeleteDependency)
 		}
 
 		tags := v1.Group("/tags")

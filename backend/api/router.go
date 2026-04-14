@@ -18,6 +18,7 @@ type RouterDeps struct {
 	ChecklistH     *ChecklistHandler
 	ChecklistItemH *ChecklistItemHandler
 	DependencyH    *DependencyHandler
+	CommentH       *CommentHandler
 }
 
 func NewRouter(
@@ -28,6 +29,7 @@ func NewRouter(
 	checklistH *ChecklistHandler,
 	checklistItemH *ChecklistItemHandler,
 	dependencyH *DependencyHandler,
+	commentH *CommentHandler,
 ) *gin.Engine {
 	r := gin.Default()
 
@@ -80,6 +82,7 @@ func NewRouter(
 			cards.POST("/:id/checklists", checklistH.CreateChecklist)
 			cards.GET("/:id/dependencies", dependencyH.ListDependencies)
 			cards.POST("/:id/dependencies", dependencyH.CreateDependency)
+			cards.POST("/:id/comments", commentH.CreateComment)
 		}
 
 		dependencies := v1.Group("/dependencies")
@@ -106,6 +109,12 @@ func NewRouter(
 		{
 			checklistItems.PATCH("/:id", checklistItemH.UpdateItem)
 			checklistItems.DELETE("/:id", checklistItemH.DeleteItem)
+		}
+
+		comments := v1.Group("/comments")
+		{
+			comments.PATCH("/:id", commentH.UpdateComment)
+			comments.DELETE("/:id", commentH.DeleteComment)
 		}
 	}
 

@@ -1,4 +1,5 @@
 export * from './boards'
+export * from './comments'
 export * from './cards'
 export * from './checklists'
 export * from './columns'

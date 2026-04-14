@@ -15,6 +15,10 @@ definitions:
         type: array
       columnId:
         type: integer
+      comments:
+        items:
+          $ref: '#/definitions/dto.CommentResponse'
+        type: array
       createdAt:
         type: string
       dependencyCount:
@@ -91,6 +95,21 @@ definitions:
       totalCount:
         type: integer
     type: object
+  dto.CommentResponse:
+    properties:
+      authorId:
+        type: string
+      cardId:
+        type: integer
+      createdAt:
+        type: string
+      id:
+        type: integer
+      text:
+        type: string
+      updatedAt:
+        type: string
+    type: object
   dto.CreateBoardRequest:
     properties:
       name:
@@ -140,6 +159,15 @@ definitions:
         type: string
     required:
     - name
+    type: object
+  dto.CreateCommentRequest:
+    properties:
+      text:
+        maxLength: 5000
+        minLength: 1
+        type: string
+    required:
+    - text
     type: object
   dto.CreateDependencyRequest:
     properties:
@@ -292,6 +320,15 @@ definitions:
       position:
         type: number
     type: object
+  dto.UpdateCommentRequest:
+    properties:
+      text:
+        maxLength: 5000
+        minLength: 1
+        type: string
+    required:
+    - text
+    type: object
   dto.UpdateScheduleRequest:
     properties:
       endTime:
@@ -332,6 +369,10 @@ definitions:
         type: array
       columnId:
         type: integer
+      comments:
+        items:
+          $ref: '#/definitions/model.Comment'
+        type: array
       createdAt:
         type: string
       dependencyCount:
@@ -407,6 +448,21 @@ definitions:
         type: string
       position:
         type: number
+      updatedAt:
+        type: string
+    type: object
+  model.Comment:
+    properties:
+      authorId:
+        type: string
+      cardId:
+        type: integer
+      createdAt:
+        type: string
+      id:
+        type: integer
+      text:
+        type: string
       updatedAt:
         type: string
     type: object
@@ -733,6 +789,44 @@ paths:
       summary: Create a checklist on a card
       tags:
       - checklists
+  /cards/{id}/comments:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Comment data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.CommentResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a comment on a card
+      tags:
+      - comments
   /cards/{id}/dependencies:
     get:
       parameters:
@@ -1287,6 +1381,63 @@ paths:
       summary: Create a card in a column
       tags:
       - cards
+  /comments/{id}:
+    delete:
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a comment
+      tags:
+      - comments
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Comment data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CommentResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a comment
+      tags:
+      - comments
   /dependencies/{id}:
     delete:
       parameters:

@@ -45,7 +45,7 @@ func TestCardSearch_Service(t *testing.T) {
 
 func TestCardSearch_Handler(t *testing.T) {
 	deps := setupRouter(t)
-	r := api.NewRouter(deps.BoardH, deps.ColumnH, deps.CardH, deps.TagH, deps.ChecklistH, deps.ChecklistItemH, deps.DependencyH)
+	r := api.NewRouter(deps.BoardH, deps.ColumnH, deps.CardH, deps.TagH, deps.ChecklistH, deps.ChecklistItemH, deps.DependencyH, deps.CommentH)
 
 	createBoardAndColumn(t, r)
 	createCardInColumn(t, r, 1)

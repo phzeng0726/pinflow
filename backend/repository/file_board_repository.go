@@ -85,6 +85,9 @@ func cardFileToModel(cf *store.CardFile, s *store.FileStore) model.Card {
 		checklists[i].Items = items
 	}
 
+	comments := make([]model.Comment, len(cf.Comments))
+	copy(comments, cf.Comments)
+
 	return model.Card{
 		ID:          cf.ID,
 		ColumnID:    cf.ColumnID,
@@ -98,6 +101,7 @@ func cardFileToModel(cf *store.CardFile, s *store.FileStore) model.Card {
 		EndTime:     cf.EndTime,
 		Tags:        tags,
 		Checklists:  checklists,
+		Comments:    comments,
 		CreatedAt:   cf.CreatedAt,
 		UpdatedAt:   cf.UpdatedAt,
 	}

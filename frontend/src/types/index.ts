@@ -81,6 +81,16 @@ export interface Card {
   tags: Tag[]
   checklists: Checklist[]
   dependencyCount: number
+  comments: Comment[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Comment {
+  id: number
+  cardId: number
+  text: string
+  authorId: string
   createdAt: string
   updatedAt: string
 }

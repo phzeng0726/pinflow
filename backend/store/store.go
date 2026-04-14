@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"pinflow/model"
 )
 
@@ -17,12 +18,13 @@ var ErrNotFound = fmt.Errorf("record not found")
 
 // Manifest tracks the workspace version and auto-increment ID counters.
 type Manifest struct {
-	Version string          `json:"version"`
-	NextIDs map[string]uint `json:"next_ids"`
+	Version     string          `json:"version"`
+	WorkspaceID string          `json:"workspaceId,omitempty"`
+	NextIDs     map[string]uint `json:"next_ids"`
 }
 
 // CardFile is the on-disk representation of a card (card-N.json).
-// Tags are stored as IDs (resolved at query time); checklists are embedded.
+// Tags are stored as IDs (resolved at query time); checklists and comments are embedded.
 type CardFile struct {
 	ID          uint              `json:"id"`
 	ColumnID    uint              `json:"columnId"`
@@ -36,6 +38,7 @@ type CardFile struct {
 	EndTime     *time.Time        `json:"endTime"`
 	TagIDs      []uint            `json:"tag_ids"`
 	Checklists  []model.Checklist `json:"checklists"`
+	Comments    []model.Comment   `json:"comments"`
 	CreatedAt   time.Time         `json:"createdAt"`
 	UpdatedAt   time.Time         `json:"updatedAt"`
 }
@@ -59,6 +62,7 @@ type FileStore struct {
 	cardsByColumn   map[uint][]uint // columnID → []cardID
 	checklistToCard map[uint]uint   // checklistID → cardID
 	itemToChecklist map[uint]uint   // checklistItemID → checklistID
+	commentToCard   map[uint]uint   // commentID → cardID
 }
 
 // New creates or opens a workspace at basePath, loading all existing data into memory.
@@ -74,12 +78,13 @@ func New(basePath string) (*FileStore, error) {
 		cardsByColumn:   make(map[uint][]uint),
 		checklistToCard: make(map[uint]uint),
 		itemToChecklist: make(map[uint]uint),
+		commentToCard:   make(map[uint]uint),
 		manifest: Manifest{
 			Version: "1.0",
 			NextIDs: map[string]uint{
 				"board": 1, "column": 1, "card": 1,
 				"tag": 1, "checklist": 1, "checklist_item": 1,
-				"dependency": 1,
+				"dependency": 1, "comment": 1,
 			},
 		},
 	}
@@ -100,6 +105,13 @@ func (s *FileStore) BasePath() string {
 	return s.basePath
 }
 
+// WorkspaceID returns the unique identifier for this workspace.
+func (s *FileStore) WorkspaceID() string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.manifest.WorkspaceID
+}
+
 // ============================================================
 // Loading
 // ============================================================
@@ -112,6 +124,12 @@ func (s *FileStore) load() error {
 			return fmt.Errorf("manifest: %w", err)
 		}
 	} else {
+		if err := s.saveManifest(); err != nil {
+			return err
+		}
+	}
+	if s.manifest.WorkspaceID == "" {
+		s.manifest.WorkspaceID = uuid.New().String()
 		if err := s.saveManifest(); err != nil {
 			return err
 		}
@@ -779,6 +797,13 @@ func (s *FileStore) ChecklistIDForItem(itemID uint) (uint, bool) {
 	return id, ok
 }
 
+func (s *FileStore) CardIDForComment(commentID uint) (uint, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	id, ok := s.commentToCard[commentID]
+	return id, ok
+}
+
 // ============================================================
 // Internal: paths
 // ============================================================
@@ -860,6 +885,9 @@ func (s *FileStore) buildChecklistIndex(card *CardFile) {
 			s.itemToChecklist[item.ID] = cl.ID
 		}
 	}
+	for _, c := range card.Comments {
+		s.commentToCard[c.ID] = card.ID
+	}
 }
 
 func (s *FileStore) clearChecklistIndex(card *CardFile) {
@@ -868,6 +896,9 @@ func (s *FileStore) clearChecklistIndex(card *CardFile) {
 		for _, item := range cl.Items {
 			delete(s.itemToChecklist, item.ID)
 		}
+	}
+	for _, c := range card.Comments {
+		delete(s.commentToCard, c.ID)
 	}
 }
 
@@ -905,6 +936,9 @@ func initCardSlices(c *CardFile) {
 			c.Checklists[i].Items = []model.ChecklistItem{}
 		}
 	}
+	if c.Comments == nil {
+		c.Comments = []model.Comment{}
+	}
 }
 
 func copyCard(c *CardFile) *CardFile {
@@ -917,5 +951,7 @@ func copyCard(c *CardFile) *CardFile {
 		cp.Checklists[i].Items = make([]model.ChecklistItem, len(cl.Items))
 		copy(cp.Checklists[i].Items, cl.Items)
 	}
+	cp.Comments = make([]model.Comment, len(c.Comments))
+	copy(cp.Comments, c.Comments)
 	return &cp
 }

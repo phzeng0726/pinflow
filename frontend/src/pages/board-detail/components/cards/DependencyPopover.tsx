@@ -13,7 +13,7 @@ import {
   type DependencyRelationKey,
 } from '@/pages/board-detail/components/styleConfig'
 import type { Card, CardSearchResult } from '@/types'
-import { Link2, Search, X } from 'lucide-react'
+import { Plus, Search, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -70,10 +70,9 @@ export function DependencyPopover({ boardId, card }: DependencyPopoverProps) {
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 px-2 text-xs"
+          className="h-7 w-7 p-0"
         >
-          <Link2 className="mr-1 h-3.5 w-3.5" />
-          {t('dependency.add')}
+          <Plus className="h-3.5 w-3.5" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[480px] overflow-hidden p-0" align="start">
@@ -140,7 +139,9 @@ export function DependencyPopover({ boardId, card }: DependencyPopoverProps) {
 
             <div className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
               {isFetching && (
-                <p className="px-1 py-2 text-xs text-gray-400">{t('dependency.loading')}</p>
+                <p className="px-1 py-2 text-xs text-gray-400">
+                  {t('dependency.loading')}
+                </p>
               )}
               {!isFetching && filteredResults.length === 0 && (
                 <p className="px-1 py-2 text-xs text-gray-400">

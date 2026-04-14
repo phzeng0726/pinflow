@@ -61,7 +61,7 @@
     "dialogTitle": "卡片詳情",
     "description": "描述",
     "descPlaceholder": "新增描述...",
-    "cardNumber": "卡片編號",
+    "cardNumber": "編號",
     "storyPoints": "點數",
     "priority": "優先度",
     "schedule": "時程",
@@ -69,7 +69,6 @@
     "tags": "標籤"
   },
   "dependency": {
-    "add": "新增",
     "title": "新增依賴關係",
     "searchPlaceholder": "搜尋卡片...",
     "loading": "載入中...",

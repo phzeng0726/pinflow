@@ -61,7 +61,7 @@
     "dialogTitle": "Card Detail",
     "description": "Description",
     "descPlaceholder": "Add a description...",
-    "cardNumber": "Card Number",
+    "cardNumber": "Number",
     "storyPoints": "Story Points",
     "priority": "Priority",
     "schedule": "Schedule",
@@ -69,7 +69,6 @@
     "tags": "Tags"
   },
   "dependency": {
-    "add": "Add",
     "title": "Add Dependency",
     "searchPlaceholder": "Search cards...",
     "loading": "Loading...",

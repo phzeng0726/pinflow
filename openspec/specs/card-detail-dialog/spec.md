@@ -11,12 +11,12 @@ The system SHALL provide a dialog/modal that opens when the user clicks a detail
 
 ### Requirement: Dialog displays rich fields
 
-The dialog SHALL display title, description, story points, priority, tags, start time, end time, and all checklists with their items. The title header area SHALL remain fixed/sticky at the top of the dialog while the content area below it scrolls independently.
+The dialog SHALL display title, description, story points, priority, tags, start time, end time, all checklists with their items, and dependencies. The dialog SHALL use a left/right split layout: the left panel contains all existing fields (metadata, tags, dependencies, description, checklists) and the right panel contains the CommentSection. The title header area SHALL remain fixed/sticky at the top of the dialog while both panels scroll independently.
 
 #### Scenario: All fields visible
 
 - **WHEN** dialog opens for a card with tags, schedule, priority, checklists, and dependencies
-- **THEN** all sections (story points, priority, tags, schedule, checklists, dependencies) are visible and populated
+- **THEN** all sections (story points, priority, tags, schedule, checklists, dependencies) are visible and populated in the left panel
 
 #### Scenario: Priority section position
 
@@ -27,6 +27,16 @@ The dialog SHALL display title, description, story points, priority, tags, start
 
 - **WHEN** the user scrolls down through long card content
 - **THEN** the title input and close button remain visible at the top of the dialog
+
+#### Scenario: Left and right panels scroll independently
+
+- **WHEN** the user scrolls within the left panel
+- **THEN** the right panel (CommentSection) does not scroll, and vice versa
+
+#### Scenario: Dialog width accommodates split layout
+
+- **WHEN** the dialog opens
+- **THEN** the dialog is rendered with a maximum width of max-w-4xl to provide space for both panels
 
 ### Requirement: Inline tag editing in dialog
 
@@ -79,14 +89,6 @@ All field popovers in the dialog (Story Points, Priority, Schedule, Tags) SHALL 
 ### Requirement: Inline schedule editing in dialog
 
 The dialog SHALL allow the user to set or clear start and end datetimes via a popover button in the metadata row. The Schedule button SHALL be positioned between Priority and Tags in the metadata row.
-
-=======
-
-### Requirement: Inline schedule editing in dialog
-
-The dialog SHALL allow the user to set or clear start and end datetimes via a popover button in the metadata row. The Schedule button SHALL be positioned between Priority and Tags in the metadata row.
-
-> > > > > > > f08473a (feat(dependency): add card dependency management)
 
 #### Scenario: No schedule set — button shows icon only
 
@@ -179,3 +181,12 @@ All edits made in the dialog SHALL be persisted to the backend immediately (on e
 
 - **WHEN** user makes changes and closes the dialog
 - **THEN** reopening the dialog shows the same saved state
+
+### Requirement: CommentSection occupies the right panel of the dialog
+
+The dialog SHALL render a CommentSection in a fixed-width right panel (border-left separator). The CommentSection SHALL be self-contained: comment input at the top, scrollable comment list below.
+
+#### Scenario: Right panel is always visible
+
+- **WHEN** the dialog opens for any card
+- **THEN** the right panel with CommentSection is visible regardless of whether the card has existing comments

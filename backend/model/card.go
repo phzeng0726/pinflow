@@ -15,6 +15,7 @@ type Card struct {
 	EndTime         *time.Time  `json:"endTime"`
 	Tags            []Tag       `json:"tags"`
 	Checklists      []Checklist `json:"checklists"`
+	Comments        []Comment   `json:"comments"`
 	DependencyCount int         `json:"dependencyCount"`
 	CreatedAt       time.Time   `json:"createdAt"`
 	UpdatedAt       time.Time   `json:"updatedAt"`

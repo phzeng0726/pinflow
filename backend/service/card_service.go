@@ -185,6 +185,17 @@ func ToCardResponse(card *model.Card) dto.CardResponse {
 			TotalCount:     len(cl.Items),
 		}
 	}
+	comments := make([]dto.CommentResponse, len(card.Comments))
+	for i, c := range card.Comments {
+		comments[i] = dto.CommentResponse{
+			ID:        c.ID,
+			CardID:    c.CardID,
+			Text:      c.Text,
+			AuthorID:  c.AuthorID,
+			CreatedAt: c.CreatedAt,
+			UpdatedAt: c.UpdatedAt,
+		}
+	}
 	return dto.CardResponse{
 		ID:          card.ID,
 		ColumnID:    card.ColumnID,
@@ -198,6 +209,7 @@ func ToCardResponse(card *model.Card) dto.CardResponse {
 		EndTime:     card.EndTime,
 		Tags:        tags,
 		Checklists:  checklists,
+		Comments:    comments,
 		CreatedAt:   card.CreatedAt,
 		UpdatedAt:   card.UpdatedAt,
 	}

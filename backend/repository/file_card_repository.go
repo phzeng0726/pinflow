@@ -112,6 +112,7 @@ func (r *fileCardRepository) Update(card *model.Card) error {
 		EndTime:     card.EndTime,
 		TagIDs:      existing.TagIDs,
 		Checklists:  existing.Checklists,
+		Comments:    existing.Comments,
 		CreatedAt:   card.CreatedAt,
 		UpdatedAt:   card.UpdatedAt,
 	}

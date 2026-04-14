@@ -13,7 +13,7 @@ import (
 
 func TestHandler_Dependency_CreateAndList(t *testing.T) {
 	deps := setupRouter(t)
-	r := api.NewRouter(deps.BoardH, deps.ColumnH, deps.CardH, deps.TagH, deps.ChecklistH, deps.ChecklistItemH, deps.DependencyH)
+	r := api.NewRouter(deps.BoardH, deps.ColumnH, deps.CardH, deps.TagH, deps.ChecklistH, deps.ChecklistItemH, deps.DependencyH, deps.CommentH)
 
 	// Setup: board, column, two cards
 	boardID, colID := createBoardAndColumn(t, r)
@@ -64,7 +64,7 @@ func TestHandler_Dependency_CreateAndList(t *testing.T) {
 
 func TestHandler_Dependency_SelfReference(t *testing.T) {
 	deps := setupRouter(t)
-	r := api.NewRouter(deps.BoardH, deps.ColumnH, deps.CardH, deps.TagH, deps.ChecklistH, deps.ChecklistItemH, deps.DependencyH)
+	r := api.NewRouter(deps.BoardH, deps.ColumnH, deps.CardH, deps.TagH, deps.ChecklistH, deps.ChecklistItemH, deps.DependencyH, deps.CommentH)
 
 	createBoardAndColumn(t, r)
 	cardID := createCardInColumn(t, r, 1)
@@ -82,7 +82,7 @@ func TestHandler_Dependency_SelfReference(t *testing.T) {
 
 func TestHandler_Dependency_Conflict(t *testing.T) {
 	deps := setupRouter(t)
-	r := api.NewRouter(deps.BoardH, deps.ColumnH, deps.CardH, deps.TagH, deps.ChecklistH, deps.ChecklistItemH, deps.DependencyH)
+	r := api.NewRouter(deps.BoardH, deps.ColumnH, deps.CardH, deps.TagH, deps.ChecklistH, deps.ChecklistItemH, deps.DependencyH, deps.CommentH)
 
 	createBoardAndColumn(t, r)
 	card1ID := createCardInColumn(t, r, 1)

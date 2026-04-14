@@ -68,3 +68,11 @@ type ChecklistItemRepository interface {
 	Update(item *model.ChecklistItem) error
 	Delete(id uint) error
 }
+
+type CommentRepository interface {
+	Create(comment *model.Comment) error
+	FindByID(id uint) (*model.Comment, error)
+	ListByCard(cardID uint) ([]model.Comment, error)
+	Update(comment *model.Comment) error
+	Delete(id uint) error
+}

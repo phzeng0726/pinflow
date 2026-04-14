@@ -11,6 +11,7 @@ import { useTagMutations } from '@/hooks/tag/mutations/useTagMutations'
 import { type EditCardForm, editCardSchema } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import { ChecklistSection } from '@/pages/board-detail/components/checklists/ChecklistSection'
+import { CommentSection } from '@/pages/board-detail/components/comments/CommentSection'
 import {
   getTagColorClasses,
   resolveDependencyView,
@@ -79,7 +80,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col overflow-hidden p-0">
+      <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden p-0">
         <DialogTitle className="sr-only">卡片詳情</DialogTitle>
 
         {/* 頂部標題區 */}
@@ -107,144 +108,156 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
         </div>
 
         {/* 內容區 */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="space-y-4">
-            <div className="space-y-6">
-              {/* Number, SP 與 Tags 並排 */}
-              <div className="flex gap-6">
-                {/* Card Number */}
-                <div>
-                  <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
-                    Card Number
-                  </Label>
-                  <div className="flex h-8 items-center justify-center rounded border border-gray-300 bg-gray-100 px-2 text-sm font-medium dark:border-gray-600 dark:bg-gray-700">
-                    # {card.id}
+        <div className="flex flex-1 flex-row overflow-hidden">
+          {/* 左側主內容 */}
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="space-y-4">
+              <div className="space-y-6">
+                {/* Number, SP 與 Tags 並排 */}
+                <div className="flex flex-wrap gap-x-6 gap-y-4">
+                  {/* Card Number */}
+                  <div>
+                    <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      Card Number
+                    </Label>
+                    <div className="flex h-8 items-center justify-center rounded border border-gray-300 bg-gray-100 px-2 text-sm font-medium dark:border-gray-600 dark:bg-gray-700">
+                      # {card.id}
+                    </div>
                   </div>
-                </div>
 
-                {/* Story Points */}
-                <div>
-                  <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
-                    Story Points
-                  </Label>
-                  <StoryPointPopover boardId={boardId} card={card} />
-                </div>
+                  {/* Story Points */}
+                  <div>
+                    <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      Story Points
+                    </Label>
+                    <StoryPointPopover boardId={boardId} card={card} />
+                  </div>
 
-                {/* Priority */}
-                <div>
-                  <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
-                    Priority
-                  </Label>
-                  <PriorityPopover boardId={boardId} card={card} />
-                </div>
+                  {/* Priority */}
+                  <div>
+                    <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      Priority
+                    </Label>
+                    <PriorityPopover boardId={boardId} card={card} />
+                  </div>
 
-                {/* Schedule */}
-                <div>
-                  <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
-                    Schedule
-                  </Label>
-                  <SchedulePopover boardId={boardId} card={card} />
-                </div>
+                  {/* Schedule */}
+                  <div>
+                    <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      Schedule
+                    </Label>
+                    <SchedulePopover boardId={boardId} card={card} />
+                  </div>
 
-                {/* Tags */}
-                <div className="min-w-0 flex-1">
-                  <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
-                    Tags
-                  </Label>
-                  <div className="flex flex-wrap items-center gap-1">
-                    {(card.tags ?? []).map((tag) => {
-                      const colorCls = getTagColorClasses(tag.color)
-                      return (
-                        <Badge
-                          key={tag.id}
-                          variant={tag.color ? 'outline' : 'secondary'}
-                          onClick={() => setTagsOpen(true)}
-                          className={cn(
-                            'flex h-8 cursor-pointer items-center gap-1 rounded px-2 py-0.5 text-xs',
-                            tag.color &&
-                              `${colorCls.bg} border-transparent text-white transition-opacity hover:opacity-80`,
-                          )}
-                        >
-                          {tag.name}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              detachTag.mutate({
-                                cardId: card.id,
-                                tagId: tag.id,
-                              })
-                            }}
+                  {/* Dependencies */}
+                  <div>
+                    <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      Dependencies
+                    </Label>
+                    <div className="flex flex-wrap items-center gap-1">
+                      {dependencies.map((dep) => {
+                        const { label, otherCardTitle } = resolveDependencyView(
+                          dep,
+                          card.id,
+                        )
+                        return (
+                          <Badge
+                            key={dep.id}
+                            variant="secondary"
+                            className="flex h-8 items-center gap-1 rounded px-2 py-0.5 text-xs"
+                          >
+                            <span className="text-gray-500 dark:text-gray-400">
+                              {label}:
+                            </span>
+                            <span>{otherCardTitle}</span>
+                            <button
+                              type="button"
+                              onClick={() => deleteDep.mutate(dep.id)}
+                              className="ml-0.5 h-3 w-3 opacity-60 hover:opacity-100"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        )
+                      })}
+                      <DependencyPopover boardId={boardId} card={card} />
+                    </div>
+                  </div>
+
+                  {/* Tags */}
+                  <div className="min-w-0 flex-1">
+                    <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      Tags
+                    </Label>
+                    <div className="flex flex-wrap items-center gap-1">
+                      {(card.tags ?? []).map((tag) => {
+                        const colorCls = getTagColorClasses(tag.color)
+                        return (
+                          <Badge
+                            key={tag.id}
+                            variant={tag.color ? 'outline' : 'secondary'}
+                            onClick={() => setTagsOpen(true)}
                             className={cn(
-                              'ml-0.5 h-3 w-3 p-0 opacity-60 hover:opacity-100',
-                              tag.color ? 'text-white' : '',
+                              'flex h-8 cursor-pointer items-center gap-1 rounded px-2 py-0.5 text-xs',
+                              tag.color &&
+                                `${colorCls.bg} border-transparent text-white transition-opacity hover:opacity-80`,
                             )}
                           >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      )
-                    })}
-                    <TagsPopover
-                      boardId={boardId}
-                      card={card}
-                      open={tagsOpen}
-                      onOpenChange={setTagsOpen}
-                    />
+                            {tag.name}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                detachTag.mutate({
+                                  cardId: card.id,
+                                  tagId: tag.id,
+                                })
+                              }}
+                              className={cn(
+                                'ml-0.5 h-3 w-3 p-0 opacity-60 hover:opacity-100',
+                                tag.color ? 'text-white' : '',
+                              )}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        )
+                      })}
+                      <TagsPopover
+                        boardId={boardId}
+                        card={card}
+                        open={tagsOpen}
+                        onOpenChange={setTagsOpen}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {/* Dependencies */}
-                <div className="min-w-0 flex-1">
-                  <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
-                    Dependencies
+                <div className="space-y-2">
+                  <Label className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    <Notebook className="h-4 w-4" /> 描述
                   </Label>
-                  <div className="flex flex-wrap items-center gap-1">
-                    {dependencies.map((dep) => {
-                      const { label, otherCardTitle } = resolveDependencyView(
-                        dep,
-                        card.id,
-                      )
-                      return (
-                        <Badge
-                          key={dep.id}
-                          variant="secondary"
-                          className="flex h-8 items-center gap-1 rounded px-2 py-0.5 text-xs"
-                        >
-                          <span className="text-gray-500 dark:text-gray-400">
-                            {label}:
-                          </span>
-                          <span>{otherCardTitle}</span>
-                          <button
-                            type="button"
-                            onClick={() => deleteDep.mutate(dep.id)}
-                            className="ml-0.5 h-3 w-3 opacity-60 hover:opacity-100"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      )
-                    })}
-                    <DependencyPopover boardId={boardId} card={card} />
-                  </div>
+
+                  <Textarea
+                    {...register('description')}
+                    onBlur={handleBlur} // 失去焦點時儲存
+                    placeholder="Add a description..."
+                    rows={6}
+                    className="w-full resize-none border-transparent bg-gray-50 p-3 text-sm focus-visible:ring-1 dark:bg-gray-800/50"
+                  />
                 </div>
+                <ChecklistSection boardId={boardId} card={card} />
               </div>
-
-              <div className="space-y-2">
-                <Label className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  <Notebook className="h-4 w-4" /> 描述
-                </Label>
-
-                <Textarea
-                  {...register('description')}
-                  onBlur={handleBlur} // 失去焦點時儲存
-                  placeholder="Add a description..."
-                  rows={6}
-                  className="w-full resize-none border-transparent bg-gray-50 p-3 text-sm focus-visible:ring-1 dark:bg-gray-800/50"
-                />
-              </div>
-              <ChecklistSection boardId={boardId} card={card} />
             </div>
+          </div>
+
+          {/* 右側 CommentSection */}
+          <div className="flex w-80 flex-col border-l dark:border-gray-700">
+            <CommentSection
+              cardId={card.id}
+              boardId={boardId}
+              comments={card.comments ?? []}
+            />
           </div>
         </div>
       </DialogContent>

@@ -57,6 +57,7 @@ type CardResponse struct {
 	EndTime         *time.Time          `json:"endTime"`
 	Tags            []TagResponse       `json:"tags"`
 	Checklists      []ChecklistResponse `json:"checklists"`
+	Comments        []CommentResponse   `json:"comments"`
 	DependencyCount int                 `json:"dependencyCount"`
 	CreatedAt       time.Time           `json:"createdAt"`
 	UpdatedAt       time.Time           `json:"updatedAt"`

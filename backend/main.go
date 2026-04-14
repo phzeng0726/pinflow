@@ -33,6 +33,7 @@ func main() {
 	checklistRepo := repository.NewFileChecklistRepository(fs)
 	checklistItemRepo := repository.NewFileChecklistItemRepository(fs)
 	depRepo := repository.NewFileDependencyRepository(fs)
+	commentRepo := repository.NewFileCommentRepository(fs)
 
 	boardSvc := service.NewBoardService(boardRepo)
 	columnSvc := service.NewColumnService(boardRepo, columnRepo)
@@ -40,6 +41,7 @@ func main() {
 	tagSvc := service.NewTagService(tagRepo, cardRepo)
 	checklistSvc := service.NewChecklistService(checklistRepo, checklistItemRepo, cardRepo)
 	depSvc := service.NewDependencyService(depRepo, cardRepo, columnRepo, boardRepo)
+	commentSvc := service.NewCommentService(commentRepo, cardRepo, fs)
 
 	boardH := api.NewBoardHandler(boardSvc)
 	columnH := api.NewColumnHandler(columnSvc)
@@ -48,8 +50,9 @@ func main() {
 	checklistH := api.NewChecklistHandler(checklistSvc)
 	checklistItemH := api.NewChecklistItemHandler(checklistSvc)
 	depH := api.NewDependencyHandler(depSvc)
+	commentH := api.NewCommentHandler(commentSvc)
 
-	router := api.NewRouter(boardH, columnH, cardH, tagH, checklistH, checklistItemH, depH)
+	router := api.NewRouter(boardH, columnH, cardH, tagH, checklistH, checklistItemH, depH, commentH)
 
 	log.Println("Starting PinFlow API on :34115")
 	if err := router.Run(":34115"); err != nil {

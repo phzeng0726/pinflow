@@ -23,11 +23,15 @@ type View =
 interface TagsPopoverProps {
   boardId: number
   card: Card
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 export function TagsPopover(props: TagsPopoverProps) {
-  const { boardId, card } = props
-  const [open, setOpen] = useState(false)
+  const { boardId, card, open: controlledOpen, onOpenChange: controlledOnOpenChange } = props
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : internalOpen
   const [view, setView] = useState<View>('list')
   const [search, setSearch] = useState('')
   const [editName, setEditName] = useState('')
@@ -44,7 +48,11 @@ export function TagsPopover(props: TagsPopoverProps) {
   )
 
   const handleOpenChange = (isOpen: boolean) => {
-    setOpen(isOpen)
+    if (isControlled) {
+      controlledOnOpenChange?.(isOpen)
+    } else {
+      setInternalOpen(isOpen)
+    }
     if (!isOpen) {
       setView('list')
       setSearch('')

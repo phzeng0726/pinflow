@@ -9,11 +9,12 @@ import { useTagMutations } from '@/hooks/tag/mutations/useTagMutations'
 import { type EditCardForm, editCardSchema } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import { ChecklistSection } from '@/pages/board-detail/components/checklists/ChecklistSection'
-import { TagsPopover } from '@/pages/board-detail/components/tags/TagsPopover'
+import { TagsPopover } from './TagsPopover'
 import { getTagColorClasses } from '@/pages/board-detail/components/styleConfig'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Label } from '@radix-ui/react-label'
 import { Notebook, X } from 'lucide-react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { PriorityPopover } from './PriorityPopover'
 import { SchedulePopover } from './SchedulePopover'
@@ -30,6 +31,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
   const { data: card, isLoading } = useCardDetail(cardId)
   const { updateCard } = useCardMutations(boardId)
   const { detachTag } = useTagMutations(boardId)
+  const [tagsOpen, setTagsOpen] = useState(false)
 
   const {
     register,
@@ -69,7 +71,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto p-0">
+      <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col overflow-hidden p-0">
         <DialogTitle className="sr-only">卡片詳情</DialogTitle>
 
         {/* 頂部標題區 */}
@@ -97,7 +99,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
         </div>
 
         {/* 內容區 */}
-        <div className="p-6">
+        <div className="flex-1 overflow-y-auto p-6">
           <div className="space-y-4">
             <div className="space-y-6">
               {/* Number, SP 與 Tags 並排 */}
@@ -147,22 +149,24 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                       return (
                         <Badge
                           key={tag.id}
-                          variant="secondary"
+                          variant={tag.color ? 'outline' : 'secondary'}
+                          onClick={() => setTagsOpen(true)}
                           className={cn(
-                            'flex h-8 items-center gap-1 rounded px-2 py-0.5 text-xs',
+                            'flex h-8 cursor-pointer items-center gap-1 rounded px-2 py-0.5 text-xs',
                             tag.color &&
-                              `${colorCls.bg} border-transparent text-white`,
+                              `${colorCls.bg} border-transparent text-white transition-opacity hover:opacity-80`,
                           )}
                         >
                           {tag.name}
                           <button
                             type="button"
-                            onClick={() =>
+                            onClick={(e) => {
+                              e.stopPropagation()
                               detachTag.mutate({
                                 cardId: card.id,
                                 tagId: tag.id,
                               })
-                            }
+                            }}
                             className={cn(
                               'ml-0.5 h-3 w-3 p-0 opacity-60 hover:opacity-100',
                               tag.color ? 'text-white' : '',
@@ -173,7 +177,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                         </Badge>
                       )
                     })}
-                    <TagsPopover boardId={boardId} card={card} />
+                    <TagsPopover boardId={boardId} card={card} open={tagsOpen} onOpenChange={setTagsOpen} />
                   </div>
                 </div>
               </div>

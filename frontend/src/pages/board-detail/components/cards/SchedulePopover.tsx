@@ -9,7 +9,7 @@ import {
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import type { Card } from '@/types'
 import { format, parseISO } from 'date-fns'
-import { Calendar } from 'lucide-react'
+import { Calendar, X } from 'lucide-react'
 import { useState } from 'react'
 
 interface SchedulePopoverProps {
@@ -94,10 +94,20 @@ export function SchedulePopover(props: SchedulePopoverProps) {
           {summary ?? <Calendar className="h-3.5 w-3.5" />}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-72 p-3" align="start">
-        <p className="mb-3 text-xs font-semibold text-gray-700 dark:text-gray-300">
-          Schedule
-        </p>
+      <PopoverContent className="w-72 p-0" align="start">
+        <div className="flex items-center justify-between border-b px-3 py-2 dark:border-gray-700">
+          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Schedule
+          </span>
+          <button
+            type="button"
+            onClick={() => handleOpenChange(false)}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="px-3 py-3">
         <div className="space-y-3">
           <div>
             <Label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
@@ -134,6 +144,7 @@ export function SchedulePopover(props: SchedulePopoverProps) {
             清除全部
           </button>
         )}
+        </div>
       </PopoverContent>
     </Popover>
   )

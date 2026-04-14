@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { Controller, useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import type { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -35,6 +36,7 @@ interface DuplicateCardDialogProps {
 
 export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
   const { card, boardId, onClose } = props
+  const { t } = useTranslation()
 
   const tags = card.tags ?? []
   const checklists = card.checklists ?? []
@@ -115,14 +117,14 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
       >
         <DialogContent className="w-80 p-4">
           <DialogHeader className="mb-4">
-            <DialogTitle>複製卡片</DialogTitle>
+            <DialogTitle>{t('duplicate.title')}</DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Title */}
             <div>
               <Label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
-                名稱
+                {t('duplicate.name')}
               </Label>
               <Input {...register('title')} className="text-sm" autoFocus />
               {errors.title && (
@@ -136,7 +138,7 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
             {(tags.length > 0 || checklists.length > 0 || hasSchedule) && (
               <div>
                 <p className="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-                  保留...
+                  {t('duplicate.keep')}
                 </p>
                 <div className="space-y-1.5">
                   {tags.length > 0 && (
@@ -158,7 +160,7 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
                         htmlFor="copyTags"
                         className="cursor-pointer text-sm font-normal text-gray-700 dark:text-gray-300"
                       >
-                        標籤 ({tags.length})
+                        {t('duplicate.tags', { count: tags.length })}
                       </Label>
                     </div>
                   )}
@@ -181,7 +183,7 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
                         htmlFor="copyChecklists"
                         className="cursor-pointer text-sm font-normal text-gray-700 dark:text-gray-300"
                       >
-                        清單 ({checklists.length})
+                        {t('duplicate.checklists', { count: checklists.length })}
                       </Label>
                     </div>
                   )}
@@ -204,7 +206,7 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
                         htmlFor="copySchedule"
                         className="cursor-pointer text-sm font-normal text-gray-700 dark:text-gray-300"
                       >
-                        時程
+                        {t('duplicate.schedule')}
                       </Label>
                     </div>
                   )}
@@ -233,12 +235,12 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
                   htmlFor="pin"
                   className="cursor-pointer text-sm font-normal text-gray-700 dark:text-gray-300"
                 >
-                  釘選
+                  {t('duplicate.pin')}
                 </Label>
               </div>
               {isAutoPin && (
                 <p className="ml-6 mt-1 text-xs text-blue-500 dark:text-blue-400">
-                  目標欄位為自動釘選，將自動設為釘選
+                  {t('duplicate.autoPin')}
                 </p>
               )}
             </div>
@@ -246,12 +248,12 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
             {/* Destination */}
             <div>
               <p className="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-                複製到...
+                {t('duplicate.copyTo')}
               </p>
               <div className="space-y-2">
                 <div>
                   <Label className="mb-1 block text-xs text-gray-400">
-                    面板
+                    {t('duplicate.board')}
                   </Label>
                   <Controller
                     name="selectedBoardId"
@@ -278,7 +280,7 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
                 <div className="flex gap-2">
                   <div className="flex-1">
                     <Label className="mb-1 block text-xs text-gray-400">
-                      列表
+                      {t('duplicate.column')}
                     </Label>
                     <Controller
                       name="selectedColumnId"
@@ -312,7 +314,7 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
                   </div>
                   <div className="w-20">
                     <Label className="mb-1 block text-xs text-gray-400">
-                      位置
+                      {t('duplicate.position')}
                     </Label>
                     <Controller
                       name="position"
@@ -334,7 +336,7 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
                                   key={val}
                                   value={isLast ? '0' : String(val)}
                                 >
-                                  {isLast ? '末尾' : String(val)}
+                                  {isLast ? t('duplicate.positionEnd') : String(val)}
                                 </SelectItem>
                               )
                             })}
@@ -353,7 +355,7 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
               className="w-full"
               disabled={duplicate.isPending}
             >
-              {duplicate.isPending ? '建立中...' : '創建卡片'}
+              {duplicate.isPending ? t('duplicate.creating') : t('duplicate.createCard')}
             </Button>
           </form>
         </DialogContent>

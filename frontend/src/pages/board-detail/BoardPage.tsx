@@ -6,6 +6,7 @@ import {
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { ArrowLeft, Moon, Pin, Plus, Sun } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +23,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { LocaleToggle } from '@/components/LocaleToggle'
 import { useBoardDetail } from '@/hooks/board/queries/useBoardDetail'
 import { useBoardDnd } from '@/hooks/board/useBoardDnd'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
@@ -36,6 +38,7 @@ export function BoardPage() {
   const navigate = useNavigate()
   const { boardId } = useParams({ from: '/boards/$boardId' })
   const id = Number(boardId)
+  const { t } = useTranslation()
 
   const { data: board, isLoading } = useBoardDetail(id)
   const { data: pinned = [] } = usePinnedCards()
@@ -96,13 +99,13 @@ export function BoardPage() {
   if (isLoading)
     return (
       <div className="flex h-screen items-center justify-center">
-        Loading...
+        {t('common.loading')}
       </div>
     )
   if (!board)
     return (
       <div className="flex h-screen items-center justify-center">
-        看板不存在
+        {t('boardPage.boardNotFound')}
       </div>
     )
 
@@ -121,7 +124,7 @@ export function BoardPage() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>返回</TooltipContent>
+          <TooltipContent>{t('common.back')}</TooltipContent>
         </Tooltip>
         <div>
           <h1 className="font-bold text-gray-900 dark:text-gray-100">
@@ -130,6 +133,7 @@ export function BoardPage() {
           <p className="text-xs text-gray-400 dark:text-gray-500">PinFlow</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
+          <LocaleToggle />
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -146,7 +150,7 @@ export function BoardPage() {
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              {theme === 'dark' ? '切換亮色模式' : '切換暗色模式'}
+              {theme === 'dark' ? t('theme.toLight') : t('theme.toDark')}
             </TooltipContent>
           </Tooltip>
           <div className="relative" ref={pinPopoverRef}>
@@ -157,7 +161,7 @@ export function BoardPage() {
               onClick={() => setPinPopoverOpen((v) => !v)}
             >
               <Pin className="h-3.5 w-3.5" />
-              釘選任務
+              {t('boardPage.pinnedTasks')}
               {pinned.length > 0 && (
                 <span className="min-w-[18px] rounded-full bg-blue-500 px-1.5 py-0.5 text-center text-xs text-white">
                   {pinned.length}
@@ -170,7 +174,7 @@ export function BoardPage() {
                 {pinned.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-6 text-gray-400 dark:text-gray-500">
                     <Pin className="mb-1 h-5 w-5 opacity-30" />
-                    <p className="text-xs">尚無釘選任務</p>
+                    <p className="text-xs">{t('boardPage.noPinnedTasks')}</p>
                   </div>
                 ) : (
                   <ul className="max-h-64 overflow-y-auto py-1">
@@ -203,7 +207,7 @@ export function BoardPage() {
                         setPinPopoverOpen(false)
                       }}
                     >
-                      浮動視窗
+                      {t('boardPage.floatWindow')}
                     </Button>
                   </div>
                 )}
@@ -248,7 +252,7 @@ export function BoardPage() {
                     className="flex w-full items-center justify-center gap-1 rounded-xl border-2 border-dashed border-gray-300 p-4 text-sm text-gray-400 transition-colors hover:border-gray-400 hover:text-gray-500 dark:border-gray-600 dark:text-gray-500 dark:hover:border-gray-500 dark:hover:text-gray-400"
                   >
                     <Plus className="h-4 w-4" />
-                    新增欄位
+                    {t('boardPage.addColumn')}
                   </button>
                 )}
               </div>
@@ -270,7 +274,7 @@ export function BoardPage() {
                   {activeColumn.name}
                 </p>
                 <p className="mt-1 text-xs text-gray-400">
-                  {activeColumn.cards?.length ?? 0} 張卡片
+                  {t('boardPage.cards', { count: activeColumn.cards?.length ?? 0 })}
                 </p>
               </div>
             )}
@@ -287,18 +291,18 @@ export function BoardPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>移出自動釘選欄位</AlertDialogTitle>
+            <AlertDialogTitle>{t('boardPage.moveOutAutoPinTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              此卡片仍處於釘選狀態，是否同時取消釘選？
+              {t('boardPage.moveOutAutoPinDesc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>保持釘選</AlertDialogCancel>
+            <AlertDialogCancel>{t('boardPage.keepPinned')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleCardUnpin}
               disabled={togglePin.isPending}
             >
-              取消釘選
+              {t('boardPage.unpin')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

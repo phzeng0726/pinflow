@@ -1,4 +1,5 @@
 import { PinOff } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -24,6 +25,7 @@ interface PinnedCardItemProps {
 
 export function PinnedCardItem(props: PinnedCardItemProps) {
   const { card, onUnpin } = props
+  const { t } = useTranslation()
 
   const colorClass = COLUMN_COLORS[card.columnId % COLUMN_COLORS.length]
   const truncatedDesc =
@@ -57,14 +59,14 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
             <Button
               variant="ghost"
               size="icon"
-              aria-label="取消釘選"
+              aria-label={t('pin.unpin')}
               className="mt-0.5 h-6 w-6 shrink-0 text-gray-400 opacity-0 transition-all hover:text-red-500 group-hover:opacity-100"
               onClick={() => onUnpin(card.id)}
             >
               <PinOff className="h-3.5 w-3.5" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>取消釘選</TooltipContent>
+          <TooltipContent>{t('pin.unpin')}</TooltipContent>
         </Tooltip>
       </div>
     </div>

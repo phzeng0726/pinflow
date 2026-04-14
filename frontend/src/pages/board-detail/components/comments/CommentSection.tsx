@@ -6,10 +6,13 @@ import {
 } from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
 import { useCommentMutations } from '@/hooks/comment/mutations/useCommentMutations'
+import { useLocaleStore } from '@/stores/localeStore'
 import type { Comment } from '@/types'
 import { formatDistanceToNow } from 'date-fns'
+import { enUS, zhTW } from 'date-fns/locale'
 import { MessageSquare } from 'lucide-react'
 import { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface CommentSectionProps {
   cardId: number
@@ -32,6 +35,8 @@ function CommentItem({
   isUpdating,
   isDeleting,
 }: CommentItemProps) {
+  const { t } = useTranslation()
+  const locale = useLocaleStore((s) => s.locale)
   const [editing, setEditing] = useState(false)
   const [editText, setEditText] = useState(comment.text)
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -48,8 +53,10 @@ function CommentItem({
     setEditing(false)
   }
 
+  const dateFnsLocale = locale === 'zh-TW' ? zhTW : enUS
   const relativeTime = formatDistanceToNow(new Date(comment.createdAt), {
     addSuffix: true,
+    locale: dateFnsLocale,
   })
 
   return (
@@ -69,10 +76,10 @@ function CommentItem({
               onClick={handleSave}
               disabled={isUpdating || !editText.trim()}
             >
-              Save
+              {t('comment.save')}
             </Button>
             <Button size="sm" variant="ghost" onClick={handleCancel}>
-              Cancel
+              {t('comment.cancel')}
             </Button>
           </div>
         </div>
@@ -92,17 +99,17 @@ function CommentItem({
               setEditing(true)
             }}
           >
-            Edit
+            {t('comment.edit')}
           </button>
           <span>•</span>
           <Popover open={deleteOpen} onOpenChange={setDeleteOpen}>
             <PopoverTrigger asChild>
               <button type="button" className="hover:text-red-500">
-                Delete
+                {t('comment.delete')}
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-48 p-3" side="top">
-              <p className="mb-3 text-xs font-medium">確定要刪除這則留言？</p>
+              <p className="mb-3 text-xs font-medium">{t('comment.deleteConfirmTitle')}</p>
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -113,14 +120,14 @@ function CommentItem({
                     setDeleteOpen(false)
                   }}
                 >
-                  確認刪除
+                  {t('comment.confirmDelete')}
                 </Button>
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={() => setDeleteOpen(false)}
                 >
-                  取消
+                  {t('comment.cancel')}
                 </Button>
               </div>
             </PopoverContent>
@@ -136,6 +143,7 @@ export function CommentSection({
   boardId,
   comments,
 }: CommentSectionProps) {
+  const { t } = useTranslation()
   const [newText, setNewText] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const { create, update, remove } = useCommentMutations(cardId, boardId)
@@ -172,7 +180,7 @@ export function CommentSection({
       <div className="flex items-center gap-2 border-b px-4 py-3 dark:border-gray-700">
         <MessageSquare className="h-4 w-4 text-gray-500" />
         <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-          Comments
+          {t('comment.title')}
         </span>
         {comments.length > 0 && (
           <span className="text-xs text-gray-400">({comments.length})</span>
@@ -187,7 +195,7 @@ export function CommentSection({
               ref={textareaRef}
               value={newText}
               onChange={(e) => setNewText(e.target.value)}
-              placeholder="Write a comment..."
+              placeholder={t('comment.writePlaceholder')}
               rows={3}
               className="mb-2 resize-none text-sm"
               onBlur={() => setIsEditing(false)}
@@ -198,7 +206,7 @@ export function CommentSection({
               onClick={handleCreate}
               disabled={create.isPending || !newText.trim()}
             >
-              Save
+              {t('comment.save')}
             </Button>
           </>
         ) : (
@@ -206,7 +214,7 @@ export function CommentSection({
             onClick={handleOpen}
             className="w-full cursor-pointer rounded-md border px-3 py-2 text-left text-sm text-muted-foreground hover:bg-accent dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
           >
-            Write a comment...
+            {t('comment.writePlaceholder')}
           </div>
         )}
       </div>
@@ -214,7 +222,7 @@ export function CommentSection({
       {/* 留言列表 */}
       <div className="flex-1 space-y-2 overflow-y-auto p-3">
         {sorted.length === 0 && (
-          <p className="py-4 text-center text-xs text-gray-400">尚無留言</p>
+          <p className="py-4 text-center text-xs text-gray-400">{t('comment.noComments')}</p>
         )}
         {sorted.map((comment) => (
           <CommentItem

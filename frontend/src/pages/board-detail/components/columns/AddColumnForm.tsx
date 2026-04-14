@@ -2,6 +2,7 @@ import { newColumnSchema, type NewColumnForm } from '@/lib/schemas'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { type Dispatch, type SetStateAction } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useColumnMutations } from '@/hooks/column/mutations/useColumnMutations'
@@ -13,6 +14,7 @@ interface AddColumnFormProps {
 }
 export function AddColumnForm(props: AddColumnFormProps) {
   const { board, setAddingColumn } = props
+  const { t } = useTranslation()
 
   const { createColumn } = useColumnMutations(board.id)
 
@@ -41,14 +43,14 @@ export function AddColumnForm(props: AddColumnFormProps) {
       className="space-y-2 rounded-xl bg-gray-200 p-3 dark:bg-gray-700"
     >
       <Input
-        placeholder="欄位名稱"
+        placeholder={t('column.namePlaceholder')}
         {...registerCol('name')}
         autoFocus
         className="text-sm"
       />
       <div className="flex gap-1">
         <Button type="submit" size="sm" className="h-7 text-xs">
-          新增
+          {t('column.add')}
         </Button>
         <Button
           type="button"
@@ -57,7 +59,7 @@ export function AddColumnForm(props: AddColumnFormProps) {
           onClick={handleCancel}
           className="h-7 text-xs"
         >
-          取消
+          {t('column.cancel')}
         </Button>
       </div>
     </form>

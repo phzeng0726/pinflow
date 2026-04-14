@@ -11,6 +11,7 @@ import type { Card } from '@/types'
 import { format, parseISO } from 'date-fns'
 import { Calendar, X } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface SchedulePopoverProps {
   boardId: number
@@ -41,6 +42,7 @@ function buildSummary(
 export function SchedulePopover(props: SchedulePopoverProps) {
   const { boardId, card } = props
   const { updateSchedule } = useCardMutations(boardId)
+  const { t } = useTranslation()
 
   const [open, setOpen] = useState(false)
   const [startTime, setStartTime] = useState<string | null>(null)
@@ -57,7 +59,7 @@ export function SchedulePopover(props: SchedulePopoverProps) {
     }
 
     if (startTime && endTime && endTime <= startTime) {
-      setError('結束時間不能早於開始時間')
+      setError(t('schedule.endBeforeStart'))
       return
     }
 
@@ -97,7 +99,7 @@ export function SchedulePopover(props: SchedulePopoverProps) {
       <PopoverContent className="w-72 p-0" align="start">
         <div className="flex items-center justify-between border-b px-3 py-2 dark:border-gray-700">
           <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Schedule
+            {t('schedule.title')}
           </span>
           <button
             type="button"
@@ -111,7 +113,7 @@ export function SchedulePopover(props: SchedulePopoverProps) {
         <div className="space-y-3">
           <div>
             <Label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
-              開始時間
+              {t('schedule.startTime')}
             </Label>
             <DateTimePicker
               value={startTime}
@@ -123,7 +125,7 @@ export function SchedulePopover(props: SchedulePopoverProps) {
           </div>
           <div>
             <Label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
-              結束時間
+              {t('schedule.endTime')}
             </Label>
             <DateTimePicker
               value={endTime}
@@ -141,7 +143,7 @@ export function SchedulePopover(props: SchedulePopoverProps) {
             onClick={handleClearAll}
             className="mt-3 w-full rounded py-1 text-xs text-gray-500 hover:bg-gray-100 hover:text-red-500 dark:hover:bg-gray-700"
           >
-            清除全部
+            {t('schedule.clearAll')}
           </button>
         )}
         </div>

@@ -1,0 +1,161 @@
+{
+  "common": {
+    "loading": "載入中...",
+    "cancel": "取消",
+    "save": "儲存",
+    "add": "新增",
+    "edit": "編輯",
+    "delete": "刪除",
+    "confirm": "確認",
+    "remove": "移除",
+    "create": "建立",
+    "back": "返回"
+  },
+  "theme": {
+    "toDark": "切換暗色模式",
+    "toLight": "切換亮色模式"
+  },
+  "locale": {
+    "toChinese": "切換至中文",
+    "toEnglish": "切換至英文"
+  },
+  "board": {
+    "myBoards": "我的看板",
+    "newBoard": "新增看板",
+    "namePlaceholder": "看板名稱",
+    "create": "建立",
+    "noBoards": "尚未建立任何看板",
+    "columns_one": "{{count}} 個欄位",
+    "columns_other": "{{count}} 個欄位"
+  },
+  "boardPage": {
+    "pinnedTasks": "釘選任務",
+    "noPinnedTasks": "尚無釘選任務",
+    "floatWindow": "浮動視窗",
+    "addColumn": "新增欄位",
+    "boardNotFound": "看板不存在",
+    "moveOutAutoPinTitle": "移出自動釘選欄位",
+    "moveOutAutoPinDesc": "此卡片仍處於釘選狀態，是否同時取消釘選？",
+    "keepPinned": "保持釘選",
+    "unpin": "取消釘選",
+    "cards_one": "{{count}} 張卡片",
+    "cards_other": "{{count}} 張卡片"
+  },
+  "card": {
+    "addCard": "新增卡片",
+    "titlePlaceholder": "卡片標題",
+    "add": "新增",
+    "save": "儲存",
+    "edit": "編輯"
+  },
+  "cardMenu": {
+    "unpin": "取消釘選",
+    "pin": "釘選",
+    "duplicate": "複製卡片",
+    "delete": "刪除",
+    "deleteTitle": "刪除卡片",
+    "deleteDesc": "確定要刪除「{{title}}」？此操作無法復原。",
+    "cancel": "取消"
+  },
+  "cardDetail": {
+    "dialogTitle": "卡片詳情",
+    "description": "描述",
+    "descPlaceholder": "新增描述...",
+    "cardNumber": "卡片編號",
+    "storyPoints": "點數",
+    "priority": "優先度",
+    "schedule": "時程",
+    "dependencies": "相依任務",
+    "tags": "標籤"
+  },
+  "dependency": {
+    "add": "新增",
+    "title": "新增依賴關係",
+    "searchPlaceholder": "搜尋卡片...",
+    "loading": "載入中...",
+    "noCards": "找不到卡片",
+    "confirm": "確認"
+  },
+  "duplicate": {
+    "title": "複製卡片",
+    "name": "名稱",
+    "keep": "保留...",
+    "tags": "標籤 ({{count}})",
+    "checklists": "清單 ({{count}})",
+    "schedule": "時程",
+    "pin": "釘選",
+    "autoPin": "目標欄位為自動釘選，將自動設為釘選",
+    "copyTo": "複製到...",
+    "board": "面板",
+    "column": "列表",
+    "position": "位置",
+    "positionEnd": "末尾",
+    "creating": "建立中...",
+    "createCard": "創建卡片"
+  },
+  "priority": {
+    "title": "Priority",
+    "remove": "REMOVE"
+  },
+  "schedule": {
+    "title": "Schedule",
+    "startTime": "開始時間",
+    "endTime": "結束時間",
+    "endBeforeStart": "結束時間不能早於開始時間",
+    "clearAll": "清除全部"
+  },
+  "storyPoint": {
+    "title": "Story Points",
+    "remove": "REMOVE"
+  },
+  "tags": {
+    "title": "Tags",
+    "searchPlaceholder": "搜尋標籤...",
+    "createNew": "建立新標籤",
+    "createTitle": "建立標籤",
+    "editTitle": "編輯標籤",
+    "namePlaceholder": "標籤名稱",
+    "removeColor": "移除顏色",
+    "create": "建立",
+    "save": "儲存",
+    "delete": "刪除",
+    "deleteTitle": "刪除標籤？",
+    "deleteDesc": "沒有復原機制，這個 tag 將會從所有的卡片中被移除。",
+    "cancel": "取消"
+  },
+  "column": {
+    "namePlaceholder": "欄位名稱",
+    "add": "新增",
+    "cancel": "取消",
+    "autoPinEnabled": "自動釘選已開啟",
+    "rename": "重新命名",
+    "disableAutoPin": "關閉自動釘選",
+    "enableAutoPin": "開啟自動釘選",
+    "deleteColumn": "刪除欄位"
+  },
+  "checklist": {
+    "title": "檢查清單",
+    "listNamePlaceholder": "清單名稱...",
+    "add": "新增",
+    "cancel": "取消",
+    "addChecklist": "新增清單",
+    "addItemPlaceholder": "新增項目...",
+    "addItem": "新增項目"
+  },
+  "comment": {
+    "title": "留言",
+    "writePlaceholder": "新增留言...",
+    "save": "儲存",
+    "edit": "編輯",
+    "delete": "刪除",
+    "deleteConfirmTitle": "確定要刪除這則留言？",
+    "confirmDelete": "確認刪除",
+    "cancel": "取消",
+    "noComments": "尚無留言"
+  },
+  "pin": {
+    "pinnedTasks": "釘選任務",
+    "noPinnedTasks": "尚無釘選任務",
+    "unpin": "取消釘選"
+  }
+}

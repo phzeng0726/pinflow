@@ -4,6 +4,8 @@ import { useNavigate } from '@tanstack/react-router'
 import { LayoutDashboard, Moon, Plus, Sun, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
+import { LocaleToggle } from '@/components/LocaleToggle'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -22,6 +24,7 @@ export function BoardListPage() {
   const theme = useThemeStore((s) => s.theme)
   const toggleTheme = useThemeStore((s) => s.toggle)
   const [creating, setCreating] = useState(false)
+  const { t } = useTranslation()
 
   const {
     register,
@@ -41,7 +44,7 @@ export function BoardListPage() {
   if (isLoading)
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50 text-gray-500 dark:bg-gray-900 dark:text-gray-400">
-        Loading...
+        {t('common.loading')}
       </div>
     )
 
@@ -51,9 +54,10 @@ export function BoardListPage() {
         <div className="mb-8 flex items-center justify-between">
           <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
             <LayoutDashboard className="h-6 w-6" />
-            我的看板
+            {t('board.myBoards')}
           </h1>
           <div className="flex items-center gap-2">
+            <LocaleToggle />
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -70,7 +74,7 @@ export function BoardListPage() {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                {theme === 'dark' ? '切換亮色模式' : '切換暗色模式'}
+                {theme === 'dark' ? t('theme.toLight') : t('theme.toDark')}
               </TooltipContent>
             </Tooltip>
             <Button
@@ -78,7 +82,7 @@ export function BoardListPage() {
               className="flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
-              新增看板
+              {t('board.newBoard')}
             </Button>
           </div>
         </div>
@@ -90,12 +94,12 @@ export function BoardListPage() {
           >
             <div className="flex gap-2">
               <Input
-                placeholder="看板名稱"
+                placeholder={t('board.namePlaceholder')}
                 {...register('name')}
                 autoFocus
                 className="flex-1"
               />
-              <Button type="submit">建立</Button>
+              <Button type="submit">{t('board.create')}</Button>
               <Button
                 type="button"
                 variant="ghost"
@@ -104,7 +108,7 @@ export function BoardListPage() {
                   setCreating(false)
                 }}
               >
-                取消
+                {t('common.cancel')}
               </Button>
             </div>
             {errors.name && (
@@ -131,7 +135,7 @@ export function BoardListPage() {
                     {board.name}
                   </h2>
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    {board.columns?.length ?? 0} 個欄位
+                    {t('board.columns', { count: board.columns?.length ?? 0 })}
                   </p>
                 </div>
                 <Button
@@ -152,7 +156,7 @@ export function BoardListPage() {
           {boards.length === 0 && !creating && (
             <div className="col-span-3 py-12 text-center text-gray-400 dark:text-gray-600">
               <LayoutDashboard className="mx-auto mb-2 h-12 w-12 opacity-30" />
-              <p>尚未建立任何看板</p>
+              <p>{t('board.noBoards')}</p>
             </div>
           )}
         </div>

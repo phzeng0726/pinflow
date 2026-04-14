@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { newCardSchema, type NewCardForm } from '@/lib/schemas'
@@ -17,6 +18,7 @@ export function AddCardForm(props: AddCardFormProps) {
 
   const [open, setOpen] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
+  const { t } = useTranslation()
 
   const { createCard } = useCardMutations(boardId)
 
@@ -55,7 +57,7 @@ export function AddCardForm(props: AddCardFormProps) {
         className="flex w-full items-center gap-1 rounded px-2 py-1.5 text-left text-sm text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
       >
         <Plus className="h-4 w-4" />
-        新增卡片
+        {t('card.addCard')}
       </button>
     )
   }
@@ -65,14 +67,14 @@ export function AddCardForm(props: AddCardFormProps) {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
         <Textarea
           {...register('title')}
-          placeholder="卡片標題"
+          placeholder={t('card.titlePlaceholder')}
           autoFocus
           className="resize-none text-sm"
           rows={3}
         />
         <div className="flex gap-1">
           <Button type="submit" size="sm" className="h-7 text-xs">
-            新增
+            {t('card.add')}
           </Button>
           <Button
             type="button"

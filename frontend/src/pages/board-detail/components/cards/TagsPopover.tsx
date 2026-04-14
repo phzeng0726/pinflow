@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 import type { Card, Tag } from '@/types'
 import { ArrowLeft, Check, Pencil, Plus, X } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { TAG_COLORS, getTagColorClasses } from '@/pages/board-detail/components/styleConfig'
 
 type View =
@@ -37,6 +38,7 @@ export function TagsPopover(props: TagsPopoverProps) {
   const [editName, setEditName] = useState('')
   const [editColor, setEditColor] = useState('')
 
+  const { t } = useTranslation()
   const { data: allTags = [] } = useTags()
   const { createTag, updateTag, deleteTag, attachTag, detachTag } =
     useTagMutations(boardId)
@@ -77,7 +79,7 @@ export function TagsPopover(props: TagsPopoverProps) {
       {/* Header */}
       <div className="flex items-center justify-between border-b px-3 py-2 dark:border-gray-700">
         <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-          Tags
+          {t('tags.title')}
         </span>
         <button
           type="button"
@@ -93,7 +95,7 @@ export function TagsPopover(props: TagsPopoverProps) {
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search tags..."
+          placeholder={t('tags.searchPlaceholder')}
           className="h-7 text-xs"
           autoFocus
         />
@@ -146,7 +148,7 @@ export function TagsPopover(props: TagsPopoverProps) {
           onClick={enterCreate}
           className="w-full text-left text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
         >
-          Create a new tag
+          {t('tags.createNew')}
         </button>
       </div>
     </div>
@@ -154,7 +156,7 @@ export function TagsPopover(props: TagsPopoverProps) {
 
   // ── Create / Edit View ─────────────────────────────────────────────────
   const renderCreateEdit = (mode: 'create' | 'edit', tag?: Tag) => {
-    const title = mode === 'create' ? 'Create tag' : 'Edit tag'
+    const title = mode === 'create' ? t('tags.createTitle') : t('tags.editTitle')
     const previewCls = editColor
       ? getTagColorClasses(editColor).bg
       : 'bg-gray-200 dark:bg-gray-600'
@@ -203,7 +205,7 @@ export function TagsPopover(props: TagsPopoverProps) {
           <Input
             value={editName}
             onChange={(e) => setEditName(e.target.value)}
-            placeholder="Tag name"
+            placeholder={t('tags.namePlaceholder')}
             className="h-7 text-xs"
             autoFocus
           />
@@ -244,7 +246,7 @@ export function TagsPopover(props: TagsPopoverProps) {
             onClick={() => setEditColor('')}
             className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
           >
-            Remove color
+            {t('tags.removeColor')}
           </button>
 
           {/* Footer buttons */}
@@ -257,7 +259,7 @@ export function TagsPopover(props: TagsPopoverProps) {
                 onClick={handleSave}
                 disabled={!editName.trim() || createTag.isPending}
               >
-                Create
+                {t('tags.create')}
               </Button>
             ) : (
               <>
@@ -268,7 +270,7 @@ export function TagsPopover(props: TagsPopoverProps) {
                   onClick={handleSave}
                   disabled={!editName.trim() || updateTag.isPending}
                 >
-                  Save
+                  {t('tags.save')}
                 </Button>
                 <Button
                   type="button"
@@ -279,7 +281,7 @@ export function TagsPopover(props: TagsPopoverProps) {
                     tag && setView({ mode: 'delete-confirm', tag })
                   }
                 >
-                  Delete
+                  {t('tags.delete')}
                 </Button>
               </>
             )}
@@ -295,7 +297,7 @@ export function TagsPopover(props: TagsPopoverProps) {
       {/* Header */}
       <div className="flex items-center justify-between border-b px-3 py-2 dark:border-gray-700">
         <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-          Delete tag?
+          {t('tags.deleteTitle')}
         </span>
         <button
           type="button"
@@ -308,7 +310,7 @@ export function TagsPopover(props: TagsPopoverProps) {
 
       <div className="space-y-3 px-3 py-3">
         <p className="text-xs text-gray-600 dark:text-gray-400">
-          沒有復原機制，這個 tag 將會從所有的卡片中被移除。
+          {t('tags.deleteDesc')}
         </p>
         <div className="flex gap-2">
           <Button
@@ -318,7 +320,7 @@ export function TagsPopover(props: TagsPopoverProps) {
             className="h-7 flex-1 text-xs"
             onClick={() => setView({ mode: 'edit', tag })}
           >
-            Cancel
+            {t('tags.cancel')}
           </Button>
           <Button
             type="button"
@@ -331,7 +333,7 @@ export function TagsPopover(props: TagsPopoverProps) {
             }}
             disabled={deleteTag.isPending}
           >
-            Delete
+            {t('tags.delete')}
           </Button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { Copy, Pin, PinOff, Trash2 } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +33,7 @@ export function CardContextMenu(props: CardContextMenuProps) {
   const { card, boardId, open, onOpenChange } = props
 
   const { togglePin, deleteCard } = useCardMutations(boardId)
+  const { t } = useTranslation()
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showDuplicate, setShowDuplicate] = useState(false)
@@ -76,11 +78,11 @@ export function CardContextMenu(props: CardContextMenuProps) {
             {card.isPinned ? (
               <>
                 <PinOff className="h-3.5 w-3.5 text-blue-500" />{' '}
-                <span className="text-blue-500">取消釘選</span>
+                <span className="text-blue-500">{t('cardMenu.unpin')}</span>
               </>
             ) : (
               <>
-                <Pin className="h-3.5 w-3.5" /> 釘選
+                <Pin className="h-3.5 w-3.5" /> {t('cardMenu.pin')}
               </>
             )}
           </DropdownMenuItem>
@@ -90,7 +92,7 @@ export function CardContextMenu(props: CardContextMenuProps) {
               onOpenChange(false)
             }}
           >
-            <Copy className="h-3.5 w-3.5" /> 複製卡片
+            <Copy className="h-3.5 w-3.5" /> {t('cardMenu.duplicate')}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -100,7 +102,7 @@ export function CardContextMenu(props: CardContextMenuProps) {
             }}
             className="text-red-500 focus:text-red-500"
           >
-            <Trash2 className="h-3.5 w-3.5" /> 刪除
+            <Trash2 className="h-3.5 w-3.5" /> {t('cardMenu.delete')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -121,13 +123,13 @@ export function CardContextMenu(props: CardContextMenuProps) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>刪除卡片</AlertDialogTitle>
+            <AlertDialogTitle>{t('cardMenu.deleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              確定要刪除「{card.title}」？此操作無法復原。
+              {t('cardMenu.deleteDesc', { title: card.title })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{t('cardMenu.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-red-500 hover:bg-red-600"
               onClick={() => {
@@ -135,7 +137,7 @@ export function CardContextMenu(props: CardContextMenuProps) {
                 setShowDeleteConfirm(false)
               }}
             >
-              刪除
+              {t('cardMenu.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -15,6 +15,7 @@ import {
 import type { Card, CardSearchResult } from '@/types'
 import { Link2, Search, X } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface DependencyPopoverProps {
   boardId: number
@@ -23,6 +24,7 @@ interface DependencyPopoverProps {
 
 export function DependencyPopover({ boardId, card }: DependencyPopoverProps) {
   const [open, setOpen] = useState(false)
+  const { t } = useTranslation()
   const [selectedRelation, setSelectedRelation] =
     useState<DependencyRelationKey | null>(null)
   const [selectedCard, setSelectedCard] = useState<CardSearchResult | null>(
@@ -71,13 +73,13 @@ export function DependencyPopover({ boardId, card }: DependencyPopoverProps) {
           className="h-8 px-2 text-xs"
         >
           <Link2 className="mr-1 h-3.5 w-3.5" />
-          Add
+          {t('dependency.add')}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[480px] overflow-hidden p-0" align="start">
         <div className="flex items-center justify-between border-b px-3 py-2 dark:border-gray-700">
           <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Add Dependency
+            {t('dependency.title')}
           </span>
           <button
             type="button"
@@ -126,7 +128,7 @@ export function DependencyPopover({ boardId, card }: DependencyPopoverProps) {
             <div className="relative mb-2">
               <Search className="absolute left-2 top-2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search cards..."
+                placeholder={t('dependency.searchPlaceholder')}
                 value={query}
                 onChange={(e) => {
                   setQuery(e.target.value)
@@ -138,11 +140,11 @@ export function DependencyPopover({ boardId, card }: DependencyPopoverProps) {
 
             <div className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
               {isFetching && (
-                <p className="px-1 py-2 text-xs text-gray-400">Loading...</p>
+                <p className="px-1 py-2 text-xs text-gray-400">{t('dependency.loading')}</p>
               )}
               {!isFetching && filteredResults.length === 0 && (
                 <p className="px-1 py-2 text-xs text-gray-400">
-                  No cards found
+                  {t('dependency.noCards')}
                 </p>
               )}
               {filteredResults.map((c) => (
@@ -200,7 +202,7 @@ export function DependencyPopover({ boardId, card }: DependencyPopoverProps) {
               onClick={handleConfirm}
               disabled={createDep.isPending}
             >
-              Confirm
+              {t('dependency.confirm')}
             </Button>
           </div>
         )}

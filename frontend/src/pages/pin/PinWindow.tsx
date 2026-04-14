@@ -1,6 +1,7 @@
 import { Pin, X } from 'lucide-react'
 import type React from 'react'
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { usePinnedCards } from '@/hooks/card/queries/usePinnedCards'
@@ -8,6 +9,7 @@ import { usePinStore } from '@/stores/pinStore'
 import { PinnedCardItem } from './components/PinnedCardItem'
 
 export function PinWindow() {
+  const { t } = useTranslation()
   const { data: cards = [] } = usePinnedCards()
   const close = usePinStore((s) => s.close)
   const { togglePinFromPin: togglePin } = useCardMutations()
@@ -38,7 +40,7 @@ export function PinWindow() {
         <div className="flex items-center gap-1.5">
           <Pin className="h-3.5 w-3.5 fill-white" />
           <span className="text-sm font-semibold">
-            釘選任務
+            {t('pin.pinnedTasks')}
             {cards.length > 0 && (
               <span className="ml-1.5 rounded-full bg-white/25 px-1.5 py-0.5 text-xs text-white">
                 {cards.length}
@@ -70,7 +72,7 @@ export function PinWindow() {
         {cards.length === 0 ? (
           <div className="flex h-24 flex-col items-center justify-center text-gray-400 dark:text-gray-500">
             <Pin className="mb-1 h-6 w-6 opacity-30" />
-            <p className="text-xs">尚無釘選任務</p>
+            <p className="text-xs">{t('pin.noPinnedTasks')}</p>
           </div>
         ) : (
           cards.map((card) => (

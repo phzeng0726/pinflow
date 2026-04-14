@@ -21,6 +21,7 @@ import { Label } from '@radix-ui/react-label'
 import { Notebook, X } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { DependencyPopover } from './DependencyPopover'
 import { PriorityPopover } from './PriorityPopover'
 import { SchedulePopover } from './SchedulePopover'
@@ -39,6 +40,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
   const { updateCard } = useCardMutations(boardId)
   const { detachTag } = useTagMutations(boardId)
   const [tagsOpen, setTagsOpen] = useState(false)
+  const { t } = useTranslation()
   const { data: dependencies = [] } = useDependencies(cardId)
   const { deleteDep } = useDependencyMutations(cardId, boardId)
 
@@ -75,13 +77,15 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
     handleSubmit(onSubmit)()
   }
 
-  if (isLoading) return <div>Loading...</div>
-  if (!card) return <div>Card not found</div>
+  if (isLoading) return <div>{t('common.loading')}</div>
+  if (!card) return <div>{t('cardDetail.dialogTitle')}</div>
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden p-0">
-        <DialogTitle className="sr-only">卡片詳情</DialogTitle>
+        <DialogTitle className="sr-only">
+          {t('cardDetail.dialogTitle')}
+        </DialogTitle>
 
         {/* 頂部標題區 */}
         <div className="flex items-start gap-3 border-b px-6 py-3 dark:border-gray-700">
@@ -118,7 +122,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                   {/* Card Number */}
                   <div>
                     <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
-                      Card Number
+                      {t('cardDetail.cardNumber')}
                     </Label>
                     <div className="flex h-8 items-center justify-center rounded border border-gray-300 bg-gray-100 px-2 text-sm font-medium dark:border-gray-600 dark:bg-gray-700">
                       # {card.id}
@@ -128,7 +132,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                   {/* Story Points */}
                   <div>
                     <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
-                      Story Points
+                      {t('cardDetail.storyPoints')}
                     </Label>
                     <StoryPointPopover boardId={boardId} card={card} />
                   </div>
@@ -136,7 +140,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                   {/* Priority */}
                   <div>
                     <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
-                      Priority
+                      {t('cardDetail.priority')}
                     </Label>
                     <PriorityPopover boardId={boardId} card={card} />
                   </div>
@@ -144,7 +148,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                   {/* Schedule */}
                   <div>
                     <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
-                      Schedule
+                      {t('cardDetail.schedule')}
                     </Label>
                     <SchedulePopover boardId={boardId} card={card} />
                   </div>
@@ -152,7 +156,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                   {/* Dependencies */}
                   <div>
                     <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
-                      Dependencies
+                      {t('cardDetail.dependencies')}
                     </Label>
                     <div className="flex flex-wrap items-center gap-1">
                       {dependencies.map((dep) => {
@@ -187,7 +191,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                   {/* Tags */}
                   <div className="min-w-0 flex-1">
                     <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
-                      Tags
+                      {t('cardDetail.tags')}
                     </Label>
                     <div className="flex flex-wrap items-center gap-1">
                       {(card.tags ?? []).map((tag) => {
@@ -235,13 +239,14 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
 
                 <div className="space-y-2">
                   <Label className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    <Notebook className="h-4 w-4" /> 描述
+                    <Notebook className="h-4 w-4" />{' '}
+                    {t('cardDetail.description')}
                   </Label>
 
                   <Textarea
                     {...register('description')}
                     onBlur={handleBlur} // 失去焦點時儲存
-                    placeholder="Add a description..."
+                    placeholder={t('cardDetail.descPlaceholder')}
                     rows={6}
                     className="w-full resize-none border-transparent bg-gray-50 p-3 text-sm focus-visible:ring-1 dark:bg-gray-800/50"
                   />

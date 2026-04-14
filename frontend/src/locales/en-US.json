@@ -1,0 +1,161 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "cancel": "Cancel",
+    "save": "Save",
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "remove": "REMOVE",
+    "create": "Create",
+    "back": "Back"
+  },
+  "theme": {
+    "toDark": "Switch to dark mode",
+    "toLight": "Switch to light mode"
+  },
+  "locale": {
+    "toChinese": "切換至中文",
+    "toEnglish": "Switch to English"
+  },
+  "board": {
+    "myBoards": "My Boards",
+    "newBoard": "New Board",
+    "namePlaceholder": "Board name",
+    "create": "Create",
+    "noBoards": "No boards yet",
+    "columns_one": "{{count}} column",
+    "columns_other": "{{count}} columns"
+  },
+  "boardPage": {
+    "pinnedTasks": "Pinned Tasks",
+    "noPinnedTasks": "No pinned tasks",
+    "floatWindow": "Float Window",
+    "addColumn": "Add Column",
+    "boardNotFound": "Board not found",
+    "moveOutAutoPinTitle": "Move out of auto-pin column",
+    "moveOutAutoPinDesc": "This card is still pinned. Unpin it as well?",
+    "keepPinned": "Keep Pinned",
+    "unpin": "Unpin",
+    "cards_one": "{{count}} card",
+    "cards_other": "{{count}} cards"
+  },
+  "card": {
+    "addCard": "Add Card",
+    "titlePlaceholder": "Card title",
+    "add": "Add",
+    "save": "Save",
+    "edit": "Edit"
+  },
+  "cardMenu": {
+    "unpin": "Unpin",
+    "pin": "Pin",
+    "duplicate": "Duplicate Card",
+    "delete": "Delete",
+    "deleteTitle": "Delete Card",
+    "deleteDesc": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
+    "cancel": "Cancel"
+  },
+  "cardDetail": {
+    "dialogTitle": "Card Detail",
+    "description": "Description",
+    "descPlaceholder": "Add a description...",
+    "cardNumber": "Card Number",
+    "storyPoints": "Story Points",
+    "priority": "Priority",
+    "schedule": "Schedule",
+    "dependencies": "Dependencies",
+    "tags": "Tags"
+  },
+  "dependency": {
+    "add": "Add",
+    "title": "Add Dependency",
+    "searchPlaceholder": "Search cards...",
+    "loading": "Loading...",
+    "noCards": "No cards found",
+    "confirm": "Confirm"
+  },
+  "duplicate": {
+    "title": "Duplicate Card",
+    "name": "Name",
+    "keep": "Keep...",
+    "tags": "Tags ({{count}})",
+    "checklists": "Checklists ({{count}})",
+    "schedule": "Schedule",
+    "pin": "Pin",
+    "autoPin": "Target column is auto-pin, will be automatically pinned",
+    "copyTo": "Copy to...",
+    "board": "Board",
+    "column": "Column",
+    "position": "Position",
+    "positionEnd": "End",
+    "creating": "Creating...",
+    "createCard": "Create Card"
+  },
+  "priority": {
+    "title": "Priority",
+    "remove": "REMOVE"
+  },
+  "schedule": {
+    "title": "Schedule",
+    "startTime": "Start Time",
+    "endTime": "End Time",
+    "endBeforeStart": "End time cannot be earlier than start time",
+    "clearAll": "Clear All"
+  },
+  "storyPoint": {
+    "title": "Story Points",
+    "remove": "REMOVE"
+  },
+  "tags": {
+    "title": "Tags",
+    "searchPlaceholder": "Search tags...",
+    "createNew": "Create a new tag",
+    "createTitle": "Create tag",
+    "editTitle": "Edit tag",
+    "namePlaceholder": "Tag name",
+    "removeColor": "Remove color",
+    "create": "Create",
+    "save": "Save",
+    "delete": "Delete",
+    "deleteTitle": "Delete tag?",
+    "deleteDesc": "This tag will be permanently removed from all cards.",
+    "cancel": "Cancel"
+  },
+  "column": {
+    "namePlaceholder": "Column name",
+    "add": "Add",
+    "cancel": "Cancel",
+    "autoPinEnabled": "Auto-pin enabled",
+    "rename": "Rename",
+    "disableAutoPin": "Disable auto-pin",
+    "enableAutoPin": "Enable auto-pin",
+    "deleteColumn": "Delete Column"
+  },
+  "checklist": {
+    "title": "Checklist",
+    "listNamePlaceholder": "List name...",
+    "add": "Add",
+    "cancel": "Cancel",
+    "addChecklist": "Add Checklist",
+    "addItemPlaceholder": "Add item...",
+    "addItem": "Add Item"
+  },
+  "comment": {
+    "title": "Comments",
+    "writePlaceholder": "Write a comment...",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirmTitle": "Are you sure you want to delete this comment?",
+    "confirmDelete": "Confirm Delete",
+    "cancel": "Cancel",
+    "noComments": "No comments yet"
+  },
+  "pin": {
+    "pinnedTasks": "Pinned Tasks",
+    "noPinnedTasks": "No pinned tasks",
+    "unpin": "Unpin"
+  }
+}

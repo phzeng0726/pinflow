@@ -22,6 +22,7 @@ import { Calendar, CheckSquare, Flame, Link2, Pencil, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { CardContextMenu } from './CardContextMenu'
 import { CardDetailDialog } from './CardDetailDialog'
 
@@ -36,6 +37,7 @@ export function CardItem(props: CardItemProps) {
 
   const [showDetail, setShowDetail] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
+  const { t } = useTranslation()
 
   const { updateCard } = useCardMutations(boardId)
 
@@ -162,7 +164,7 @@ export function CardItem(props: CardItemProps) {
             />
             <div className="flex gap-1">
               <Button type="submit" size="sm" className="h-7 text-xs">
-                儲存
+                {t('card.save')}
               </Button>
               <Button
                 type="button"
@@ -293,7 +295,7 @@ export function CardItem(props: CardItemProps) {
                     <Pencil className="h-3.5 w-3.5" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent>編輯</TooltipContent>
+                <TooltipContent>{t('card.edit')}</TooltipContent>
               </Tooltip>
             </div>
           </div>

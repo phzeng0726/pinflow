@@ -5,6 +5,7 @@ import { Check, MoreHorizontal, Pencil, Pin, Trash2, X } from 'lucide-react'
 import type { HTMLAttributes } from 'react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +40,7 @@ interface ColumnHeaderProps {
 
 export function ColumnHeader(props: ColumnHeaderProps) {
   const { boardId, column, cardCount, dragHandleProps } = props
+  const { t } = useTranslation()
 
   const [editing, setEditing] = useState(false)
   const { updateColumn, deleteColumn } = useColumnMutations(boardId)
@@ -114,7 +116,7 @@ export function ColumnHeader(props: ColumnHeaderProps) {
                 <Pin className="h-3.5 w-3.5 fill-blue-500 text-blue-500" />
               </span>
             </TooltipTrigger>
-            <TooltipContent>自動釘選已開啟</TooltipContent>
+            <TooltipContent>{t('column.autoPinEnabled')}</TooltipContent>
           </Tooltip>
         )}
         <DropdownMenu>
@@ -131,7 +133,7 @@ export function ColumnHeader(props: ColumnHeaderProps) {
               }}
             >
               <Pencil className="h-3.5 w-3.5" />
-              重新命名
+              {t('column.rename')}
             </DropdownMenuItem>
             <DropdownMenuItem
               onSelect={() => handleUpdateColumn({ autoPin: !column.autoPin })}
@@ -142,7 +144,7 @@ export function ColumnHeader(props: ColumnHeaderProps) {
                   column.autoPin ? 'text-blue-500' : 'text-gray-400',
                 )}
               />
-              {column.autoPin ? '關閉自動釘選' : '開啟自動釘選'}
+              {column.autoPin ? t('column.disableAutoPin') : t('column.enableAutoPin')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -150,7 +152,7 @@ export function ColumnHeader(props: ColumnHeaderProps) {
               className="text-red-500 focus:text-red-500"
             >
               <Trash2 className="h-3.5 w-3.5" />
-              刪除欄位
+              {t('column.deleteColumn')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

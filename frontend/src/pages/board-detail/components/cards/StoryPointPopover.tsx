@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import type { Card } from '@/types'
 import { Plus, X } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const STORY_POINTS = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
 
@@ -20,6 +21,7 @@ interface StoryPointPopoverProps {
 export function StoryPointPopover(props: StoryPointPopoverProps) {
   const { boardId, card } = props
   const [open, setOpen] = useState(false)
+  const { t } = useTranslation()
   const { updateCard } = useCardMutations(boardId)
 
   const handleSelect = (sp: number) => {
@@ -72,7 +74,7 @@ export function StoryPointPopover(props: StoryPointPopoverProps) {
       <PopoverContent className="w-52 p-0" align="start">
         <div className="flex items-center justify-between border-b px-3 py-2 dark:border-gray-700">
           <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Story Points
+            {t('storyPoint.title')}
           </span>
           <button
             type="button"
@@ -106,7 +108,7 @@ export function StoryPointPopover(props: StoryPointPopoverProps) {
             onClick={handleRemove}
             className="mt-2 w-full rounded py-1 text-xs text-gray-500 hover:bg-gray-100 hover:text-red-500 dark:hover:bg-gray-700"
           >
-            REMOVE
+            {t('storyPoint.remove')}
           </button>
         )}
         </div>

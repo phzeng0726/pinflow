@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { CheckSquare, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import type { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,6 +27,7 @@ interface ChecklistSectionProps {
 
 export function ChecklistSection(props: ChecklistSectionProps) {
   const { boardId, card } = props
+  const { t } = useTranslation()
 
   const [showNewForm, setShowNewForm] = useState(false)
   const { createChecklist } = useChecklistMutations(boardId, card.id)
@@ -52,7 +54,7 @@ export function ChecklistSection(props: ChecklistSectionProps) {
   return (
     <div>
       <Label className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-        <CheckSquare className="h-4 w-4" /> 檢查清單
+        <CheckSquare className="h-4 w-4" /> {t('checklist.title')}
       </Label>
       <DndContext
         sensors={sensors}
@@ -85,12 +87,12 @@ export function ChecklistSection(props: ChecklistSectionProps) {
                 setShowNewForm(false)
               }
             }}
-            placeholder="清單名稱..."
+            placeholder={t('checklist.listNamePlaceholder')}
             className="h-8 text-sm"
             autoFocus
           />
           <Button type="submit" className="h-8 text-xs">
-            新增
+            {t('checklist.add')}
           </Button>
           <Button
             type="button"
@@ -101,7 +103,7 @@ export function ChecklistSection(props: ChecklistSectionProps) {
             }}
             className="h-8 text-xs"
           >
-            取消
+            {t('checklist.cancel')}
           </Button>
         </form>
       ) : (
@@ -110,7 +112,7 @@ export function ChecklistSection(props: ChecklistSectionProps) {
           onClick={() => setShowNewForm(true)}
           className="mt-3 h-8 text-xs text-gray-500"
         >
-          <Plus className="mr-1 h-3.5 w-3.5" /> 新增清單
+          <Plus className="mr-1 h-3.5 w-3.5" /> {t('checklist.addChecklist')}
         </Button>
       )}
     </div>

@@ -10,6 +10,7 @@ import { PRIORITIES } from '@/pages/board-detail/components/styleConfig'
 import type { Card } from '@/types'
 import { Plus, X } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface PriorityPopoverProps {
   boardId: number
@@ -19,6 +20,7 @@ interface PriorityPopoverProps {
 export function PriorityPopover(props: PriorityPopoverProps) {
   const { boardId, card } = props
   const [open, setOpen] = useState(false)
+  const { t } = useTranslation()
   const { updateCard } = useCardMutations(boardId)
 
   const handleSelect = (value: number) => {
@@ -59,7 +61,7 @@ export function PriorityPopover(props: PriorityPopoverProps) {
       <PopoverContent className="w-44 p-0" align="start">
         <div className="flex items-center justify-between border-b px-3 py-2 dark:border-gray-700">
           <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Priority
+            {t('priority.title')}
           </span>
           <button
             type="button"
@@ -94,7 +96,7 @@ export function PriorityPopover(props: PriorityPopoverProps) {
               onClick={handleRemove}
               className="mt-2 w-full rounded py-1 text-xs text-gray-500 hover:bg-gray-100 hover:text-red-500 dark:hover:bg-gray-700"
             >
-              REMOVE
+              {t('priority.remove')}
             </button>
           )}
         </div>

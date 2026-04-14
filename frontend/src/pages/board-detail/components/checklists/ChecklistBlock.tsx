@@ -9,6 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { GripVertical, Plus, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import type { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -31,6 +32,7 @@ interface ChecklistBlockProps {
 
 export function ChecklistBlock(props: ChecklistBlockProps) {
   const { boardId, checklist, cardId } = props
+  const { t } = useTranslation()
 
   const [showItemForm, setShowItemForm] = useState(false)
   const [editingItemId, setEditingItemId] = useState<number | null>(null)
@@ -215,12 +217,12 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
                 setShowItemForm(false)
               }
             }}
-            placeholder="新增項目..."
+            placeholder={t('checklist.addItemPlaceholder')}
             className="h-7 flex-1 text-sm"
             autoFocus
           />
           <Button type="submit" className="h-7 text-xs">
-            新增
+            {t('checklist.add')}
           </Button>
           <Button
             type="button"
@@ -231,7 +233,7 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
             }}
             className="h-7 text-xs"
           >
-            取消
+            {t('checklist.cancel')}
           </Button>
         </form>
       ) : (
@@ -241,7 +243,7 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
           onClick={() => setShowItemForm(true)}
           className="mt-2 h-7 px-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
         >
-          <Plus className="mr-1 h-3 w-3" /> 新增項目
+          <Plus className="mr-1 h-3 w-3" /> {t('checklist.addItem')}
         </Button>
       )}
     </div>

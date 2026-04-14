@@ -13,7 +13,7 @@ import {
   type DependencyRelationKey,
 } from '@/pages/board-detail/components/styleConfig'
 import type { Card, CardSearchResult } from '@/types'
-import { Link2, Search } from 'lucide-react'
+import { Link2, Search, X } from 'lucide-react'
 import { useState } from 'react'
 
 interface DependencyPopoverProps {
@@ -75,12 +75,22 @@ export function DependencyPopover({ boardId, card }: DependencyPopoverProps) {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[480px] overflow-hidden p-0" align="start">
-        <div className="flex h-80">
+        <div className="flex items-center justify-between border-b px-3 py-2 dark:border-gray-700">
+          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Add Dependency
+          </span>
+          <button
+            type="button"
+            onClick={() => handleOpenChange(false)}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="flex h-72">
           {/* Left: relation type list */}
           <div className="w-60 flex-shrink-0 overflow-y-auto border-r p-2">
-            <p className="px-2 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400">
-              Relation type
-            </p>
             {DEPENDENCY_RELATIONS.map((rel) => (
               <button
                 key={rel.key}

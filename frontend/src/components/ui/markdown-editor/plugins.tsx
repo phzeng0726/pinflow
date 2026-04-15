@@ -27,7 +27,8 @@ export function SourcePlugin({
   }, [onChange])
 
   useEffect(() => {
-    return editor.registerUpdateListener(({ editorState }) => {
+    return editor.registerUpdateListener(({ editorState, dirtyElements, dirtyLeaves }) => {
+      if (dirtyElements.size === 0 && dirtyLeaves.size === 0) return
       editorState.read(() => {
         const text = $getRoot()
           .getChildren()
@@ -61,7 +62,8 @@ export function OnChangePlugin({
   }, [onChange])
 
   useEffect(() => {
-    return editor.registerUpdateListener(({ editorState }) => {
+    return editor.registerUpdateListener(({ editorState, dirtyElements, dirtyLeaves }) => {
+      if (dirtyElements.size === 0 && dirtyLeaves.size === 0) return
       editorState.read(() => {
         const md = $convertToMarkdownString(TRANSFORMERS)
         lastExportRef.current = md

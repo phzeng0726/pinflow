@@ -33,6 +33,7 @@ interface MarkdownEditorProps {
   onChange: (markdown: string) => void
   onBlur: () => void
   placeholder?: string
+  defaultEditing?: boolean
 }
 
 /** Lexical 節點列表（Rich 模式用） */
@@ -83,8 +84,9 @@ export function MarkdownEditor({
   onChange,
   onBlur,
   placeholder,
+  defaultEditing = false,
 }: MarkdownEditorProps) {
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditing, setIsEditing] = useState(defaultEditing)
   const [editorMode, setEditorMode] = useState<'source' | 'rich'>('source')
   const [lineCount, setLineCount] = useState(() => value.split('\n').length)
 

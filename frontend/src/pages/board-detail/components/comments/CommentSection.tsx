@@ -1,18 +1,20 @@
 import { Button } from '@/components/ui/button'
+import { MarkdownEditor } from '@/components/ui/markdown-editor'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { Textarea } from '@/components/ui/textarea'
 import { useCommentMutations } from '@/hooks/comment/mutations/useCommentMutations'
 import { useLocaleStore } from '@/stores/localeStore'
 import type { Comment } from '@/types'
 import { formatDistanceToNow } from 'date-fns'
 import { enUS, zhTW } from 'date-fns/locale'
 import { MessageSquare } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface CommentSectionProps {
   cardId: number
@@ -63,16 +65,16 @@ function CommentItem({
     <div className="rounded border bg-white p-3 dark:border-gray-700 dark:bg-gray-800">
       {editing ? (
         <div className="space-y-2">
-          <Textarea
+          <MarkdownEditor
             value={editText}
-            onChange={(e) => setEditText(e.target.value)}
-            rows={3}
-            className="resize-none text-sm"
-            autoFocus
+            onChange={setEditText}
+            onBlur={handleCancel}
+            defaultEditing
           />
           <div className="flex gap-2">
             <Button
               size="sm"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={handleSave}
               disabled={isUpdating || !editText.trim()}
             >
@@ -84,7 +86,11 @@ function CommentItem({
           </div>
         </div>
       ) : (
-        <p className="whitespace-pre-wrap text-sm">{comment.text}</p>
+        <div className="prose prose-sm dark:prose-invert max-w-none">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {comment.text}
+          </ReactMarkdown>
+        </div>
       )}
 
       {!editing && (
@@ -109,7 +115,9 @@ function CommentItem({
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-48 p-3" side="top">
-              <p className="mb-3 text-xs font-medium">{t('comment.deleteConfirmTitle')}</p>
+              <p className="mb-3 text-xs font-medium">
+                {t('comment.deleteConfirmTitle')}
+              </p>
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -147,27 +155,21 @@ export function CommentSection({
   const [newText, setNewText] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const { create, update, remove } = useCommentMutations(cardId, boardId)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleOpen = () => {
     setIsEditing(true)
-
-    // 等 DOM render 再 focus
-    setTimeout(() => {
-      textareaRef.current?.focus()
-    }, 0)
   }
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     const trimmed = newText.trim()
     if (!trimmed) return
-
-    create.mutate(trimmed, {
-      onSuccess: () => {
-        setNewText('')
-        setIsEditing(false)
-      },
-    })
+    try {
+      await create.mutateAsync(trimmed)
+      setNewText('')
+      setIsEditing(false)
+    } catch {
+      // error toast handled by mutation's onError
+    }
   }
 
   const sorted = [...comments].sort(
@@ -191,18 +193,16 @@ export function CommentSection({
       <div className="p-3">
         {isEditing ? (
           <>
-            <Textarea
-              ref={textareaRef}
+            <MarkdownEditor
               value={newText}
-              onChange={(e) => setNewText(e.target.value)}
-              placeholder={t('comment.writePlaceholder')}
-              rows={3}
-              className="mb-2 resize-none text-sm"
+              onChange={setNewText}
               onBlur={() => setIsEditing(false)}
+              placeholder={t('comment.writePlaceholder')}
+              defaultEditing
             />
             <Button
               size="sm"
-              onMouseDown={(e) => e.preventDefault()} // 避免 Textarea 的 onBlur 觸發
+              onMouseDown={(e) => e.preventDefault()}
               onClick={handleCreate}
               disabled={create.isPending || !newText.trim()}
             >
@@ -222,7 +222,9 @@ export function CommentSection({
       {/* 留言列表 */}
       <div className="flex-1 space-y-2 overflow-y-auto p-3">
         {sorted.length === 0 && (
-          <p className="py-4 text-center text-xs text-gray-400">{t('comment.noComments')}</p>
+          <p className="py-4 text-center text-xs text-gray-400">
+            {t('comment.noComments')}
+          </p>
         )}
         {sorted.map((comment) => (
           <CommentItem

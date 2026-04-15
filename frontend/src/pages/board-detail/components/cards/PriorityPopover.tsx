@@ -8,7 +8,7 @@ import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { cn } from '@/lib/utils'
 import { PRIORITIES } from '@/pages/board-detail/components/styleConfig'
 import type { Card } from '@/types'
-import { Plus, X } from 'lucide-react'
+import { Flag, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -55,7 +55,7 @@ export function PriorityPopover(props: PriorityPopoverProps) {
             hasValue && activePriority?.activeClass,
           )}
         >
-          {hasValue ? activePriority?.label : <Plus className="h-3.5 w-3.5" />}
+          {hasValue ? activePriority?.label : <Flag className="h-3.5 w-3.5" />}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-44 p-0" align="start">

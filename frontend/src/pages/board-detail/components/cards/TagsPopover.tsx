@@ -9,11 +9,14 @@ import {
 import { useTagMutations } from '@/hooks/tag/mutations/useTagMutations'
 import { useTags } from '@/hooks/tag/queries/useTags'
 import { cn } from '@/lib/utils'
+import {
+  TAG_COLORS,
+  getTagColorClasses,
+} from '@/pages/board-detail/components/styleConfig'
 import type { Card, Tag } from '@/types'
 import { ArrowLeft, Check, Pencil, Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { TAG_COLORS, getTagColorClasses } from '@/pages/board-detail/components/styleConfig'
 
 type View =
   | 'list'
@@ -29,7 +32,12 @@ interface TagsPopoverProps {
 }
 
 export function TagsPopover(props: TagsPopoverProps) {
-  const { boardId, card, open: controlledOpen, onOpenChange: controlledOnOpenChange } = props
+  const {
+    boardId,
+    card,
+    open: controlledOpen,
+    onOpenChange: controlledOnOpenChange,
+  } = props
   const [internalOpen, setInternalOpen] = useState(false)
   const isControlled = controlledOpen !== undefined
   const open = isControlled ? controlledOpen : internalOpen
@@ -106,17 +114,18 @@ export function TagsPopover(props: TagsPopoverProps) {
         {filteredTags.map((tag) => {
           const attached = cardTagIds.has(tag.id)
           const colorCls = getTagColorClasses(tag.color)
+
+          const toggleTag = (next?: boolean) => {
+            const shouldAttach = next ?? !attached
+            const fn = shouldAttach ? attachTag : detachTag
+            fn.mutate({ cardId: card.id, tagId: tag.id })
+          }
+
           return (
             <div key={tag.id} className="mb-1 flex items-center gap-2">
               <Checkbox
                 checked={attached}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    attachTag.mutate({ cardId: card.id, tagId: tag.id })
-                  } else {
-                    detachTag.mutate({ cardId: card.id, tagId: tag.id })
-                  }
-                }}
+                onCheckedChange={(checked) => toggleTag(checked === true)}
                 className="shrink-0"
               />
               <div
@@ -125,7 +134,9 @@ export function TagsPopover(props: TagsPopoverProps) {
                   tag.color
                     ? `${colorCls.bg} text-white`
                     : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+                  'cursor-pointer',
                 )}
+                onClick={() => toggleTag()}
               >
                 {tag.name}
               </div>
@@ -156,7 +167,8 @@ export function TagsPopover(props: TagsPopoverProps) {
 
   // ── Create / Edit View ─────────────────────────────────────────────────
   const renderCreateEdit = (mode: 'create' | 'edit', tag?: Tag) => {
-    const title = mode === 'create' ? t('tags.createTitle') : t('tags.editTitle')
+    const title =
+      mode === 'create' ? t('tags.createTitle') : t('tags.editTitle')
     const previewCls = editColor
       ? getTagColorClasses(editColor).bg
       : 'bg-gray-200 dark:bg-gray-600'

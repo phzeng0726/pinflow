@@ -7,7 +7,7 @@ import {
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { cn } from '@/lib/utils'
 import type { Card } from '@/types'
-import { Plus, X } from 'lucide-react'
+import { Flame, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -68,7 +68,7 @@ export function StoryPointPopover(props: StoryPointPopoverProps) {
               'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600',
           )}
         >
-          {hasValue ? card.storyPoint : <Plus className="h-3.5 w-3.5" />}
+          {hasValue ? card.storyPoint : <Flame className="h-3.5 w-3.5" />}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-52 p-0" align="start">
@@ -85,32 +85,32 @@ export function StoryPointPopover(props: StoryPointPopoverProps) {
           </button>
         </div>
         <div className="px-3 py-3">
-        <div className="grid grid-cols-5 gap-1">
-          {STORY_POINTS.map((sp) => (
+          <div className="grid grid-cols-5 gap-1">
+            {STORY_POINTS.map((sp) => (
+              <button
+                key={sp}
+                type="button"
+                onClick={() => handleSelect(sp)}
+                className={cn(
+                  'flex h-8 w-full items-center justify-center rounded text-xs font-medium transition-colors',
+                  card.storyPoint === sp
+                    ? 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600',
+                )}
+              >
+                {sp}
+              </button>
+            ))}
+          </div>
+          {hasValue && (
             <button
-              key={sp}
               type="button"
-              onClick={() => handleSelect(sp)}
-              className={cn(
-                'flex h-8 w-full items-center justify-center rounded text-xs font-medium transition-colors',
-                card.storyPoint === sp
-                  ? 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600',
-              )}
+              onClick={handleRemove}
+              className="mt-2 w-full rounded py-1 text-xs text-gray-500 hover:bg-gray-100 hover:text-red-500 dark:hover:bg-gray-700"
             >
-              {sp}
+              {t('storyPoint.remove')}
             </button>
-          ))}
-        </div>
-        {hasValue && (
-          <button
-            type="button"
-            onClick={handleRemove}
-            className="mt-2 w-full rounded py-1 text-xs text-gray-500 hover:bg-gray-100 hover:text-red-500 dark:hover:bg-gray-700"
-          >
-            {t('storyPoint.remove')}
-          </button>
-        )}
+          )}
         </div>
       </PopoverContent>
     </Popover>

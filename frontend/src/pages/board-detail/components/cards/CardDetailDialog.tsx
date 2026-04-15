@@ -114,51 +114,54 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
         {/* 內容區 */}
         <div className="flex flex-1 flex-row overflow-hidden">
           {/* 左側主內容 */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto px-6 py-4">
             <div className="space-y-4">
               <div className="space-y-6">
-                {/* Number, SP 與 Tags 並排 */}
-                <div className="flex flex-wrap gap-x-6 gap-y-4">
-                  {/* Card Number */}
-                  <div>
-                    <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
-                      {t('cardDetail.cardNumber')}
-                    </Label>
-                    <div className="flex h-8 items-center justify-center rounded border border-gray-300 bg-gray-100 px-2 text-sm font-medium dark:border-gray-600 dark:bg-gray-700">
-                      # {card.id}
+                {/* 屬性區：分層 property list */}
+                <div className="flex flex-col divide-y divide-gray-100 dark:divide-gray-700/60">
+                  {/* 第一行：緊湊型屬性並排 */}
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-4 py-2.5">
+                    {/* Card Number */}
+                    <div className="flex items-center gap-2">
+                      <span className="shrink-0 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                        {t('cardDetail.cardNumber')}
+                      </span>
+                      <div className="flex h-8 items-center justify-center rounded border border-gray-300 bg-gray-100 px-2 text-xs font-medium dark:border-gray-600 dark:bg-gray-700">
+                        # {card.id}
+                      </div>
+                    </div>
+
+                    {/* Story Points */}
+                    <div className="flex items-center gap-2">
+                      <span className="shrink-0 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                        {t('cardDetail.storyPoints')}
+                      </span>
+                      <StoryPointPopover boardId={boardId} card={card} />
+                    </div>
+
+                    {/* Priority */}
+                    <div className="flex items-center gap-2">
+                      <span className="shrink-0 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                        {t('cardDetail.priority')}
+                      </span>
+                      <PriorityPopover boardId={boardId} card={card} />
+                    </div>
+
+                    {/* Schedule */}
+                    <div className="flex items-center gap-2">
+                      <span className="shrink-0 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                        {t('cardDetail.schedule')}
+                      </span>
+                      <SchedulePopover boardId={boardId} card={card} />
                     </div>
                   </div>
 
-                  {/* Story Points */}
-                  <div>
-                    <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
-                      {t('cardDetail.storyPoints')}
-                    </Label>
-                    <StoryPointPopover boardId={boardId} card={card} />
-                  </div>
-
-                  {/* Priority */}
-                  <div>
-                    <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
-                      {t('cardDetail.priority')}
-                    </Label>
-                    <PriorityPopover boardId={boardId} card={card} />
-                  </div>
-
-                  {/* Schedule */}
-                  <div>
-                    <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
-                      {t('cardDetail.schedule')}
-                    </Label>
-                    <SchedulePopover boardId={boardId} card={card} />
-                  </div>
-
-                  {/* Dependencies */}
-                  <div>
-                    <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
+                  {/* 第二行：Dependencies */}
+                  <div className="flex items-start gap-3 py-2.5">
+                    <span className="w-24 shrink-0 pt-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400">
                       {t('cardDetail.dependencies')}
-                    </Label>
-                    <div className="flex flex-wrap items-center gap-1">
+                    </span>
+                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
                       {dependencies.map((dep) => {
                         const { label, otherCardTitle } = resolveDependencyView(
                           dep,
@@ -168,7 +171,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                           <Badge
                             key={dep.id}
                             variant="secondary"
-                            className="flex h-8 items-center gap-1 rounded px-2 py-0.5 text-xs"
+                            className="flex h-8 items-center gap-1 rounded border border-gray-300 bg-gray-100 px-2 py-0.5 text-xs dark:border-gray-600 dark:bg-gray-700"
                           >
                             <span className="text-gray-500 dark:text-gray-400">
                               {label}:
@@ -188,12 +191,12 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                     </div>
                   </div>
 
-                  {/* Tags */}
-                  <div className="min-w-0 flex-1">
-                    <Label className="mb-2 block text-xs font-semibold text-gray-500 dark:text-gray-400">
+                  {/* 第三行：Tags */}
+                  <div className="flex items-start gap-3 py-2.5">
+                    <span className="w-24 shrink-0 pt-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400">
                       {t('cardDetail.tags')}
-                    </Label>
-                    <div className="flex flex-wrap items-center gap-1">
+                    </span>
+                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
                       {(card.tags ?? []).map((tag) => {
                         const colorCls = getTagColorClasses(tag.color)
                         return (

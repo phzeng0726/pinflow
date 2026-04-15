@@ -37,6 +37,7 @@ import {
   Type,
 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   $createParagraphNode,
   $getSelection,
@@ -57,6 +58,7 @@ type BlockType =
 
 export function ToolbarPlugin() {
   const [editor] = useLexicalComposerContext()
+  const { t } = useTranslation()
   const [blockType, setBlockType] = useState<BlockType>('paragraph')
   const [isBold, setIsBold] = useState(false)
   const [isItalic, setIsItalic] = useState(false)
@@ -156,7 +158,7 @@ export function ToolbarPlugin() {
     if (isLink) {
       editor.dispatchCommand(TOGGLE_LINK_COMMAND, null)
     } else {
-      const url = window.prompt('請輸入連結 URL:')
+      const url = window.prompt(t('toolbar.linkPrompt'))
       if (url) {
         editor.dispatchCommand(TOGGLE_LINK_COMMAND, { url })
         editor.focus()
@@ -186,7 +188,7 @@ export function ToolbarPlugin() {
         type="button"
         onMouseDown={(e) => { e.preventDefault(); formatBlock('h1') }}
         className={btn(blockType === 'h1')}
-        title="標題 H1"
+        title={t('toolbar.h1')}
       >
         <Heading1 className="h-4 w-4" />
       </button>
@@ -194,7 +196,7 @@ export function ToolbarPlugin() {
         type="button"
         onMouseDown={(e) => { e.preventDefault(); formatBlock('h2') }}
         className={btn(blockType === 'h2')}
-        title="標題 H2"
+        title={t('toolbar.h2')}
       >
         <Heading2 className="h-4 w-4" />
       </button>
@@ -202,7 +204,7 @@ export function ToolbarPlugin() {
         type="button"
         onMouseDown={(e) => { e.preventDefault(); formatBlock('h3') }}
         className={btn(blockType === 'h3')}
-        title="標題 H3"
+        title={t('toolbar.h3')}
       >
         <Heading3 className="h-4 w-4" />
       </button>
@@ -210,7 +212,7 @@ export function ToolbarPlugin() {
         type="button"
         onMouseDown={(e) => { e.preventDefault(); formatBlock('paragraph') }}
         className={btn(blockType === 'paragraph')}
-        title="正常文字"
+        title={t('toolbar.paragraph')}
       >
         <Type className="h-4 w-4" />
       </button>
@@ -222,7 +224,7 @@ export function ToolbarPlugin() {
         type="button"
         onMouseDown={(e) => { e.preventDefault(); editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold') }}
         className={btn(isBold)}
-        title="粗體"
+        title={t('toolbar.bold')}
       >
         <Bold className="h-4 w-4" />
       </button>
@@ -230,7 +232,7 @@ export function ToolbarPlugin() {
         type="button"
         onMouseDown={(e) => { e.preventDefault(); editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic') }}
         className={btn(isItalic)}
-        title="斜體"
+        title={t('toolbar.italic')}
       >
         <Italic className="h-4 w-4" />
       </button>
@@ -238,7 +240,7 @@ export function ToolbarPlugin() {
         type="button"
         onMouseDown={(e) => { e.preventDefault(); editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code') }}
         className={btn(isCode)}
-        title="行內程式碼"
+        title={t('toolbar.inlineCode')}
       >
         <Code className="h-4 w-4" />
       </button>
@@ -250,7 +252,7 @@ export function ToolbarPlugin() {
         type="button"
         onMouseDown={(e) => { e.preventDefault(); formatBlock('code') }}
         className={btn(blockType === 'code')}
-        title="程式碼區塊"
+        title={t('toolbar.codeBlock')}
       >
         <Code2 className="h-4 w-4" />
       </button>
@@ -258,7 +260,7 @@ export function ToolbarPlugin() {
         type="button"
         onMouseDown={(e) => { e.preventDefault(); formatBlock('quote') }}
         className={btn(blockType === 'quote')}
-        title="引用區塊"
+        title={t('toolbar.blockquote')}
       >
         <Quote className="h-4 w-4" />
       </button>
@@ -266,7 +268,7 @@ export function ToolbarPlugin() {
         type="button"
         onMouseDown={(e) => { e.preventDefault(); insertHR() }}
         className={btn(false)}
-        title="分隔線"
+        title={t('toolbar.horizontalRule')}
       >
         <Minus className="h-4 w-4" />
       </button>
@@ -274,7 +276,7 @@ export function ToolbarPlugin() {
         type="button"
         onMouseDown={(e) => { e.preventDefault(); insertLink() }}
         className={btn(isLink)}
-        title="連結"
+        title={t('toolbar.link')}
       >
         <Link className="h-4 w-4" />
       </button>
@@ -286,7 +288,7 @@ export function ToolbarPlugin() {
         type="button"
         onMouseDown={(e) => { e.preventDefault(); formatList('bullet') }}
         className={btn(blockType === 'bullet')}
-        title="無序清單"
+        title={t('toolbar.bulletList')}
       >
         <List className="h-4 w-4" />
       </button>
@@ -294,7 +296,7 @@ export function ToolbarPlugin() {
         type="button"
         onMouseDown={(e) => { e.preventDefault(); formatList('number') }}
         className={btn(blockType === 'number')}
-        title="有序清單"
+        title={t('toolbar.orderedList')}
       >
         <ListOrdered className="h-4 w-4" />
       </button>
@@ -302,7 +304,7 @@ export function ToolbarPlugin() {
         type="button"
         onMouseDown={(e) => { e.preventDefault(); formatList('check') }}
         className={btn(blockType === 'check')}
-        title="Checkbox 清單"
+        title={t('toolbar.checkboxList')}
       >
         <ListChecks className="h-4 w-4" />
       </button>

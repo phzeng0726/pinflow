@@ -86,7 +86,10 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden p-0">
+      <DialogContent
+        className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden p-0"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogTitle className="sr-only">
           {t('cardDetail.dialogTitle')}
         </DialogTitle>

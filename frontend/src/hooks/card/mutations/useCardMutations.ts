@@ -4,9 +4,11 @@ import { toast } from 'sonner'
 import * as api from '@/lib/api'
 import type { DuplicateCardRequest } from '@/types'
 import { queryKeys } from '@/hooks/queryKeys'
+import { useTranslation } from 'react-i18next'
 
 export function useCardMutations(boardId?: number) {
   const qc = useQueryClient()
+  const { t } = useTranslation()
 
   const invalidateBoardDetail = () =>
     boardId != null
@@ -24,9 +26,9 @@ export function useCardMutations(boardId?: number) {
     },
     onSuccess: async () => {
       await Promise.all([invalidateBoardDetail(), invalidatePinned()])
-      toast.success('卡片已建立')
+      toast.success(t('toast.card.createSuccess'))
     },
-    onError: () => toast.error('建立卡片失敗'),
+    onError: () => toast.error(t('toast.card.createError')),
   })
 
   const move = useMutation({
@@ -44,7 +46,7 @@ export function useCardMutations(boardId?: number) {
     },
     onError: async () => {
       await invalidateBoardDetail()
-      toast.error('移動卡片失敗')
+      toast.error(t('toast.card.moveError'))
     },
   })
 
@@ -52,9 +54,9 @@ export function useCardMutations(boardId?: number) {
     mutationFn: (id: number) => api.togglePin(id),
     onSuccess: async (data) => {
       await Promise.all([invalidateBoardDetail(), invalidatePinned()])
-      toast.success(data.isPinned ? '已釘選' : '已取消釘選')
+      toast.success(data.isPinned ? t('toast.card.pinned') : t('toast.card.unpinned'))
     },
-    onError: () => toast.error('切換釘選失敗'),
+    onError: () => toast.error(t('toast.card.togglePinError')),
   })
 
   const update = useMutation({
@@ -68,9 +70,9 @@ export function useCardMutations(boardId?: number) {
         invalidateCardDetail(variables.id),
         invalidatePinned(),
       ])
-      toast.success('卡片已更新')
+      toast.success(t('toast.card.updateSuccess'))
     },
-    onError: () => toast.error('更新卡片失敗'),
+    onError: () => toast.error(t('toast.card.updateError')),
   })
 
   const updateSchedule = useMutation({
@@ -90,16 +92,16 @@ export function useCardMutations(boardId?: number) {
         invalidatePinned(),
       ])
     },
-    onError: () => toast.error('更新時程失敗'),
+    onError: () => toast.error(t('toast.card.scheduleError')),
   })
 
   const remove = useMutation({
     mutationFn: (id: number) => api.deleteCard(id),
     onSuccess: async () => {
       await Promise.all([invalidateBoardDetail(), invalidatePinned()])
-      toast.success('卡片已刪除')
+      toast.success(t('toast.card.deleteSuccess'))
     },
-    onError: () => toast.error('刪除卡片失敗'),
+    onError: () => toast.error(t('toast.card.deleteError')),
   })
 
   const duplicate = useMutation({
@@ -107,9 +109,9 @@ export function useCardMutations(boardId?: number) {
       api.duplicateCard(id, data),
     onSuccess: async () => {
       await Promise.all([invalidateBoardDetail(), invalidatePinned()])
-      toast.success('卡片已複製')
+      toast.success(t('toast.card.duplicateSuccess'))
     },
-    onError: () => toast.error('複製卡片失敗'),
+    onError: () => toast.error(t('toast.card.duplicateError')),
   })
 
   return {

@@ -118,7 +118,14 @@ function CommentItem({
               <p className="mb-3 text-xs font-medium">
                 {t('comment.deleteConfirmTitle')}
               </p>
-              <div className="flex gap-2">
+              <div className="flex justify-end gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setDeleteOpen(false)}
+                >
+                  {t('comment.cancel')}
+                </Button>
                 <Button
                   size="sm"
                   variant="destructive"
@@ -128,14 +135,7 @@ function CommentItem({
                     setDeleteOpen(false)
                   }}
                 >
-                  {t('comment.confirmDelete')}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setDeleteOpen(false)}
-                >
-                  {t('comment.cancel')}
+                  {t('comment.delete')}
                 </Button>
               </div>
             </PopoverContent>
@@ -192,7 +192,7 @@ export function CommentSection({
       {/* 輸入區 */}
       <div className="p-3">
         {isEditing ? (
-          <>
+          <div className="space-y-2">
             <MarkdownEditor
               value={newText}
               onChange={setNewText}
@@ -208,7 +208,7 @@ export function CommentSection({
             >
               {t('comment.save')}
             </Button>
-          </>
+          </div>
         ) : (
           <div
             onClick={handleOpen}

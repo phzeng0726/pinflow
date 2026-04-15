@@ -7,22 +7,24 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { GripVertical, Plus, Trash2, X } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import type { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { Progress } from '@/components/ui/progress'
 import { useChecklistDnd } from '@/hooks/checklist/useChecklistDnd'
 import { useChecklistMutations } from '@/hooks/checklist/mutations/useChecklistMutations'
-import { checklistItemSchema } from '@/lib/schemas'
+import { createChecklistItemSchema, type ChecklistItemFormData } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import type { Checklist } from '@/types'
-
-type ChecklistItemForm = z.infer<typeof checklistItemSchema>
 
 interface ChecklistBlockProps {
   boardId: number
@@ -33,12 +35,14 @@ interface ChecklistBlockProps {
 export function ChecklistBlock(props: ChecklistBlockProps) {
   const { boardId, checklist, cardId } = props
   const { t } = useTranslation()
+  const checklistItemSchema = useMemo(() => createChecklistItemSchema(t), [t])
 
   const [showItemForm, setShowItemForm] = useState(false)
   const [editingItemId, setEditingItemId] = useState<number | null>(null)
   const [editItemValue, setEditItemValue] = useState('')
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleValue, setTitleValue] = useState(checklist.title)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   const {
     attributes,
@@ -87,7 +91,7 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
     setEditingItemId(null)
   }
 
-  const newItemForm = useForm<ChecklistItemForm>({
+  const newItemForm = useForm<ChecklistItemFormData>({
     resolver: zodResolver(checklistItemSchema),
   })
 
@@ -95,7 +99,7 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
   const total = checklist.items?.length ?? 0
   const progress = total > 0 ? (completedCount / total) * 100 : 0
 
-  const handleAddItem = async (data: ChecklistItemForm) => {
+  const handleAddItem = async (data: ChecklistItemFormData) => {
     await createItem.mutateAsync({ checklistId: checklist.id, text: data.text })
     newItemForm.reset()
     setShowItemForm(false)
@@ -155,14 +159,43 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
           <span className="text-xs text-gray-400">
             {completedCount}/{total}
           </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 text-gray-400 hover:text-red-500"
-            onClick={() => deleteChecklist.mutate(checklist.id)}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          <Popover open={deleteOpen} onOpenChange={setDeleteOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-gray-400 hover:text-red-500"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-3" align="end">
+              <p className="mb-3 text-sm text-gray-700 dark:text-gray-300">
+                {t('confirm.deleteChecklistTitle')}
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => setDeleteOpen(false)}
+                >
+                  {t('common.cancel')}
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => {
+                    deleteChecklist.mutate(checklist.id)
+                    setDeleteOpen(false)
+                  }}
+                >
+                  {t('common.delete')}
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
       {total > 0 && <Progress value={progress} className="mb-3 h-1.5" />}

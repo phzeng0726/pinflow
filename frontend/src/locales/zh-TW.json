@@ -95,22 +95,20 @@
     "createCard": "創建卡片"
   },
   "priority": {
-    "title": "Priority",
-    "remove": "REMOVE"
+    "title": "優先度"
   },
   "schedule": {
-    "title": "Schedule",
+    "title": "時程",
     "startTime": "開始時間",
     "endTime": "結束時間",
     "endBeforeStart": "結束時間不能早於開始時間",
     "clearAll": "清除全部"
   },
   "storyPoint": {
-    "title": "Story Points",
-    "remove": "REMOVE"
+    "title": "點數"
   },
   "tags": {
-    "title": "Tags",
+    "title": "標籤",
     "searchPlaceholder": "搜尋標籤...",
     "createNew": "建立新標籤",
     "createTitle": "建立標籤",
@@ -150,7 +148,6 @@
     "edit": "編輯",
     "delete": "刪除",
     "deleteConfirmTitle": "確定要刪除這則留言？",
-    "confirmDelete": "確認刪除",
     "cancel": "取消",
     "noComments": "尚無留言"
   },
@@ -175,5 +172,87 @@
     "orderedList": "有序清單",
     "checkboxList": "Checkbox 清單",
     "linkPrompt": "請輸入連結 URL:"
+  },
+  "confirm": {
+    "deleteBoardTitle": "刪除看板",
+    "deleteBoardDesc": "確定要刪除「{{name}}」？此操作無法復原。",
+    "deleteColumnTitle": "刪除欄位",
+    "deleteColumnDesc": "確定要刪除「{{name}}」？此欄位內所有卡片將一併刪除，此操作無法復原。",
+    "deleteChecklistTitle": "確定要刪除此清單？"
+  },
+  "validation": {
+    "boardName": "請輸入看板名稱",
+    "columnName": "請輸入欄位名稱",
+    "cardTitle": "請輸入標題",
+    "endBeforeStart": "結束時間必須晚於開始時間",
+    "tagName": "請輸入標籤名稱",
+    "checklistTitle": "請輸入清單標題",
+    "checklistItemText": "請輸入項目文字",
+    "targetColumn": "請選擇目標欄位"
+  },
+  "toast": {
+    "board": {
+      "createSuccess": "看板已建立",
+      "createError": "建立看板失敗",
+      "updateSuccess": "看板已更新",
+      "updateError": "更新看板失敗",
+      "deleteSuccess": "看板已刪除",
+      "deleteError": "刪除看板失敗"
+    },
+    "card": {
+      "createSuccess": "卡片已建立",
+      "createError": "建立卡片失敗",
+      "moveError": "移動卡片失敗",
+      "pinned": "已釘選",
+      "unpinned": "已取消釘選",
+      "togglePinError": "切換釘選失敗",
+      "updateSuccess": "卡片已更新",
+      "updateError": "更新卡片失敗",
+      "scheduleError": "更新時程失敗",
+      "deleteSuccess": "卡片已刪除",
+      "deleteError": "刪除卡片失敗",
+      "duplicateSuccess": "卡片已複製",
+      "duplicateError": "複製卡片失敗"
+    },
+    "column": {
+      "createSuccess": "欄位已建立",
+      "createError": "建立欄位失敗",
+      "updateSuccess": "欄位已更新",
+      "updateError": "更新欄位失敗",
+      "moveError": "移動欄位失敗",
+      "deleteSuccess": "欄位已刪除",
+      "deleteError": "刪除欄位失敗"
+    },
+    "checklist": {
+      "listCreated": "清單已建立",
+      "listCreateError": "建立清單失敗",
+      "listUpdateError": "更新清單失敗",
+      "listDeleted": "清單已刪除",
+      "listDeleteError": "刪除清單失敗",
+      "itemCreateError": "新增項目失敗",
+      "itemUpdateError": "更新項目失敗",
+      "itemDeleteError": "刪除項目失敗"
+    },
+    "comment": {
+      "createError": "新增留言失敗",
+      "updateError": "更新留言失敗",
+      "deleteError": "刪除留言失敗"
+    },
+    "dependency": {
+      "created": "Dependency 已建立",
+      "createError": "建立 Dependency 失敗",
+      "deleted": "Dependency 已移除",
+      "deleteError": "移除 Dependency 失敗"
+    },
+    "tag": {
+      "createSuccess": "標籤已建立",
+      "createError": "建立標籤失敗",
+      "updateSuccess": "標籤已更新",
+      "updateError": "更新標籤失敗",
+      "deleteSuccess": "標籤已刪除",
+      "deleteError": "刪除標籤失敗",
+      "attachError": "新增標籤失敗",
+      "detachError": "移除標籤失敗"
+    }
   }
 }

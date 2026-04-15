@@ -3,9 +3,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import * as api from '@/lib/api'
 import { queryKeys } from '@/hooks/queryKeys'
+import { useTranslation } from 'react-i18next'
 
 export function useColumnMutations(boardId: number) {
   const qc = useQueryClient()
+  const { t } = useTranslation()
 
   const invalidateBoardDetail = () =>
     qc.invalidateQueries({ queryKey: queryKeys.boards.detail(boardId) })
@@ -14,9 +16,9 @@ export function useColumnMutations(boardId: number) {
     mutationFn: (form: NewColumnForm) => api.createColumn(boardId, form),
     onSuccess: async () => {
       await invalidateBoardDetail()
-      toast.success('欄位已建立')
+      toast.success(t('toast.column.createSuccess'))
     },
-    onError: () => toast.error('建立欄位失敗'),
+    onError: () => toast.error(t('toast.column.createError')),
   })
 
   const update = useMutation({
@@ -26,9 +28,9 @@ export function useColumnMutations(boardId: number) {
     },
     onSuccess: async () => {
       await invalidateBoardDetail()
-      toast.success('欄位已更新')
+      toast.success(t('toast.column.updateSuccess'))
     },
-    onError: () => toast.error('更新欄位失敗'),
+    onError: () => toast.error(t('toast.column.updateError')),
   })
 
   const move = useMutation({
@@ -39,16 +41,16 @@ export function useColumnMutations(boardId: number) {
     onSuccess: async () => {
       await invalidateBoardDetail()
     },
-    onError: () => toast.error('移動欄位失敗'),
+    onError: () => toast.error(t('toast.column.moveError')),
   })
 
   const remove = useMutation({
     mutationFn: (id: number) => api.deleteColumn(id),
     onSuccess: async () => {
       await invalidateBoardDetail()
-      toast.success('欄位已刪除')
+      toast.success(t('toast.column.deleteSuccess'))
     },
-    onError: () => toast.error('刪除欄位失敗'),
+    onError: () => toast.error(t('toast.column.deleteError')),
   })
 
   return {

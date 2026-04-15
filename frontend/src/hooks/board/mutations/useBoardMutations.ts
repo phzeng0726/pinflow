@@ -3,9 +3,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import * as api from '@/lib/api'
 import { queryKeys } from '@/hooks/queryKeys'
+import { useTranslation } from 'react-i18next'
 
 export function useBoardMutations() {
   const qc = useQueryClient()
+  const { t } = useTranslation()
 
   const invalidateBoardAll = () =>
     qc.invalidateQueries({ queryKey: queryKeys.boards.all() })
@@ -16,9 +18,9 @@ export function useBoardMutations() {
     mutationFn: (form: NewOrEditBoardForm) => api.createBoard(form),
     onSuccess: async () => {
       await invalidateBoardAll()
-      toast.success('看板已建立')
+      toast.success(t('toast.board.createSuccess'))
     },
-    onError: () => toast.error('建立看板失敗'),
+    onError: () => toast.error(t('toast.board.createError')),
   })
 
   const update = useMutation({
@@ -28,18 +30,18 @@ export function useBoardMutations() {
     },
     onSuccess: async (data) => {
       await Promise.all([invalidateBoardAll(), invalidateBoardDetail(data.id)])
-      toast.success('看板已更新')
+      toast.success(t('toast.board.updateSuccess'))
     },
-    onError: () => toast.error('更新看板失敗'),
+    onError: () => toast.error(t('toast.board.updateError')),
   })
 
   const remove = useMutation({
     mutationFn: (id: number) => api.deleteBoard(id),
     onSuccess: async () => {
       await invalidateBoardAll()
-      toast.success('看板已刪除')
+      toast.success(t('toast.board.deleteSuccess'))
     },
-    onError: () => toast.error('刪除看板失敗'),
+    onError: () => toast.error(t('toast.board.deleteError')),
   })
 
   return {

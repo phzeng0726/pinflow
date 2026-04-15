@@ -7,7 +7,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
-import { editCardSchema, type EditCardForm } from '@/lib/schemas'
+import { createEditCardSchema, type EditCardForm } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import {
   getPriorityConfig,
@@ -27,7 +27,7 @@ import {
   Pencil,
   X,
 } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -46,6 +46,7 @@ export function CardItem(props: CardItemProps) {
   const [showDetail, setShowDetail] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const { t } = useTranslation()
+  const editCardSchema = useMemo(() => createEditCardSchema(t), [t])
 
   const { updateCard } = useCardMutations(boardId)
 

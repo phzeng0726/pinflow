@@ -8,7 +8,7 @@ import { useCardDetail } from '@/hooks/card/queries/useCardDetail'
 import { useDependencyMutations } from '@/hooks/dependency/mutations/useDependencyMutations'
 import { useDependencies } from '@/hooks/dependency/queries/useDependencies'
 import { useTagMutations } from '@/hooks/tag/mutations/useTagMutations'
-import { type EditCardForm, editCardSchema } from '@/lib/schemas'
+import { type EditCardForm, createEditCardSchema } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import { ChecklistSection } from '@/pages/board-detail/components/checklists/ChecklistSection'
 import { CommentSection } from '@/pages/board-detail/components/comments/CommentSection'
@@ -19,7 +19,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Label } from '@radix-ui/react-label'
 import { Notebook, X } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { DependencyPopover } from './DependencyPopover'
@@ -41,6 +41,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
   const { detachTag } = useTagMutations(boardId)
   const [tagsOpen, setTagsOpen] = useState(false)
   const { t } = useTranslation()
+  const editCardSchema = useMemo(() => createEditCardSchema(t), [t])
   const { data: dependencies = [] } = useDependencies(cardId)
   const { deleteDep } = useDependencyMutations(cardId, boardId)
 

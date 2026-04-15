@@ -7,12 +7,23 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   Tooltip,
@@ -43,6 +54,7 @@ export function ColumnHeader(props: ColumnHeaderProps) {
   const { t } = useTranslation()
 
   const [editing, setEditing] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const { updateColumn, deleteColumn } = useColumnMutations(boardId)
 
   const { register, handleSubmit, reset } = useForm<EditColumnForm>({
@@ -57,106 +69,130 @@ export function ColumnHeader(props: ColumnHeaderProps) {
     setEditing(false)
   }
 
-  const handleDeleteColumn = (id: number) => {
-    deleteColumn.mutate(id)
-  }
-
   return (
-    <div className="flex items-center justify-between px-3 py-2">
-      <div
-        {...dragHandleProps}
-        className="flex min-w-0 flex-1 items-center gap-1.5 py-1"
-      >
-        <span className={cn('h-2.5 w-2.5 shrink-0 rounded-full', colorClass)} />
-        {editing ? (
-          <form
-            onSubmit={handleSubmit(handleUpdateColumn)}
-            className="flex flex-1 gap-1"
-          >
-            <Input
-              {...register('name')}
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') {
+    <>
+      <div className="flex items-center justify-between px-3 py-2">
+        <div
+          {...dragHandleProps}
+          className="flex min-w-0 flex-1 items-center gap-1.5 py-1"
+        >
+          <span className={cn('h-2.5 w-2.5 shrink-0 rounded-full', colorClass)} />
+          {editing ? (
+            <form
+              onSubmit={handleSubmit(handleUpdateColumn)}
+              className="flex flex-1 gap-1"
+            >
+              <Input
+                {...register('name')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    reset()
+                    setEditing(false)
+                  }
+                }}
+                className="h-6 py-0 text-sm"
+                autoFocus
+              />
+              <button type="submit" className="text-green-600">
+                <Check className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
                   reset()
                   setEditing(false)
-                }
-              }}
-              className="h-6 py-0 text-sm"
-              autoFocus
-            />
-            <button type="submit" className="text-green-600">
-              <Check className="h-3.5 w-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                reset()
-                setEditing(false)
-              }}
-              className="text-gray-400"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </form>
-        ) : (
-          <span className="truncate text-sm font-semibold text-gray-700 dark:text-gray-200">
-            {column.name}
-            <span className="ml-1.5 text-xs font-normal text-gray-400 dark:text-gray-500">
-              ({cardCount})
+                }}
+                className="text-gray-400"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </form>
+          ) : (
+            <span className="truncate text-sm font-semibold text-gray-700 dark:text-gray-200">
+              {column.name}
+              <span className="ml-1.5 text-xs font-normal text-gray-400 dark:text-gray-500">
+                ({cardCount})
+              </span>
             </span>
-          </span>
-        )}
+          )}
+        </div>
+
+        <div className="flex shrink-0 items-center gap-1">
+          {column.autoPin && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Pin className="h-3.5 w-3.5 fill-blue-500 text-blue-500" />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{t('column.autoPinEnabled')}</TooltipContent>
+            </Tooltip>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="rounded p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem
+                onSelect={() => {
+                  reset({ name: column.name })
+                  setEditing(true)
+                }}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                {t('column.rename')}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => handleUpdateColumn({ autoPin: !column.autoPin })}
+              >
+                <Pin
+                  className={cn(
+                    'h-3.5 w-3.5',
+                    column.autoPin ? 'text-blue-500' : 'text-gray-400',
+                  )}
+                />
+                {column.autoPin ? t('column.disableAutoPin') : t('column.enableAutoPin')}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault()
+                  setDeleteOpen(true)
+                }}
+                className="text-red-500 focus:text-red-500"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {t('column.deleteColumn')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-1">
-        {column.autoPin && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span>
-                <Pin className="h-3.5 w-3.5 fill-blue-500 text-blue-500" />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>{t('column.autoPinEnabled')}</TooltipContent>
-          </Tooltip>
-        )}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="rounded p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-              <MoreHorizontal className="h-4 w-4" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuItem
-              onSelect={() => {
-                reset({ name: column.name })
-                setEditing(true)
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('confirm.deleteColumnTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('confirm.deleteColumnDesc', { name: column.name })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              className={buttonVariants({ variant: 'destructive' })}
+              onClick={() => {
+                deleteColumn.mutate(column.id)
+                setDeleteOpen(false)
               }}
             >
-              <Pencil className="h-3.5 w-3.5" />
-              {t('column.rename')}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={() => handleUpdateColumn({ autoPin: !column.autoPin })}
-            >
-              <Pin
-                className={cn(
-                  'h-3.5 w-3.5',
-                  column.autoPin ? 'text-blue-500' : 'text-gray-400',
-                )}
-              />
-              {column.autoPin ? t('column.disableAutoPin') : t('column.enableAutoPin')}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onSelect={() => handleDeleteColumn(column.id)}
-              className="text-red-500 focus:text-red-500"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              {t('column.deleteColumn')}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </div>
+              {t('common.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }

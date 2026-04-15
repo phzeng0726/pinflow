@@ -1,12 +1,12 @@
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { newCardSchema, type NewCardForm } from '@/lib/schemas'
+import { createCardSchema, type NewCardForm } from '@/lib/schemas'
 
 interface AddCardFormProps {
   boardId: number
@@ -19,11 +19,12 @@ export function AddCardForm(props: AddCardFormProps) {
   const [open, setOpen] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
+  const cardSchema = useMemo(() => createCardSchema(t), [t])
 
   const { createCard } = useCardMutations(boardId)
 
   const { register, handleSubmit, reset, watch } = useForm<NewCardForm>({
-    resolver: zodResolver(newCardSchema),
+    resolver: zodResolver(cardSchema),
   })
 
   const titleValue = watch('title')

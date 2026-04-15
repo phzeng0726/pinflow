@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/popover'
 import { useTagMutations } from '@/hooks/tag/mutations/useTagMutations'
 import { useTags } from '@/hooks/tag/queries/useTags'
+import { createTagSchema } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import {
   TAG_COLORS,
@@ -15,7 +16,7 @@ import {
 } from '@/pages/board-detail/components/styleConfig'
 import type { Card, Tag } from '@/types'
 import { ArrowLeft, Check, Pencil, Plus, X } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 type View =
@@ -47,6 +48,7 @@ export function TagsPopover(props: TagsPopoverProps) {
   const [editColor, setEditColor] = useState('')
 
   const { t } = useTranslation()
+  const tagSchema = useMemo(() => createTagSchema(t), [t])
   const { data: allTags = [] } = useTags()
   const { createTag, updateTag, deleteTag, attachTag, detachTag } =
     useTagMutations(boardId)
@@ -269,7 +271,7 @@ export function TagsPopover(props: TagsPopoverProps) {
                 size="sm"
                 className="h-7 flex-1 text-xs"
                 onClick={handleSave}
-                disabled={!editName.trim() || createTag.isPending}
+                disabled={!tagSchema.safeParse({ name: editName, color: editColor }).success || createTag.isPending}
               >
                 {t('tags.create')}
               </Button>
@@ -280,7 +282,7 @@ export function TagsPopover(props: TagsPopoverProps) {
                   size="sm"
                   className="h-7 flex-1 text-xs"
                   onClick={handleSave}
-                  disabled={!editName.trim() || updateTag.isPending}
+                  disabled={!tagSchema.safeParse({ name: editName, color: editColor }).success || updateTag.isPending}
                 >
                   {t('tags.save')}
                 </Button>

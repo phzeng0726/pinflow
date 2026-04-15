@@ -1,7 +1,3 @@
-import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
-import { Copy, Pin, PinOff, Trash2 } from 'lucide-react'
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,6 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { buttonVariants } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +16,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import type { Card } from '@/types'
+import { Copy, Pin, PinOff, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { DuplicateCardDialog } from './DuplicateCardDialog'
 
 interface CardContextMenuProps {
@@ -131,7 +132,7 @@ export function CardContextMenu(props: CardContextMenuProps) {
           <AlertDialogFooter>
             <AlertDialogCancel>{t('cardMenu.cancel')}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-500 hover:bg-red-600"
+              className={buttonVariants({ variant: 'destructive' })}
               onClick={() => {
                 handleDeleteCard(card.id)
                 setShowDeleteConfirm(false)

@@ -2,9 +2,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import * as api from '@/lib/api'
 import { queryKeys } from '@/hooks/queryKeys'
+import { useTranslation } from 'react-i18next'
 
 export function useChecklistMutations(boardId: number, cardId: number) {
   const qc = useQueryClient()
+  const { t } = useTranslation()
 
   const invalidateBoardDetail = () =>
     qc.invalidateQueries({ queryKey: queryKeys.boards.detail(boardId) })
@@ -15,9 +17,9 @@ export function useChecklistMutations(boardId: number, cardId: number) {
     mutationFn: (title: string) => api.createChecklist(cardId, title),
     onSuccess: async () => {
       await Promise.all([invalidateCardDetail(), invalidateBoardDetail()])
-      toast.success('清單已建立')
+      toast.success(t('toast.checklist.listCreated'))
     },
-    onError: () => toast.error('建立清單失敗'),
+    onError: () => toast.error(t('toast.checklist.listCreateError')),
   })
 
   const updateList = useMutation({
@@ -31,16 +33,16 @@ export function useChecklistMutations(boardId: number, cardId: number) {
     onSuccess: async () => {
       await Promise.all([invalidateCardDetail(), invalidateBoardDetail()])
     },
-    onError: () => toast.error('更新清單失敗'),
+    onError: () => toast.error(t('toast.checklist.listUpdateError')),
   })
 
   const deleteList = useMutation({
     mutationFn: (id: number) => api.deleteChecklist(id),
     onSuccess: async () => {
       await Promise.all([invalidateCardDetail(), invalidateBoardDetail()])
-      toast.success('清單已刪除')
+      toast.success(t('toast.checklist.listDeleted'))
     },
-    onError: () => toast.error('刪除清單失敗'),
+    onError: () => toast.error(t('toast.checklist.listDeleteError')),
   })
 
   const createItem = useMutation({
@@ -54,7 +56,7 @@ export function useChecklistMutations(boardId: number, cardId: number) {
     onSuccess: async () => {
       await Promise.all([invalidateCardDetail(), invalidateBoardDetail()])
     },
-    onError: () => toast.error('新增項目失敗'),
+    onError: () => toast.error(t('toast.checklist.itemCreateError')),
   })
 
   const updateItem = useMutation({
@@ -68,7 +70,7 @@ export function useChecklistMutations(boardId: number, cardId: number) {
     onSuccess: async () => {
       await Promise.all([invalidateCardDetail(), invalidateBoardDetail()])
     },
-    onError: () => toast.error('更新項目失敗'),
+    onError: () => toast.error(t('toast.checklist.itemUpdateError')),
   })
 
   const deleteItem = useMutation({
@@ -76,7 +78,7 @@ export function useChecklistMutations(boardId: number, cardId: number) {
     onSuccess: async () => {
       await Promise.all([invalidateCardDetail(), invalidateBoardDetail()])
     },
-    onError: () => toast.error('刪除項目失敗'),
+    onError: () => toast.error(t('toast.checklist.itemDeleteError')),
   })
 
   return {

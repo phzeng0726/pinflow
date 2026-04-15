@@ -96,7 +96,7 @@ export function PriorityPopover(props: PriorityPopoverProps) {
               onClick={handleRemove}
               className="mt-2 w-full rounded py-1 text-xs text-gray-500 hover:bg-gray-100 hover:text-red-500 dark:hover:bg-gray-700"
             >
-              {t('priority.remove')}
+              {t('common.remove')}
             </button>
           )}
         </div>

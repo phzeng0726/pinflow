@@ -1,20 +1,25 @@
+import type { TFunction } from 'i18next'
 import { z } from 'zod'
 
 // ─── Board ──────────────────────────────────────────────────────────────────
 
-export const newOrEditBoardSchema = z.object({
-  name: z.string().min(1, '請輸入看板名稱'),
-})
+export function createBoardSchema(t: TFunction) {
+  return z.object({
+    name: z.string().min(1, t('validation.boardName')),
+  })
+}
 
-export type NewOrEditBoardForm = z.infer<typeof newOrEditBoardSchema>
+export type NewOrEditBoardForm = z.infer<ReturnType<typeof createBoardSchema>>
 
 // ─── Column ──────────────────────────────────────────────────────────────────
 
-export const newColumnSchema = z.object({
-  name: z.string().min(1, '請輸入欄位名稱'),
-})
+export function createColumnSchema(t: TFunction) {
+  return z.object({
+    name: z.string().min(1, t('validation.columnName')),
+  })
+}
 
-export type NewColumnForm = z.infer<typeof newColumnSchema>
+export type NewColumnForm = z.infer<ReturnType<typeof createColumnSchema>>
 
 export const editColumnSchema = z.object({
   name: z.string().optional(),
@@ -25,57 +30,77 @@ export type EditColumnForm = z.infer<typeof editColumnSchema>
 
 // ─── Card ──────────────────────────────────────────────────────────────────
 
-export const newCardSchema = z.object({
-  title: z.string().min(1, '請輸入標題'),
-})
+export function createCardSchema(t: TFunction) {
+  return z.object({
+    title: z.string().min(1, t('validation.cardTitle')),
+  })
+}
 
-export type NewCardForm = z.infer<typeof newCardSchema>
+export type NewCardForm = z.infer<ReturnType<typeof createCardSchema>>
 
 const timeField = z
   .string()
   .transform((v) => (v === '' ? undefined : v))
   .optional()
 
-export const editCardSchema = z
-  .object({
-    title: z.string().optional(),
-    description: z.string().optional(),
-    storyPoint: z.number().optional(),
-    priority: z.number().optional(),
-    startTime: timeField,
-    endTime: timeField,
-  })
-  .refine((d) => !(d.startTime && d.endTime && d.endTime < d.startTime), {
-    message: '結束時間必須晚於開始時間',
-    path: ['endTime'],
-  })
+export function createEditCardSchema(t: TFunction) {
+  return z
+    .object({
+      title: z.string().optional(),
+      description: z.string().optional(),
+      storyPoint: z.number().optional(),
+      priority: z.number().optional(),
+      startTime: timeField,
+      endTime: timeField,
+    })
+    .refine((d) => !(d.startTime && d.endTime && d.endTime < d.startTime), {
+      message: t('validation.endBeforeStart'),
+      path: ['endTime'],
+    })
+}
 
-export type EditCardForm = z.infer<typeof editCardSchema>
+export type EditCardForm = z.infer<ReturnType<typeof createEditCardSchema>>
 
 export const tagInputSchema = z.object({
   input: z.string(),
 })
 
-export const tagFormSchema = z.object({
-  name: z.string().min(1, '請輸入標籤名稱'),
-  color: z.string().optional(),
-})
+export function createTagSchema(t: TFunction) {
+  return z.object({
+    name: z.string().min(1, t('validation.tagName')),
+    color: z.string().optional(),
+  })
+}
 
-export const checklistSchema = z.object({
-  title: z.string().min(1, '請輸入清單標題'),
-})
+export type TagForm = z.infer<ReturnType<typeof createTagSchema>>
 
-export const checklistItemSchema = z.object({
-  text: z.string().min(1, '請輸入項目文字'),
-})
+export function createChecklistSchema(t: TFunction) {
+  return z.object({
+    title: z.string().min(1, t('validation.checklistTitle')),
+  })
+}
 
-export const duplicateCardSchema = z.object({
-  title: z.string().min(1, '請輸入標題'),
-  copyTags: z.boolean(),
-  copyChecklists: z.boolean(),
-  copySchedule: z.boolean(),
-  pin: z.boolean(),
-  selectedBoardId: z.number(),
-  selectedColumnId: z.number().min(1, '請選擇目標欄位'),
-  position: z.number(),
-})
+export type ChecklistFormData = z.infer<ReturnType<typeof createChecklistSchema>>
+
+export function createChecklistItemSchema(t: TFunction) {
+  return z.object({
+    text: z.string().min(1, t('validation.checklistItemText')),
+  })
+}
+
+export type ChecklistItemFormData = z.infer<ReturnType<typeof createChecklistItemSchema>>
+
+export function createDuplicateCardSchema(t: TFunction) {
+  return z.object({
+    title: z.string().min(1, t('validation.cardTitle')),
+    copyTags: z.boolean(),
+    copyChecklists: z.boolean(),
+    copySchedule: z.boolean(),
+    pin: z.boolean(),
+    selectedBoardId: z.number(),
+    selectedColumnId: z.number().min(1, t('validation.targetColumn')),
+    position: z.number(),
+  })
+}
+
+export type DuplicateCardFormData = z.infer<ReturnType<typeof createDuplicateCardSchema>>

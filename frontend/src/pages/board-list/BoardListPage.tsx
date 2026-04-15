@@ -1,12 +1,22 @@
-import { type NewOrEditBoardForm, newOrEditBoardSchema } from '@/lib/schemas'
+import { type NewOrEditBoardForm, createBoardSchema } from '@/lib/schemas'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from '@tanstack/react-router'
 import { LayoutDashboard, Moon, Plus, Sun, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { LocaleToggle } from '@/components/LocaleToggle'
-import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   Tooltip,
@@ -24,7 +34,9 @@ export function BoardListPage() {
   const theme = useThemeStore((s) => s.theme)
   const toggleTheme = useThemeStore((s) => s.toggle)
   const [creating, setCreating] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<{ id: number; name: string } | null>(null)
   const { t } = useTranslation()
+  const boardSchema = useMemo(() => createBoardSchema(t), [t])
 
   const {
     register,
@@ -32,7 +44,7 @@ export function BoardListPage() {
     reset,
     formState: { errors },
   } = useForm<NewOrEditBoardForm>({
-    resolver: zodResolver(newOrEditBoardSchema),
+    resolver: zodResolver(boardSchema),
   })
 
   const onSubmit = async (form: NewOrEditBoardForm) => {
@@ -144,7 +156,7 @@ export function BoardListPage() {
                   className="h-8 w-8 text-gray-400 opacity-0 transition-all hover:text-red-500 group-hover:opacity-100"
                   onClick={(e) => {
                     e.stopPropagation()
-                    deleteBoard.mutate(board.id)
+                    setShowDeleteConfirm({ id: board.id, name: board.name })
                   }}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -161,6 +173,34 @@ export function BoardListPage() {
           )}
         </div>
       </div>
+
+      <AlertDialog
+        open={showDeleteConfirm !== null}
+        onOpenChange={(o) => { if (!o) setShowDeleteConfirm(null) }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('confirm.deleteBoardTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('confirm.deleteBoardDesc', { name: showDeleteConfirm?.name ?? '' })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              className={buttonVariants({ variant: 'destructive' })}
+              onClick={() => {
+                if (showDeleteConfirm) {
+                  deleteBoard.mutate(showDeleteConfirm.id)
+                  setShowDeleteConfirm(null)
+                }
+              }}
+            >
+              {t('common.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

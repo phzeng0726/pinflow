@@ -2,9 +2,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import * as api from '@/lib/api'
 import { queryKeys } from '@/hooks/queryKeys'
+import { useTranslation } from 'react-i18next'
 
 export function useTagMutations(boardId: number) {
   const qc = useQueryClient()
+  const { t } = useTranslation()
 
   const invalidateTagsAll = () =>
     qc.invalidateQueries({ queryKey: queryKeys.tags.all() })
@@ -18,9 +20,9 @@ export function useTagMutations(boardId: number) {
       api.createTag(name, color),
     onSuccess: async () => {
       await invalidateTagsAll()
-      toast.success('標籤已建立')
+      toast.success(t('toast.tag.createSuccess'))
     },
-    onError: () => toast.error('建立標籤失敗'),
+    onError: () => toast.error(t('toast.tag.createError')),
   })
 
   const update = useMutation({
@@ -33,18 +35,18 @@ export function useTagMutations(boardId: number) {
     }) => api.updateTag(id, data),
     onSuccess: async () => {
       await Promise.all([invalidateTagsAll(), invalidateBoardDetail()])
-      toast.success('標籤已更新')
+      toast.success(t('toast.tag.updateSuccess'))
     },
-    onError: () => toast.error('更新標籤失敗'),
+    onError: () => toast.error(t('toast.tag.updateError')),
   })
 
   const remove = useMutation({
     mutationFn: (id: number) => api.deleteTag(id),
     onSuccess: async () => {
       await Promise.all([invalidateTagsAll(), invalidateBoardDetail()])
-      toast.success('標籤已刪除')
+      toast.success(t('toast.tag.deleteSuccess'))
     },
-    onError: () => toast.error('刪除標籤失敗'),
+    onError: () => toast.error(t('toast.tag.deleteError')),
   })
 
   // 在 Card 上附上標籤
@@ -54,7 +56,7 @@ export function useTagMutations(boardId: number) {
     onSuccess: async (_, { cardId }) => {
       await Promise.all([invalidateCardDetail(cardId), invalidateBoardDetail()])
     },
-    onError: () => toast.error('新增標籤失敗'),
+    onError: () => toast.error(t('toast.tag.attachError')),
   })
 
   // 移除 Card 上的標籤
@@ -64,7 +66,7 @@ export function useTagMutations(boardId: number) {
     onSuccess: async (_, { cardId }) => {
       await Promise.all([invalidateCardDetail(cardId), invalidateBoardDetail()])
     },
-    onError: () => toast.error('移除標籤失敗'),
+    onError: () => toast.error(t('toast.tag.detachError')),
   })
 
   return {

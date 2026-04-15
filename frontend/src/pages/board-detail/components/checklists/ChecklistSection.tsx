@@ -5,20 +5,17 @@ import {
 } from '@dnd-kit/sortable'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { CheckSquare, Plus } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import type { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useChecklistDnd } from '@/hooks/checklist/useChecklistDnd'
 import { useChecklistMutations } from '@/hooks/checklist/mutations/useChecklistMutations'
-import { checklistSchema } from '@/lib/schemas'
+import { createChecklistSchema, type ChecklistFormData } from '@/lib/schemas'
 import type { Card } from '@/types'
 import { ChecklistBlock } from './ChecklistBlock'
-
-type ChecklistForm = z.infer<typeof checklistSchema>
 
 interface ChecklistSectionProps {
   boardId: number
@@ -28,6 +25,7 @@ interface ChecklistSectionProps {
 export function ChecklistSection(props: ChecklistSectionProps) {
   const { boardId, card } = props
   const { t } = useTranslation()
+  const checklistSchema = useMemo(() => createChecklistSchema(t), [t])
 
   const [showNewForm, setShowNewForm] = useState(false)
   const { createChecklist } = useChecklistMutations(boardId, card.id)
@@ -37,11 +35,11 @@ export function ChecklistSection(props: ChecklistSectionProps) {
     checklists: card.checklists ?? [],
   })
 
-  const { register, handleSubmit, reset } = useForm<ChecklistForm>({
+  const { register, handleSubmit, reset } = useForm<ChecklistFormData>({
     resolver: zodResolver(checklistSchema),
   })
 
-  const onSubmit = async (data: ChecklistForm) => {
+  const onSubmit = async (data: ChecklistFormData) => {
     await createChecklist.mutateAsync(data.title)
     reset()
     setShowNewForm(false)

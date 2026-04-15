@@ -62,3 +62,108 @@
     margin: 0;
   }
 }
+
+/* ── 自訂捲軸（WebKit） ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5); /* gray-400/50 */
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(107, 114, 128, 0.7); /* gray-500/70 */
+}
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgba(75, 85, 99, 0.6); /* gray-600/60 */
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(107, 114, 128, 0.8); /* gray-500/80 */
+}
+
+@layer components {
+  /* ── 標題 ── */
+  .markdown-editor-content h1 {
+    @apply mb-2 mt-3 text-2xl font-bold;
+  }
+  .markdown-editor-content h2 {
+    @apply mb-2 mt-3 text-xl font-bold;
+  }
+  .markdown-editor-content h3 {
+    @apply mb-1 mt-3 text-lg font-semibold;
+  }
+
+  /* ── 清單（一般） ── */
+  .markdown-editor-content ul {
+    @apply my-1 list-disc pl-6;
+  }
+  .markdown-editor-content ol {
+    @apply my-1 list-decimal pl-6;
+  }
+  .markdown-editor-content li {
+    @apply my-0.5;
+  }
+
+  /* ── 引用區塊 ── */
+  .markdown-editor-content blockquote {
+    @apply my-2 border-l-4 border-gray-300 pl-4 text-gray-600 dark:border-gray-600 dark:text-gray-400;
+  }
+
+  /* ── 連結 ── */
+  .markdown-editor-content a {
+    @apply text-blue-600 underline hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300;
+  }
+
+  /* ── 分隔線 ── */
+  .markdown-editor-content hr {
+    @apply my-3 border-gray-300 dark:border-gray-600;
+  }
+
+  /* ── Markdown Editor Content：code / pre dark mode ── */
+  .markdown-editor-content code {
+    @apply rounded bg-gray-100 px-1 py-0.5 font-mono text-[0.875em] dark:bg-gray-700 dark:text-gray-200;
+  }
+  .markdown-editor-content pre {
+    @apply my-2 overflow-x-auto rounded bg-gray-100 p-3 dark:bg-gray-800;
+  }
+  .markdown-editor-content pre code {
+    @apply rounded-none bg-transparent p-0 font-mono text-sm dark:bg-transparent;
+  }
+
+  /* ── Markdown Source Editor：段落固定行高、不換行，以對齊左側行號 ── */
+  .markdown-source-editor p {
+    @apply m-0 whitespace-nowrap;
+    line-height: 1.5rem; /* = leading-6，需與 .source-editor-line 一致 */
+  }
+
+  /* 行號欄每一行，高度與 editor <p> 一致 */
+  .source-editor-line {
+    line-height: 1.5rem;
+  }
+
+  /* ── Markdown Preview：react-markdown 渲染的 code 元素 ── */
+  .markdown-preview code {
+    @apply rounded bg-gray-100 px-1 py-0.5 font-mono text-[0.875em] dark:bg-gray-700;
+  }
+  .markdown-preview pre {
+    @apply my-2 overflow-x-auto rounded bg-gray-100 p-3 dark:bg-gray-800;
+  }
+  .markdown-preview pre code {
+    @apply rounded-none bg-transparent p-0 font-mono text-sm;
+  }
+
+  /* ── Markdown Preview：GFM task list ── */
+  .markdown-preview ul.contains-task-list {
+    @apply list-none pl-2;
+  }
+  .markdown-preview .task-list-item {
+    @apply flex items-start gap-1.5 py-0.5;
+  }
+  .markdown-preview .task-list-item input[type='checkbox'] {
+    @apply mt-0.5 shrink-0 accent-gray-500;
+  }
+}

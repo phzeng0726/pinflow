@@ -18,7 +18,15 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { format, parseISO } from 'date-fns'
-import { Calendar, CheckSquare, Flame, Link2, Pencil, X } from 'lucide-react'
+import {
+  Calendar,
+  CheckSquare,
+  Flag,
+  Flame,
+  Link2,
+  Pencil,
+  X,
+} from 'lucide-react'
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useForm } from 'react-hook-form'
@@ -218,11 +226,11 @@ export function CardItem(props: CardItemProps) {
                 totalItems > 0 ||
                 (card.priority != null && card.priority > 0) ||
                 card.dependencyCount > 0) && (
-                <div className="mt-1.5 flex items-center gap-2">
+                <div className="mt-1.5 flex flex-wrap items-center gap-2">
                   {hasSchedule && (
                     <span
                       className={cn(
-                        'flex items-center gap-0.5 text-xs',
+                        'flex shrink-0 items-center gap-0.5 whitespace-nowrap text-xs',
                         scheduleUrgencyClass,
                       )}
                     >
@@ -238,7 +246,7 @@ export function CardItem(props: CardItemProps) {
                   {totalItems > 0 && (
                     <span
                       className={cn(
-                        'flex items-center gap-0.5 text-xs',
+                        'flex shrink-0 items-center gap-0.5 whitespace-nowrap text-xs',
                         completedItems === totalItems
                           ? 'text-green-500'
                           : 'text-gray-400',
@@ -252,27 +260,34 @@ export function CardItem(props: CardItemProps) {
                     card.priority > 0 &&
                     (() => {
                       const p = getPriorityConfig(card.priority)
-                      return p ? (
-                        <span className={cn('text-xs font-bold', p.textClass)}>
-                          P{p.value}
+                      return (
+                        <span
+                          className={cn(
+                            'flex shrink-0 items-center gap-0.5 whitespace-nowrap text-xs font-medium',
+                            p?.textClass,
+                          )}
+                        >
+                          <Flag className="h-3 w-3" />P{p?.value}
                         </span>
-                      ) : null
+                      )
                     })()}
                   {card.storyPoint != null && (
-                    <span className="flex items-center gap-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
+                    <span className="flex shrink-0 items-center gap-0.5 whitespace-nowrap text-xs font-medium text-blue-600 dark:text-blue-400">
                       <Flame className="h-3 w-3" />
                       {card.storyPoint}
                     </span>
                   )}
 
                   {card.dependencyCount > 0 && (
-                    <span className="flex items-center gap-0.5 text-xs text-gray-400">
+                    <span className="flex shrink-0 items-center gap-0.5 whitespace-nowrap text-xs text-gray-400">
                       <Link2 className="h-3 w-3" />
                       {card.dependencyCount}
                     </span>
                   )}
 
-                  <span className="text-xs text-gray-400">#{card.id}</span>
+                  <span className="flex shrink-0 items-center gap-0.5 whitespace-nowrap text-xs text-gray-400">
+                    #{card.id}
+                  </span>
                 </div>
               )}
             </div>

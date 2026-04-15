@@ -1,5 +1,5 @@
+import { MarkdownEditor } from '@/components/common/markdown-editor'
 import { Button } from '@/components/ui/button'
-import { MarkdownEditor } from '@/components/ui/markdown-editor'
 import {
   Popover,
   PopoverContent,

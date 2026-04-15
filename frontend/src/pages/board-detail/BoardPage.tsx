@@ -1,12 +1,4 @@
-import { DndContext, DragOverlay } from '@dnd-kit/core'
-import {
-  SortableContext,
-  horizontalListSortingStrategy,
-} from '@dnd-kit/sortable'
-import { useNavigate, useParams } from '@tanstack/react-router'
-import { ArrowLeft, Moon, Pin, Plus, Sun } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { LocaleToggle } from '@/components/common/LocaleToggle'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,16 +15,24 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { LocaleToggle } from '@/components/LocaleToggle'
 import { useBoardDetail } from '@/hooks/board/queries/useBoardDetail'
 import { useBoardDnd } from '@/hooks/board/useBoardDnd'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { usePinnedCards } from '@/hooks/card/queries/usePinnedCards'
 import { useColumnMutations } from '@/hooks/column/mutations/useColumnMutations'
-import { useThemeStore } from '@/stores/themeStore'
-import type { Card } from '@/types'
 import { AddColumnForm } from '@/pages/board-detail/components/columns/AddColumnForm'
 import { ColumnView } from '@/pages/board-detail/components/columns/ColumnView'
+import { useThemeStore } from '@/stores/themeStore'
+import type { Card } from '@/types'
+import { DndContext, DragOverlay } from '@dnd-kit/core'
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { useNavigate, useParams } from '@tanstack/react-router'
+import { ArrowLeft, Moon, Pin, Plus, Sun } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export function BoardPage() {
   const navigate = useNavigate()
@@ -274,7 +274,9 @@ export function BoardPage() {
                   {activeColumn.name}
                 </p>
                 <p className="mt-1 text-xs text-gray-400">
-                  {t('boardPage.cards', { count: activeColumn.cards?.length ?? 0 })}
+                  {t('boardPage.cards', {
+                    count: activeColumn.cards?.length ?? 0,
+                  })}
                 </p>
               </div>
             )}
@@ -291,7 +293,9 @@ export function BoardPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('boardPage.moveOutAutoPinTitle')}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t('boardPage.moveOutAutoPinTitle')}
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {t('boardPage.moveOutAutoPinDesc')}
             </AlertDialogDescription>

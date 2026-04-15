@@ -1,11 +1,4 @@
-import { type NewOrEditBoardForm, createBoardSchema } from '@/lib/schemas'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate } from '@tanstack/react-router'
-import { LayoutDashboard, Moon, Plus, Sun, Trash2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { useTranslation } from 'react-i18next'
-import { LocaleToggle } from '@/components/LocaleToggle'
+import { LocaleToggle } from '@/components/common/LocaleToggle'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,7 +18,14 @@ import {
 } from '@/components/ui/tooltip'
 import { useBoardMutations } from '@/hooks/board/mutations/useBoardMutations'
 import { useBoards } from '@/hooks/board/queries/useBoards'
+import { type NewOrEditBoardForm, createBoardSchema } from '@/lib/schemas'
 import { useThemeStore } from '@/stores/themeStore'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useNavigate } from '@tanstack/react-router'
+import { LayoutDashboard, Moon, Plus, Sun, Trash2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 
 export function BoardListPage() {
   const { data: boards = [], isLoading } = useBoards()
@@ -34,7 +34,10 @@ export function BoardListPage() {
   const theme = useThemeStore((s) => s.theme)
   const toggleTheme = useThemeStore((s) => s.toggle)
   const [creating, setCreating] = useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<{ id: number; name: string } | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<{
+    id: number
+    name: string
+  } | null>(null)
   const { t } = useTranslation()
   const boardSchema = useMemo(() => createBoardSchema(t), [t])
 
@@ -176,13 +179,17 @@ export function BoardListPage() {
 
       <AlertDialog
         open={showDeleteConfirm !== null}
-        onOpenChange={(o) => { if (!o) setShowDeleteConfirm(null) }}
+        onOpenChange={(o) => {
+          if (!o) setShowDeleteConfirm(null)
+        }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('confirm.deleteBoardTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('confirm.deleteBoardDesc', { name: showDeleteConfirm?.name ?? '' })}
+              {t('confirm.deleteBoardDesc', {
+                name: showDeleteConfirm?.name ?? '',
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

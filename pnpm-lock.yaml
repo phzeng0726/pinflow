@@ -35,6 +35,9 @@ importers:
       '@lexical/code':
         specifier: ^0.43.0
         version: 0.43.0
+      '@lexical/extension':
+        specifier: ^0.43.0
+        version: 0.43.0
       '@lexical/link':
         specifier: ^0.43.0
         version: 0.43.0

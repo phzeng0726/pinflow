@@ -9,7 +9,7 @@ import {
   REMOVE_LIST_COMMAND,
 } from '@lexical/list'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { INSERT_HORIZONTAL_RULE_COMMAND } from '@lexical/react/LexicalHorizontalRuleNode'
+import { INSERT_HORIZONTAL_RULE_COMMAND } from '@lexical/extension'
 import {
   $createHeadingNode,
   $createQuoteNode,

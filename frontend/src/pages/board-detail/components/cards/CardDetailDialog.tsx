@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+import { MarkdownEditor } from '@/components/ui/markdown-editor'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { useCardDetail } from '@/hooks/card/queries/useCardDetail'
 import { useDependencyMutations } from '@/hooks/dependency/mutations/useDependencyMutations'
@@ -47,6 +47,8 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<EditCardForm>({
     resolver: zodResolver(editCardSchema),
@@ -71,6 +73,8 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
       },
     })
   }
+
+  const descriptionValue = watch('description')
 
   // 封裝一個 blur 處理函數
   const handleBlur = () => {
@@ -240,18 +244,20 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                   </div>
                 </div>
 
+                {/* Description */}
                 <div className="space-y-2">
                   <Label className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
                     <Notebook className="h-4 w-4" />{' '}
                     {t('cardDetail.description')}
                   </Label>
 
-                  <Textarea
-                    {...register('description')}
-                    onBlur={handleBlur} // 失去焦點時儲存
+                  <MarkdownEditor
+                    value={descriptionValue ?? ''}
+                    onChange={(md) =>
+                      setValue('description', md, { shouldDirty: true })
+                    }
+                    onBlur={handleBlur}
                     placeholder={t('cardDetail.descPlaceholder')}
-                    rows={6}
-                    className="w-full resize-none border-transparent bg-gray-50 p-3 text-sm focus-visible:ring-1 dark:bg-gray-800/50"
                   />
                 </div>
                 <ChecklistSection boardId={boardId} card={card} />

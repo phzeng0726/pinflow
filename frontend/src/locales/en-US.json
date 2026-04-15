@@ -9,7 +9,9 @@
     "confirm": "Confirm",
     "remove": "REMOVE",
     "create": "Create",
-    "back": "Back"
+    "back": "Back",
+    "preview": "Preview",
+    "continueEditing": "Continue Editing"
   },
   "theme": {
     "toDark": "Switch to dark mode",

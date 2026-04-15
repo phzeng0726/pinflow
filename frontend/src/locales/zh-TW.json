@@ -9,7 +9,9 @@
     "confirm": "確認",
     "remove": "移除",
     "create": "建立",
-    "back": "返回"
+    "back": "返回",
+    "preview": "預覽",
+    "continueEditing": "繼續編輯"
   },
   "theme": {
     "toDark": "切換暗色模式",

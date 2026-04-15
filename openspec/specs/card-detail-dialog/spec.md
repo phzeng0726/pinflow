@@ -11,7 +11,7 @@ The system SHALL provide a dialog/modal that opens when the user clicks a detail
 
 ### Requirement: Dialog displays rich fields
 
-The dialog SHALL display title, description, story points, priority, tags, start time, end time, all checklists with their items, and dependencies. The dialog SHALL use a left/right split layout: the left panel contains all existing fields (metadata, tags, dependencies, description, checklists) and the right panel contains the CommentSection. The title header area SHALL remain fixed/sticky at the top of the dialog while both panels scroll independently.
+The dialog SHALL display title, description, story points, priority, tags, start time, end time, all checklists with their items, and dependencies. The dialog SHALL use a left/right split layout: the left panel contains all existing fields (metadata, tags, dependencies, description, checklists) and the right panel contains the CommentSection. The title header area SHALL remain fixed/sticky at the top of the dialog while both panels scroll independently. The description field SHALL be rendered using the `MarkdownEditor` component, supporting rich text formatting.
 
 #### Scenario: All fields visible
 
@@ -37,6 +37,30 @@ The dialog SHALL display title, description, story points, priority, tags, start
 
 - **WHEN** the dialog opens
 - **THEN** the dialog is rendered with a maximum width of max-w-4xl to provide space for both panels
+
+#### Scenario: Description renders Markdown formatting
+
+- **WHEN** the dialog opens for a card whose description contains Markdown (e.g., headings, bold, lists)
+- **THEN** the description is displayed with formatting applied in the MarkdownEditor, not as raw Markdown text
+
+### Requirement: Description supports rich text editing
+
+The dialog SHALL allow the user to edit the card description using the `MarkdownEditor` component. The description SHALL be saved as a Markdown string via the existing `PATCH /cards/:id` API on blur.
+
+#### Scenario: Edit description with formatting
+
+- **WHEN** the user applies formatting (e.g., bold, heading, list) in the description editor
+- **THEN** the formatting is reflected immediately in the editor view
+
+#### Scenario: Description saves on blur
+
+- **WHEN** the user finishes editing the description and clicks outside the editor
+- **THEN** the description is saved via `PATCH /cards/:id` with the Markdown string representation of the content
+
+#### Scenario: No API call if description unchanged
+
+- **WHEN** the user focuses and then blurs the description editor without making changes
+- **THEN** no API call is made
 
 ### Requirement: Inline tag editing in dialog
 

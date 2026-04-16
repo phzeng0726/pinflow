@@ -62,7 +62,10 @@ export function CardItem(props: CardItemProps) {
   const checklists = card.checklists ?? []
   const hasSchedule = !!card.startTime || !!card.endTime
 
-  const scheduleUrgencyClass = getScheduleUrgencyClass(card.endTime, card.startTime)
+  const scheduleUrgencyClass = getScheduleUrgencyClass(
+    card.endTime,
+    card.startTime,
+  )
   const totalItems = checklists.reduce(
     (n, cl) => n + (cl.totalCount ?? cl.items?.length ?? 0),
     0,
@@ -180,7 +183,7 @@ export function CardItem(props: CardItemProps) {
             <Textarea
               {...register('title')}
               onKeyDown={handleEditKeyDown}
-              className="mb-2 resize-none font-medium"
+              className="mb-2 resize-none border-gray-200 font-medium hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-500"
               rows={3}
               autoFocus
             />

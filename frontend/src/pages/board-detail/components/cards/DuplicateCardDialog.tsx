@@ -86,6 +86,12 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
     setValue('position', 0)
   }
 
+  const handleWrapperClick = (e: React.MouseEvent) => e.stopPropagation()
+
+  const handleDialogOpenChange = (open: boolean) => {
+    if (!open) onClose()
+  }
+
   const onSubmit = (data: DuplicateCardFormData) => {
     duplicate.mutate(
       {
@@ -106,12 +112,10 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
 
   return (
     // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-    <div onClick={(e) => e.stopPropagation()}>
+    <div onClick={handleWrapperClick}>
       <Dialog
         open={true}
-        onOpenChange={(open) => {
-          if (!open) onClose()
-        }}
+        onOpenChange={handleDialogOpenChange}
       >
         <DialogContent className="w-80 p-4">
           <DialogHeader className="mb-4">

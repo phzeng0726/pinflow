@@ -1,144 +1,11 @@
 import { MarkdownEditor } from '@/components/common/markdown-editor'
 import { Button } from '@/components/ui/button'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
 import { useCommentMutations } from '@/hooks/comment/mutations/useCommentMutations'
-import { useLocaleStore } from '@/stores/localeStore'
 import type { Comment } from '@/types'
-import { formatDistanceToNow } from 'date-fns'
-import { enUS, zhTW } from 'date-fns/locale'
 import { MessageSquare } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-
-interface CommentItemProps {
-  comment: Comment
-  onUpdate: (id: number, text: string) => void
-  onDelete: (id: number) => void
-  isUpdating: boolean
-  isDeleting: boolean
-}
-
-function CommentItem({
-  comment,
-  onUpdate,
-  onDelete,
-  isUpdating,
-  isDeleting,
-}: CommentItemProps) {
-  const { t } = useTranslation()
-  const locale = useLocaleStore((s) => s.locale)
-  const [editing, setEditing] = useState(false)
-  const [editText, setEditText] = useState(comment.text)
-  const [deleteOpen, setDeleteOpen] = useState(false)
-
-  const handleSave = () => {
-    const trimmed = editText.trim()
-    if (!trimmed) return
-    onUpdate(comment.id, trimmed)
-    setEditing(false)
-  }
-
-  const handleCancel = () => {
-    setEditText(comment.text)
-    setEditing(false)
-  }
-
-  const dateFnsLocale = locale === 'zh-TW' ? zhTW : enUS
-  const relativeTime = formatDistanceToNow(new Date(comment.createdAt), {
-    addSuffix: true,
-    locale: dateFnsLocale,
-  })
-
-  return (
-    <div className="rounded border bg-white p-3 dark:border-gray-700 dark:bg-gray-800">
-      {editing ? (
-        <div className="space-y-2">
-          <MarkdownEditor
-            value={editText}
-            onChange={setEditText}
-            onBlur={handleCancel}
-            defaultEditing
-          />
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={handleSave}
-              disabled={isUpdating || !editText.trim()}
-            >
-              {t('comment.save')}
-            </Button>
-            <Button size="sm" variant="ghost" onClick={handleCancel}>
-              {t('comment.cancel')}
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="prose prose-sm dark:prose-invert max-w-none">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {comment.text}
-          </ReactMarkdown>
-        </div>
-      )}
-
-      {!editing && (
-        <div className="mt-2 flex items-center gap-1 text-xs text-gray-400">
-          <span>{relativeTime}</span>
-          <span>•</span>
-          <button
-            type="button"
-            className="hover:text-gray-600 dark:hover:text-gray-200"
-            onClick={() => {
-              setEditText(comment.text)
-              setEditing(true)
-            }}
-          >
-            {t('comment.edit')}
-          </button>
-          <span>•</span>
-          <Popover open={deleteOpen} onOpenChange={setDeleteOpen}>
-            <PopoverTrigger asChild>
-              <button type="button" className="hover:text-red-500">
-                {t('comment.delete')}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-48 p-3" side="top">
-              <p className="mb-3 text-xs font-medium">
-                {t('comment.deleteConfirmTitle')}
-              </p>
-              <div className="flex justify-end gap-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setDeleteOpen(false)}
-                >
-                  {t('comment.cancel')}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  disabled={isDeleting}
-                  onClick={() => {
-                    onDelete(comment.id)
-                    setDeleteOpen(false)
-                  }}
-                >
-                  {t('comment.delete')}
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      )}
-    </div>
-  )
-}
+import { CommentItem } from './CommentItem'
 
 interface CommentSectionProps {
   cardId: number
@@ -158,16 +25,31 @@ export function CommentSection(props: CommentSectionProps) {
     setIsEditing(true)
   }
 
-  const handleCreate = async () => {
+  const handleEditorBlur = () => {
+    setIsEditing(false)
+  }
+
+  const handleButtonMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault()
+  }
+
+  const handleCreate = () => {
     const trimmed = newText.trim()
     if (!trimmed) return
-    try {
-      await create.mutateAsync(trimmed)
-      setNewText('')
-      setIsEditing(false)
-    } catch {
-      // error toast handled by mutation's onError
-    }
+    create.mutate(trimmed, {
+      onSuccess: () => {
+        setNewText('')
+        setIsEditing(false)
+      },
+    })
+  }
+
+  const handleUpdateComment = (id: number, text: string) => {
+    update.mutate({ id, text })
+  }
+
+  const handleDeleteComment = (id: number) => {
+    remove.mutate(id)
   }
 
   const sorted = [...comments].sort(
@@ -194,13 +76,13 @@ export function CommentSection(props: CommentSectionProps) {
             <MarkdownEditor
               value={newText}
               onChange={setNewText}
-              onBlur={() => setIsEditing(false)}
+              onBlur={handleEditorBlur}
               placeholder={t('comment.writePlaceholder')}
               defaultEditing
             />
             <Button
               size="sm"
-              onMouseDown={(e) => e.preventDefault()}
+              onMouseDown={handleButtonMouseDown}
               onClick={handleCreate}
               disabled={create.isPending || !newText.trim()}
             >
@@ -228,8 +110,8 @@ export function CommentSection(props: CommentSectionProps) {
           <CommentItem
             key={comment.id}
             comment={comment}
-            onUpdate={(id, text) => update.mutate({ id, text })}
-            onDelete={(id) => remove.mutate(id)}
+            onUpdate={handleUpdateComment}
+            onDelete={handleDeleteComment}
             isUpdating={update.isPending}
             isDeleting={remove.isPending}
           />

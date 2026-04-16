@@ -47,14 +47,42 @@ export function CardContextMenu(props: CardContextMenuProps) {
     deleteCard.mutate(cardId)
   }
 
+  const handleDropdownOpenChange = (o: boolean) => {
+    if (!o) onOpenChange(false)
+  }
+
+  const handleSelectPin = () => {
+    handlePinCard(card.id)
+    onOpenChange(false)
+  }
+
+  const handleSelectDuplicate = () => {
+    setShowDuplicate(true)
+    onOpenChange(false)
+  }
+
+  const handleSelectDelete = () => {
+    setShowDeleteConfirm(true)
+    onOpenChange(false)
+  }
+
+  const handleCloseDuplicateDialog = () => setShowDuplicate(false)
+
+  const handleDeleteDialogOpenChange = (o: boolean) => {
+    if (!o) setShowDeleteConfirm(false)
+  }
+
+  const handleConfirmDelete = () => {
+    handleDeleteCard(card.id)
+    setShowDeleteConfirm(false)
+  }
+
   return (
     <>
       <DropdownMenu
         modal={false}
         open={open}
-        onOpenChange={(o) => {
-          if (!o) onOpenChange(false)
-        }}
+        onOpenChange={handleDropdownOpenChange}
       >
         <DropdownMenuTrigger asChild>
           <button
@@ -70,12 +98,7 @@ export function CardContextMenu(props: CardContextMenuProps) {
           onInteractOutside={(e) => e.preventDefault()}
           onFocusOutside={(e) => e.preventDefault()}
         >
-          <DropdownMenuItem
-            onSelect={() => {
-              handlePinCard(card.id)
-              onOpenChange(false)
-            }}
-          >
+          <DropdownMenuItem onSelect={handleSelectPin}>
             {card.isPinned ? (
               <>
                 <PinOff className="h-3.5 w-3.5 text-blue-500" />{' '}
@@ -87,20 +110,12 @@ export function CardContextMenu(props: CardContextMenuProps) {
               </>
             )}
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onSelect={() => {
-              setShowDuplicate(true)
-              onOpenChange(false)
-            }}
-          >
+          <DropdownMenuItem onSelect={handleSelectDuplicate}>
             <Copy className="h-3.5 w-3.5" /> {t('cardMenu.duplicate')}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onSelect={() => {
-              setShowDeleteConfirm(true)
-              onOpenChange(false)
-            }}
+            onSelect={handleSelectDelete}
             className="text-red-500 focus:text-red-500"
           >
             <Trash2 className="h-3.5 w-3.5" /> {t('cardMenu.delete')}
@@ -112,15 +127,13 @@ export function CardContextMenu(props: CardContextMenuProps) {
         <DuplicateCardDialog
           card={card}
           boardId={boardId}
-          onClose={() => setShowDuplicate(false)}
+          onClose={handleCloseDuplicateDialog}
         />
       )}
 
       <AlertDialog
         open={showDeleteConfirm}
-        onOpenChange={(o) => {
-          if (!o) setShowDeleteConfirm(false)
-        }}
+        onOpenChange={handleDeleteDialogOpenChange}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -133,10 +146,7 @@ export function CardContextMenu(props: CardContextMenuProps) {
             <AlertDialogCancel>{t('cardMenu.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               className={buttonVariants({ variant: 'destructive' })}
-              onClick={() => {
-                handleDeleteCard(card.id)
-                setShowDeleteConfirm(false)
-              }}
+              onClick={handleConfirmDelete}
             >
               {t('cardMenu.delete')}
             </AlertDialogAction>

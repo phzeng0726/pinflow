@@ -39,11 +39,28 @@ export function ChecklistSection(props: ChecklistSectionProps) {
     resolver: zodResolver(checklistSchema),
   })
 
-  const onSubmit = async (data: ChecklistFormData) => {
-    await createChecklist.mutateAsync(data.title)
+  const onSubmit = (data: ChecklistFormData) => {
+    createChecklist.mutate(data.title, {
+      onSuccess: () => {
+        reset()
+        setShowNewForm(false)
+      },
+    })
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      reset()
+      setShowNewForm(false)
+    }
+  }
+
+  const handleCancel = () => {
     reset()
     setShowNewForm(false)
   }
+
+  const handleShowForm = () => setShowNewForm(true)
 
   const sortedChecklists = [...(card.checklists ?? [])].sort(
     (a, b) => a.position - b.position,
@@ -79,12 +96,7 @@ export function ChecklistSection(props: ChecklistSectionProps) {
         <form onSubmit={handleSubmit(onSubmit)} className="mt-3 flex gap-2">
           <Input
             {...register('title')}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                reset()
-                setShowNewForm(false)
-              }
-            }}
+            onKeyDown={handleKeyDown}
             placeholder={t('checklist.listNamePlaceholder')}
             className="h-8 text-sm"
             autoFocus
@@ -95,10 +107,7 @@ export function ChecklistSection(props: ChecklistSectionProps) {
           <Button
             type="button"
             variant="ghost"
-            onClick={() => {
-              reset()
-              setShowNewForm(false)
-            }}
+            onClick={handleCancel}
             className="h-8 text-xs"
           >
             {t('checklist.cancel')}
@@ -107,7 +116,7 @@ export function ChecklistSection(props: ChecklistSectionProps) {
       ) : (
         <Button
           variant="ghost"
-          onClick={() => setShowNewForm(true)}
+          onClick={handleShowForm}
           className="mt-3 h-8 text-xs text-gray-500"
         >
           <Plus className="mr-1 h-3.5 w-3.5" /> {t('checklist.addChecklist')}

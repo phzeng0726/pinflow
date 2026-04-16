@@ -81,6 +81,18 @@ export function SchedulePopover(props: SchedulePopoverProps) {
     setOpen(false)
   }
 
+  const handleClose = () => handleOpenChange(false)
+
+  const handleStartTimeChange = (iso: string | null) => {
+    setStartTime(iso)
+    setError(null)
+  }
+
+  const handleEndTimeChange = (iso: string | null) => {
+    setEndTime(iso)
+    setError(null)
+  }
+
   const summary = buildSummary(card.startTime ?? null, card.endTime ?? null)
   const hasAnyDate = !!(card.startTime || card.endTime)
 
@@ -103,7 +115,7 @@ export function SchedulePopover(props: SchedulePopoverProps) {
           </span>
           <button
             type="button"
-            onClick={() => handleOpenChange(false)}
+            onClick={handleClose}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
           >
             <X className="h-4 w-4" />
@@ -117,10 +129,7 @@ export function SchedulePopover(props: SchedulePopoverProps) {
             </Label>
             <DateTimePicker
               value={startTime}
-              onChange={(iso) => {
-                setStartTime(iso)
-                setError(null)
-              }}
+              onChange={handleStartTimeChange}
             />
           </div>
           <div>
@@ -129,10 +138,7 @@ export function SchedulePopover(props: SchedulePopoverProps) {
             </Label>
             <DateTimePicker
               value={endTime}
-              onChange={(iso) => {
-                setEndTime(iso)
-                setError(null)
-              }}
+              onChange={handleEndTimeChange}
             />
           </div>
           {error && <p className="text-xs text-red-500">{error}</p>}

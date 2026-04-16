@@ -22,7 +22,8 @@ interface DependencyPopoverProps {
   card: Card
 }
 
-export function DependencyPopover({ boardId, card }: DependencyPopoverProps) {
+export function DependencyPopover(props: DependencyPopoverProps) {
+  const { boardId, card } = props
   const [open, setOpen] = useState(false)
   const { t } = useTranslation()
   const [selectedRelation, setSelectedRelation] =
@@ -48,6 +49,13 @@ export function DependencyPopover({ boardId, card }: DependencyPopoverProps) {
       setSelectedCard(null)
       setQuery('')
     }
+  }
+
+  const handleClose = () => handleOpenChange(false)
+
+  const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value)
+    setSelectedCard(null)
   }
 
   const handleConfirm = () => {
@@ -82,7 +90,7 @@ export function DependencyPopover({ boardId, card }: DependencyPopoverProps) {
           </span>
           <button
             type="button"
-            onClick={() => handleOpenChange(false)}
+            onClick={handleClose}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
           >
             <X className="h-4 w-4" />
@@ -92,34 +100,37 @@ export function DependencyPopover({ boardId, card }: DependencyPopoverProps) {
         <div className="flex h-72">
           {/* Left: relation type list */}
           <div className="w-60 flex-shrink-0 overflow-y-auto border-r p-2">
-            {DEPENDENCY_RELATIONS.map((rel) => (
-              <button
-                key={rel.key}
-                type="button"
-                onClick={() => {
-                  setSelectedRelation(rel.key)
-                  setSelectedCard(null)
-                }}
-                className={cn(
-                  'flex w-full flex-col items-start rounded px-2 py-1.5 text-left text-xs transition-colors',
-                  selectedRelation === rel.key
-                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-700',
-                )}
-              >
-                <span className="font-medium">{rel.label}</span>
-                <span
+            {DEPENDENCY_RELATIONS.map((rel) => {
+              const handleSelectRelation = () => {
+                setSelectedRelation(rel.key)
+                setSelectedCard(null)
+              }
+              return (
+                <button
+                  key={rel.key}
+                  type="button"
+                  onClick={handleSelectRelation}
                   className={cn(
-                    'leading-snug',
+                    'flex w-full flex-col items-start rounded px-2 py-1.5 text-left text-xs transition-colors',
                     selectedRelation === rel.key
-                      ? 'text-blue-600 dark:text-blue-300'
-                      : 'text-gray-500 dark:text-gray-400',
+                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700',
                   )}
                 >
-                  {rel.description}
-                </span>
-              </button>
-            ))}
+                  <span className="font-medium">{rel.label}</span>
+                  <span
+                    className={cn(
+                      'leading-snug',
+                      selectedRelation === rel.key
+                        ? 'text-blue-600 dark:text-blue-300'
+                        : 'text-gray-500 dark:text-gray-400',
+                    )}
+                  >
+                    {rel.description}
+                  </span>
+                </button>
+              )
+            })}
           </div>
 
           {/* Right: card picker */}
@@ -129,10 +140,7 @@ export function DependencyPopover({ boardId, card }: DependencyPopoverProps) {
               <Input
                 placeholder={t('dependency.searchPlaceholder')}
                 value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value)
-                  setSelectedCard(null)
-                }}
+                onChange={handleQueryChange}
                 className="h-8 pl-8 text-sm"
               />
             </div>
@@ -148,35 +156,37 @@ export function DependencyPopover({ boardId, card }: DependencyPopoverProps) {
                   {t('dependency.noCards')}
                 </p>
               )}
-              {filteredResults.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() =>
-                    setSelectedCard(selectedCard?.id === c.id ? null : c)
-                  }
-                  className={cn(
-                    'flex flex-col items-start rounded px-2 py-1.5 text-left text-xs transition-colors',
-                    selectedCard?.id === c.id
-                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700',
-                  )}
-                >
-                  <span className="max-w-full truncate font-medium">
-                    {c.title}
-                  </span>
-                  <span
+              {filteredResults.map((c) => {
+                const handleSelectCard = () =>
+                  setSelectedCard(selectedCard?.id === c.id ? null : c)
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={handleSelectCard}
                     className={cn(
-                      'max-w-full truncate',
+                      'flex flex-col items-start rounded px-2 py-1.5 text-left text-xs transition-colors',
                       selectedCard?.id === c.id
-                        ? 'text-blue-600 dark:text-blue-300'
-                        : 'text-gray-500 dark:text-gray-400',
+                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-700',
                     )}
                   >
-                    {c.boardName} · {c.columnName}
-                  </span>
-                </button>
-              ))}
+                    <span className="max-w-full truncate font-medium">
+                      {c.title}
+                    </span>
+                    <span
+                      className={cn(
+                        'max-w-full truncate',
+                        selectedCard?.id === c.id
+                          ? 'text-blue-600 dark:text-blue-300'
+                          : 'text-gray-500 dark:text-gray-400',
+                      )}
+                    >
+                      {c.boardName} · {c.columnName}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
           </div>
         </div>

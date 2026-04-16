@@ -50,10 +50,33 @@ export function BoardListPage() {
     resolver: zodResolver(boardSchema),
   })
 
-  const onSubmit = async (form: NewOrEditBoardForm) => {
-    await createBoard.mutateAsync(form)
+  const onSubmit = (form: NewOrEditBoardForm) => {
+    createBoard.mutate(form, {
+      onSuccess: () => {
+        reset()
+        setCreating(false)
+      },
+    })
+  }
+
+  const handleStartCreating = () => setCreating(true)
+
+  const handleCancelCreating = () => {
     reset()
     setCreating(false)
+  }
+
+  const handleDeleteDialogOpenChange = (o: boolean) => {
+    if (!o) {
+      setShowDeleteConfirm(null)
+    }
+  }
+
+  const handleConfirmDeleteBoard = () => {
+    if (showDeleteConfirm) {
+      deleteBoard.mutate(showDeleteConfirm.id)
+      setShowDeleteConfirm(null)
+    }
   }
 
   if (isLoading) {
@@ -94,7 +117,7 @@ export function BoardListPage() {
               </TooltipContent>
             </Tooltip>
             <Button
-              onClick={() => setCreating(true)}
+              onClick={handleStartCreating}
               className="flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
@@ -119,10 +142,7 @@ export function BoardListPage() {
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => {
-                  reset()
-                  setCreating(false)
-                }}
+                onClick={handleCancelCreating}
               >
                 {t('common.cancel')}
               </Button>
@@ -134,40 +154,43 @@ export function BoardListPage() {
         )}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {boards.map((board) => (
-            <div
-              key={board.id}
-              className="group cursor-pointer rounded-lg border bg-white p-4 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
-              onClick={() =>
-                navigate({
-                  to: '/boards/$boardId',
-                  params: { boardId: String(board.id) },
-                })
-              }
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="font-semibold text-gray-900 dark:text-gray-100">
-                    {board.name}
-                  </h2>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    {t('board.columns', { count: board.columns?.length ?? 0 })}
-                  </p>
+          {boards.map((board) => {
+            const handleNavigateToBoard = () =>
+              navigate({
+                to: '/boards/$boardId',
+                params: { boardId: String(board.id) },
+              })
+            const handleRequestDeleteBoard = (e: React.MouseEvent) => {
+              e.stopPropagation()
+              setShowDeleteConfirm({ id: board.id, name: board.name })
+            }
+            return (
+              <div
+                key={board.id}
+                className="group cursor-pointer rounded-lg border bg-white p-4 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+                onClick={handleNavigateToBoard}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+                      {board.name}
+                    </h2>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {t('board.columns', { count: board.columns?.length ?? 0 })}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-gray-400 opacity-0 transition-all hover:text-red-500 group-hover:opacity-100"
+                    onClick={handleRequestDeleteBoard}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-gray-400 opacity-0 transition-all hover:text-red-500 group-hover:opacity-100"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowDeleteConfirm({ id: board.id, name: board.name })
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
               </div>
-            </div>
-          ))}
+            )
+          })}
 
           {boards.length === 0 && !creating && (
             <div className="col-span-3 py-12 text-center text-gray-400 dark:text-gray-600">
@@ -180,9 +203,7 @@ export function BoardListPage() {
 
       <AlertDialog
         open={showDeleteConfirm !== null}
-        onOpenChange={(o) => {
-          if (!o) setShowDeleteConfirm(null)
-        }}
+        onOpenChange={handleDeleteDialogOpenChange}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -197,12 +218,7 @@ export function BoardListPage() {
             <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               className={buttonVariants({ variant: 'destructive' })}
-              onClick={() => {
-                if (showDeleteConfirm) {
-                  deleteBoard.mutate(showDeleteConfirm.id)
-                  setShowDeleteConfirm(null)
-                }
-              }}
+              onClick={handleConfirmDeleteBoard}
             >
               {t('common.delete')}
             </AlertDialogAction>

@@ -31,16 +31,8 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { COLUMN_COLORS } from '@/pages/board-detail/components/styleConfig'
 import type { Column } from '@/types'
-
-const COLUMN_COLORS = [
-  'bg-red-500',
-  'bg-orange-500',
-  'bg-blue-500',
-  'bg-green-500',
-  'bg-blue-500',
-  'bg-purple-500',
-]
 
 interface ColumnHeaderProps {
   boardId: number
@@ -69,6 +61,35 @@ export function ColumnHeader(props: ColumnHeaderProps) {
     setEditing(false)
   }
 
+  const handleEscapeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      reset()
+      setEditing(false)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    reset()
+    setEditing(false)
+  }
+
+  const handleSelectRename = () => {
+    reset({ name: column.name })
+    setEditing(true)
+  }
+
+  const handleSelectAutoPin = () => handleUpdateColumn({ autoPin: !column.autoPin })
+
+  const handleSelectDelete = (e: Event) => {
+    e.preventDefault()
+    setDeleteOpen(true)
+  }
+
+  const handleConfirmDelete = () => {
+    deleteColumn.mutate(column.id)
+    setDeleteOpen(false)
+  }
+
   return (
     <>
       <div className="flex items-center justify-between px-3 py-2">
@@ -84,12 +105,7 @@ export function ColumnHeader(props: ColumnHeaderProps) {
             >
               <Input
                 {...register('name')}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    reset()
-                    setEditing(false)
-                  }
-                }}
+                onKeyDown={handleEscapeKeyDown}
                 className="h-6 py-0 text-sm"
                 autoFocus
               />
@@ -98,10 +114,7 @@ export function ColumnHeader(props: ColumnHeaderProps) {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  reset()
-                  setEditing(false)
-                }}
+                onClick={handleCancelEdit}
                 className="text-gray-400"
               >
                 <X className="h-3.5 w-3.5" />
@@ -135,18 +148,11 @@ export function ColumnHeader(props: ColumnHeaderProps) {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem
-                onSelect={() => {
-                  reset({ name: column.name })
-                  setEditing(true)
-                }}
-              >
+              <DropdownMenuItem onSelect={handleSelectRename}>
                 <Pencil className="h-3.5 w-3.5" />
                 {t('column.rename')}
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => handleUpdateColumn({ autoPin: !column.autoPin })}
-              >
+              <DropdownMenuItem onSelect={handleSelectAutoPin}>
                 <Pin
                   className={cn(
                     'h-3.5 w-3.5',
@@ -157,10 +163,7 @@ export function ColumnHeader(props: ColumnHeaderProps) {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onSelect={(e) => {
-                  e.preventDefault()
-                  setDeleteOpen(true)
-                }}
+                onSelect={handleSelectDelete}
                 className="text-red-500 focus:text-red-500"
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -183,10 +186,7 @@ export function ColumnHeader(props: ColumnHeaderProps) {
             <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               className={buttonVariants({ variant: 'destructive' })}
-              onClick={() => {
-                deleteColumn.mutate(column.id)
-                setDeleteOpen(false)
-              }}
+              onClick={handleConfirmDelete}
             >
               {t('common.delete')}
             </AlertDialogAction>

@@ -27,10 +27,13 @@ export function AddColumnForm(props: AddColumnFormProps) {
     resolver: zodResolver(columnSchema),
   })
 
-  const handleAddColumn = async (data: NewColumnForm) => {
-    await createColumn.mutateAsync(data)
-    resetCol()
-    setAddingColumn(false)
+  const handleAddColumn = (data: NewColumnForm) => {
+    createColumn.mutate(data, {
+      onSuccess: () => {
+        resetCol()
+        setAddingColumn(false)
+      },
+    })
   }
 
   const handleCancel = () => {

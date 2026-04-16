@@ -29,6 +29,13 @@ export function AddCardForm(props: AddCardFormProps) {
 
   const titleValue = watch('title')
 
+  const handleOpen = () => setOpen(true)
+
+  const handleCancel = () => {
+    reset()
+    setOpen(false)
+  }
+
   const onSubmit = (form: NewCardForm) => {
     createCard.mutate({ columnId, form })
     reset()
@@ -54,7 +61,7 @@ export function AddCardForm(props: AddCardFormProps) {
   if (!open) {
     return (
       <button
-        onClick={() => setOpen(true)}
+        onClick={handleOpen}
         className="flex w-full items-center gap-1 rounded px-2 py-1.5 text-left text-sm text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
       >
         <Plus className="h-4 w-4" />
@@ -81,10 +88,7 @@ export function AddCardForm(props: AddCardFormProps) {
             type="button"
             size="icon"
             variant="ghost"
-            onClick={() => {
-              reset()
-              setOpen(false)
-            }}
+            onClick={handleCancel}
             className="h-7 w-7"
           >
             <X className="h-3 w-3" />

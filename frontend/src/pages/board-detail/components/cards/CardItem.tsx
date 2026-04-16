@@ -106,20 +106,54 @@ export function CardItem(props: CardItemProps) {
     setShowMenu(true)
   }
 
-  const onSubmit = async (form: EditCardForm) => {
-    await updateCard.mutateAsync({
-      id: card.id,
-      form: {
-        title: form.title,
-        description: form.description,
+  const onSubmit = (form: EditCardForm) => {
+    updateCard.mutate(
+      {
+        id: card.id,
+        form: {
+          title: form.title,
+          description: form.description,
+        },
       },
-    })
-    setShowMenu(false)
+      { onSuccess: () => setShowMenu(false) },
+    )
   }
 
   const handleCancel = () => {
     reset()
     setShowMenu(false)
+  }
+
+  const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isDragging) return
+    if (showMenu) {
+      handleCancel()
+      return
+    }
+    if ((e.target as HTMLElement).closest('[data-card-actions]')) return
+    setShowDetail(true)
+  }
+
+  const handleContextMenu = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    openMenu()
+  }
+
+  const handleEditKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape') {
+      handleCancel()
+    }
+  }
+
+  const handleEditButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation()
+    openMenu()
+  }
+
+  const handleDetailClose = () => setShowDetail(false)
+
+  const handlePointerDown = (e: React.UIEvent) => {
+    e.stopPropagation()
   }
 
   return (
@@ -132,19 +166,8 @@ export function CardItem(props: CardItemProps) {
         style={style}
         {...attributes}
         {...listeners}
-        onClick={(e) => {
-          if (isDragging) return
-          if (showMenu) {
-            handleCancel()
-            return
-          }
-          if ((e.target as HTMLElement).closest('[data-card-actions]')) return
-          setShowDetail(true)
-        }}
-        onContextMenu={(e) => {
-          e.preventDefault()
-          openMenu()
-        }}
+        onClick={handleCardClick}
+        onContextMenu={handleContextMenu}
         className={cn(
           'rounded-lg bg-white p-3 shadow-sm dark:bg-gray-700',
           card.isPinned
@@ -159,14 +182,12 @@ export function CardItem(props: CardItemProps) {
         {showMenu ? (
           <form
             onSubmit={handleSubmit(onSubmit)}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => e.stopPropagation()}
+            onPointerDown={handlePointerDown}
+            onClick={handlePointerDown}
           >
             <Textarea
               {...register('title')}
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') handleCancel()
-              }}
+              onKeyDown={handleEditKeyDown}
               className="mb-2 resize-none font-medium"
               rows={3}
               autoFocus
@@ -297,15 +318,12 @@ export function CardItem(props: CardItemProps) {
             <div
               data-card-actions
               className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100"
-              onPointerDown={(e) => e.stopPropagation()}
+              onPointerDown={handlePointerDown}
             >
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      openMenu()
-                    }}
+                    onClick={handleEditButtonClick}
                     className="p-0.5 text-gray-400 hover:text-blue-500"
                   >
                     <Pencil className="h-3.5 w-3.5" />
@@ -367,7 +385,7 @@ export function CardItem(props: CardItemProps) {
         <CardDetailDialog
           boardId={boardId}
           cardId={card.id}
-          onClose={() => setShowDetail(false)}
+          onClose={handleDetailClose}
         />
       )}
     </>

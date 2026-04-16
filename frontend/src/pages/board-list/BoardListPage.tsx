@@ -56,12 +56,13 @@ export function BoardListPage() {
     setCreating(false)
   }
 
-  if (isLoading)
+  if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50 text-gray-500 dark:bg-gray-900 dark:text-gray-400">
         {t('common.loading')}
       </div>
     )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 dark:bg-gray-900">

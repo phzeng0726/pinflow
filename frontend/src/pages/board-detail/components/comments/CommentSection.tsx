@@ -16,12 +16,6 @@ import { useTranslation } from 'react-i18next'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
-interface CommentSectionProps {
-  cardId: number
-  boardId: number
-  comments: Comment[]
-}
-
 interface CommentItemProps {
   comment: Comment
   onUpdate: (id: number, text: string) => void
@@ -146,11 +140,15 @@ function CommentItem({
   )
 }
 
-export function CommentSection({
-  cardId,
-  boardId,
-  comments,
-}: CommentSectionProps) {
+interface CommentSectionProps {
+  cardId: number
+  boardId: number
+  comments: Comment[]
+}
+
+export function CommentSection(props: CommentSectionProps) {
+  const { cardId, boardId, comments } = props
+
   const { t } = useTranslation()
   const [newText, setNewText] = useState('')
   const [isEditing, setIsEditing] = useState(false)

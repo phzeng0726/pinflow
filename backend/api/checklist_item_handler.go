@@ -72,6 +72,35 @@ func (h *ChecklistItemHandler) UpdateItem(c *gin.Context) {
 	c.JSON(http.StatusOK, service.ToChecklistItemResponse(*item))
 }
 
+// SyncChecklistItems godoc
+// @Summary     Sync all items of a checklist (smart diff)
+// @Tags        checklist-items
+// @Accept      json
+// @Produce     json
+// @Param       id path int true "Checklist ID"
+// @Param       body body dto.SyncChecklistItemsRequest true "Items to sync"
+// @Success     200 {object} dto.ChecklistResponse
+// @Failure     404 {object} map[string]string
+// @Failure     422 {object} map[string]string
+// @Router      /checklists/{id}/items [put]
+func (h *ChecklistItemHandler) SyncItems(c *gin.Context) {
+	checklistID, err := parseUintParam(c, "id")
+	if err != nil {
+		return
+	}
+	var req dto.SyncChecklistItemsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+	cl, err := h.svc.SyncItems(checklistID, req.Items)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, service.ToChecklistResponse(*cl))
+}
+
 // DeleteChecklistItem godoc
 // @Summary     Delete a checklist item
 // @Tags        checklist-items

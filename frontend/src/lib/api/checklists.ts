@@ -51,3 +51,14 @@ export const deleteChecklistItem = async (id: number) => {
   const res = await client.delete(`/checklist-items/${id}`)
   return res.data
 }
+
+export const syncChecklistItems = async (
+  checklistId: number,
+  items: { text: string; completed: boolean }[],
+) => {
+  const res = await client.put<import('@/types').Checklist>(
+    `/checklists/${checklistId}/items`,
+    { items },
+  )
+  return res.data
+}

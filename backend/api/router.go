@@ -103,6 +103,7 @@ func NewRouter(
 			checklists.PATCH("/:id", checklistH.UpdateChecklist)
 			checklists.DELETE("/:id", checklistH.DeleteChecklist)
 			checklists.POST("/:id/items", checklistItemH.CreateItem)
+			checklists.PUT("/:id/items", checklistItemH.SyncItems)
 		}
 
 		checklistItems := v1.Group("/checklist-items")

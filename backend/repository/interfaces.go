@@ -67,6 +67,7 @@ type ChecklistItemRepository interface {
 	MaxPositionByChecklist(checklistID uint) (float64, error)
 	Update(item *model.ChecklistItem) error
 	Delete(id uint) error
+	SyncItems(checklistID uint, items []model.ChecklistItem) ([]model.ChecklistItem, error)
 }
 
 type CommentRepository interface {

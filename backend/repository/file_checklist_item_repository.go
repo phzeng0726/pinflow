@@ -96,6 +96,55 @@ func (r *fileChecklistItemRepository) Update(item *model.ChecklistItem) error {
 	return store.ErrNotFound
 }
 
+func (r *fileChecklistItemRepository) SyncItems(checklistID uint, items []model.ChecklistItem) ([]model.ChecklistItem, error) {
+	cardID, ok := r.s.CardIDForChecklist(checklistID)
+	if !ok {
+		return nil, store.ErrNotFound
+	}
+	card, err := r.s.GetCard(cardID)
+	if err != nil {
+		return nil, err
+	}
+
+	for ci, cl := range card.Checklists {
+		if cl.ID != checklistID {
+			continue
+		}
+
+		// Build textPool: text → queue of existing items with that text
+		type queue []model.ChecklistItem
+		textPool := make(map[string]queue)
+		for _, existing := range cl.Items {
+			textPool[existing.Text] = append(textPool[existing.Text], existing)
+		}
+
+		newItems := make([]model.ChecklistItem, 0, len(items))
+		for i, incoming := range items {
+			var item model.ChecklistItem
+			if q, found := textPool[incoming.Text]; found && len(q) > 0 {
+				// Reuse existing ID
+				item = q[0]
+				textPool[incoming.Text] = q[1:]
+			} else {
+				// New item
+				item.ID = r.s.NextID("checklist_item")
+				item.ChecklistID = checklistID
+			}
+			item.Text = incoming.Text
+			item.Completed = incoming.Completed
+			item.Position = float64(i + 1)
+			newItems = append(newItems, item)
+		}
+
+		card.Checklists[ci].Items = newItems
+		if err := r.s.UpdateCard(card); err != nil {
+			return nil, err
+		}
+		return newItems, nil
+	}
+	return nil, store.ErrNotFound
+}
+
 func (r *fileChecklistItemRepository) Delete(id uint) error {
 	cardID, ok := r.s.CardIDForChecklistItem(id)
 	if !ok {

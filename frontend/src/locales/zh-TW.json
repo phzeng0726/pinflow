@@ -139,7 +139,9 @@
     "cancel": "取消",
     "addChecklist": "新增清單",
     "addItemPlaceholder": "新增項目...",
-    "addItem": "新增項目"
+    "addItem": "新增項目",
+    "markdownMode": "切換至 Markdown 模式",
+    "uiMode": "切換至 UI 模式"
   },
   "comment": {
     "title": "留言",
@@ -231,7 +233,9 @@
       "listDeleteError": "刪除清單失敗",
       "itemCreateError": "新增項目失敗",
       "itemUpdateError": "更新項目失敗",
-      "itemDeleteError": "刪除項目失敗"
+      "itemDeleteError": "刪除項目失敗",
+      "itemsSynced": "清單項目已同步",
+      "itemsSyncError": "同步清單項目失敗"
     },
     "comment": {
       "createError": "新增留言失敗",

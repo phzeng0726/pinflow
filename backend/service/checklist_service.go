@@ -14,6 +14,7 @@ type ChecklistService interface {
 	CreateItem(checklistID uint, text string, position float64) (*model.ChecklistItem, error)
 	UpdateItem(id uint, req dto.UpdateChecklistItemRequest) (*model.ChecklistItem, error)
 	DeleteItem(id uint) error
+	SyncItems(checklistID uint, items []dto.SyncChecklistItemEntry) (*model.Checklist, error)
 }
 
 type checklistService struct {
@@ -122,6 +123,24 @@ func (s *checklistService) DeleteItem(id uint) error {
 		return err
 	}
 	return s.itemRepo.Delete(id)
+}
+
+func (s *checklistService) SyncItems(checklistID uint, entries []dto.SyncChecklistItemEntry) (*model.Checklist, error) {
+	if _, err := s.clRepo.FindByID(checklistID); err != nil {
+		return nil, err
+	}
+	items := make([]model.ChecklistItem, len(entries))
+	for i, e := range entries {
+		items[i] = model.ChecklistItem{
+			ChecklistID: checklistID,
+			Text:        e.Text,
+			Completed:   e.Completed,
+		}
+	}
+	if _, err := s.itemRepo.SyncItems(checklistID, items); err != nil {
+		return nil, err
+	}
+	return s.clRepo.FindByID(checklistID)
 }
 
 func ToChecklistItemResponse(item model.ChecklistItem) dto.ChecklistItemResponse {

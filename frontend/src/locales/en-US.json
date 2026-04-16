@@ -139,7 +139,9 @@
     "cancel": "Cancel",
     "addChecklist": "Add Checklist",
     "addItemPlaceholder": "Add item...",
-    "addItem": "Add Item"
+    "addItem": "Add Item",
+    "markdownMode": "Switch to Markdown mode",
+    "uiMode": "Switch to UI mode"
   },
   "comment": {
     "title": "Comments",
@@ -231,7 +233,9 @@
       "listDeleteError": "Failed to delete checklist",
       "itemCreateError": "Failed to add item",
       "itemUpdateError": "Failed to update item",
-      "itemDeleteError": "Failed to delete item"
+      "itemDeleteError": "Failed to delete item",
+      "itemsSynced": "Checklist items synced",
+      "itemsSyncError": "Failed to sync checklist items"
     },
     "comment": {
       "createError": "Failed to add comment",

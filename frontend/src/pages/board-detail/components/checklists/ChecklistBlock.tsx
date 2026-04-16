@@ -6,7 +6,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { GripVertical, Plus, Trash2 } from 'lucide-react'
+import { Code2, GripVertical, ListChecks, Plus, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -22,6 +22,7 @@ import { useChecklistDnd } from '@/hooks/checklist/useChecklistDnd'
 import { useChecklistMutations } from '@/hooks/checklist/mutations/useChecklistMutations'
 import { createChecklistItemSchema, type ChecklistItemFormData } from '@/lib/schemas'
 import type { Checklist } from '@/types'
+import { ChecklistMarkdownEditor } from './ChecklistMarkdownEditor'
 import { SortableChecklistItem } from './SortableChecklistItem'
 
 interface ChecklistBlockProps {
@@ -35,6 +36,7 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
   const { t } = useTranslation()
   const checklistItemSchema = useMemo(() => createChecklistItemSchema(t), [t])
 
+  const [markdownMode, setMarkdownMode] = useState(false)
   const [showItemForm, setShowItemForm] = useState(false)
   const [editingItemId, setEditingItemId] = useState<number | null>(null)
   const [editItemValue, setEditItemValue] = useState('')
@@ -69,6 +71,7 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
     createChecklistItem: createItem,
     updateChecklistItem: updateItem,
     deleteChecklistItem: deleteItem,
+    syncChecklistItems,
   } = useChecklistMutations(boardId, cardId)
 
   const handleTitleSave = () => {
@@ -189,6 +192,19 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
           )}
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            title={t(markdownMode ? 'checklist.uiMode' : 'checklist.markdownMode')}
+            className={`h-6 w-6 ${markdownMode ? 'text-blue-500' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+            onClick={() => setMarkdownMode((v) => !v)}
+          >
+            {markdownMode ? (
+              <ListChecks className="h-3.5 w-3.5" />
+            ) : (
+              <Code2 className="h-3.5 w-3.5" />
+            )}
+          </Button>
           <span className="text-xs text-gray-400">
             {completedCount}/{total}
           </span>
@@ -229,80 +245,95 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
         </div>
       </div>
       {total > 0 && <Progress value={progress} className="mb-3 h-1.5" />}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleChecklistDragEnd}
-      >
-        <SortableContext
-          items={sortedItems.map((item) => `checklist-item-${item.id}`)}
-          strategy={verticalListSortingStrategy}
-        >
-          <div className="space-y-1.5">
-            {sortedItems.map((item) => {
-              const handleEditStart = () => {
-                setEditingItemId(item.id)
-                setEditItemValue(item.text)
-              }
-              const handleEditSave = () => handleItemTextSave(item.id, item.text)
-              const handleEditCancel = () => {
-                setEditItemValue(item.text)
-                setEditingItemId(null)
-              }
-              const handleToggle = (checked: boolean) =>
-                updateItem.mutate({ id: item.id, data: { completed: checked } })
-              const handleDelete = () => deleteItem.mutate(item.id)
-              return (
-                <SortableChecklistItem
-                  key={item.id}
-                  item={item}
-                  isEditing={editingItemId === item.id}
-                  editItemValue={editItemValue}
-                  onEditStart={handleEditStart}
-                  onEditChange={setEditItemValue}
-                  onEditSave={handleEditSave}
-                  onEditCancel={handleEditCancel}
-                  onToggle={handleToggle}
-                  onDelete={handleDelete}
-                />
-              )
-            })}
-          </div>
-        </SortableContext>
-      </DndContext>
-      {showItemForm ? (
-        <form
-          onSubmit={newItemForm.handleSubmit(handleAddItem)}
-          className="mt-2 flex gap-2"
-        >
-          <Input
-            {...newItemForm.register('text')}
-            onKeyDown={handleItemInputKeyDown}
-            placeholder={t('checklist.addItemPlaceholder')}
-            className="h-7 flex-1 text-sm"
-            autoFocus
-          />
-          <Button type="submit" className="h-7 text-xs">
-            {t('checklist.add')}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={handleCancelItemForm}
-            className="h-7 text-xs"
-          >
-            {t('checklist.cancel')}
-          </Button>
-        </form>
+      {markdownMode ? (
+        <ChecklistMarkdownEditor
+          items={sortedItems}
+          onSave={(items) => {
+            syncChecklistItems.mutate(
+              { checklistId: checklist.id, items },
+              { onSuccess: () => setMarkdownMode(false) },
+            )
+          }}
+          onCancel={() => setMarkdownMode(false)}
+        />
       ) : (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleShowItemForm}
-          className="mt-2 h-7 px-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-        >
-          <Plus className="mr-1 h-3 w-3" /> {t('checklist.addItem')}
-        </Button>
+        <>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleChecklistDragEnd}
+          >
+            <SortableContext
+              items={sortedItems.map((item) => `checklist-item-${item.id}`)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-1.5">
+                {sortedItems.map((item) => {
+                  const handleEditStart = () => {
+                    setEditingItemId(item.id)
+                    setEditItemValue(item.text)
+                  }
+                  const handleEditSave = () => handleItemTextSave(item.id, item.text)
+                  const handleEditCancel = () => {
+                    setEditItemValue(item.text)
+                    setEditingItemId(null)
+                  }
+                  const handleToggle = (checked: boolean) =>
+                    updateItem.mutate({ id: item.id, data: { completed: checked } })
+                  const handleDelete = () => deleteItem.mutate(item.id)
+                  return (
+                    <SortableChecklistItem
+                      key={item.id}
+                      item={item}
+                      isEditing={editingItemId === item.id}
+                      editItemValue={editItemValue}
+                      onEditStart={handleEditStart}
+                      onEditChange={setEditItemValue}
+                      onEditSave={handleEditSave}
+                      onEditCancel={handleEditCancel}
+                      onToggle={handleToggle}
+                      onDelete={handleDelete}
+                    />
+                  )
+                })}
+              </div>
+            </SortableContext>
+          </DndContext>
+          {showItemForm ? (
+            <form
+              onSubmit={newItemForm.handleSubmit(handleAddItem)}
+              className="mt-2 flex gap-2"
+            >
+              <Input
+                {...newItemForm.register('text')}
+                onKeyDown={handleItemInputKeyDown}
+                placeholder={t('checklist.addItemPlaceholder')}
+                className="h-7 flex-1 text-sm"
+                autoFocus
+              />
+              <Button type="submit" className="h-7 text-xs">
+                {t('checklist.add')}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleCancelItemForm}
+                className="h-7 text-xs"
+              >
+                {t('checklist.cancel')}
+              </Button>
+            </form>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleShowItemForm}
+              className="mt-2 h-7 px-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            >
+              <Plus className="mr-1 h-3 w-3" /> {t('checklist.addItem')}
+            </Button>
+          )}
+        </>
       )}
     </div>
   )

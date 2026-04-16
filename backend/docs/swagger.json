@@ -1172,6 +1172,62 @@
             }
         },
         "/checklists/{id}/items": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "checklist-items"
+                ],
+                "summary": "Sync all items of a checklist (smart diff)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Checklist ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Items to sync",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SyncChecklistItemsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ChecklistResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "consumes": [
                     "application/json"
@@ -2025,6 +2081,36 @@
                 },
                 "title": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.SyncChecklistItemEntry": {
+            "type": "object",
+            "required": [
+                "text"
+            ],
+            "properties": {
+                "completed": {
+                    "type": "boolean"
+                },
+                "text": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "minLength": 1
+                }
+            }
+        },
+        "dto.SyncChecklistItemsRequest": {
+            "type": "object",
+            "required": [
+                "items"
+            ],
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.SyncChecklistItemEntry"
+                    }
                 }
             }
         },

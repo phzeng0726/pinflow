@@ -81,6 +81,21 @@ export function useChecklistMutations(boardId: number, cardId: number) {
     onError: () => toast.error(t('toast.checklist.itemDeleteError')),
   })
 
+  const syncItems = useMutation({
+    mutationFn: ({
+      checklistId,
+      items,
+    }: {
+      checklistId: number
+      items: { text: string; completed: boolean }[]
+    }) => api.syncChecklistItems(checklistId, items),
+    onSuccess: async () => {
+      await Promise.all([invalidateCardDetail(), invalidateBoardDetail()])
+      toast.success(t('toast.checklist.itemsSynced'))
+    },
+    onError: () => toast.error(t('toast.checklist.itemsSyncError')),
+  })
+
   return {
     createChecklist: createList,
     updateChecklist: updateList,
@@ -88,5 +103,6 @@ export function useChecklistMutations(boardId: number, cardId: number) {
     createChecklistItem: createItem,
     updateChecklistItem: updateItem,
     deleteChecklistItem: deleteItem,
+    syncChecklistItems: syncItems,
   }
 }

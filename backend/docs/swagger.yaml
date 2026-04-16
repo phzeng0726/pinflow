@@ -259,6 +259,26 @@ definitions:
       title:
         type: string
     type: object
+  dto.SyncChecklistItemEntry:
+    properties:
+      completed:
+        type: boolean
+      text:
+        maxLength: 500
+        minLength: 1
+        type: string
+    required:
+    - text
+    type: object
+  dto.SyncChecklistItemsRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.SyncChecklistItemEntry'
+        type: array
+    required:
+    - items
+    type: object
   dto.TagResponse:
     properties:
       color:
@@ -1284,6 +1304,43 @@ paths:
               type: string
             type: object
       summary: Add an item to a checklist
+      tags:
+      - checklist-items
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Checklist ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Items to sync
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SyncChecklistItemsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ChecklistResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Sync all items of a checklist (smart diff)
       tags:
       - checklist-items
   /columns/{id}:

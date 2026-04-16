@@ -1,3 +1,18 @@
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Progress } from '@/components/ui/progress'
+import { useChecklistMutations } from '@/hooks/checklist/mutations/useChecklistMutations'
+import { useChecklistItemDnd } from '@/hooks/checklist/useChecklistItemDnd'
+import {
+  createChecklistItemSchema,
+  type ChecklistItemFormData,
+} from '@/lib/schemas'
+import type { Checklist } from '@/types'
 import { DndContext, closestCenter } from '@dnd-kit/core'
 import {
   SortableContext,
@@ -10,18 +25,6 @@ import { Code2, GripVertical, ListChecks, Plus, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { Progress } from '@/components/ui/progress'
-import { useChecklistDnd } from '@/hooks/checklist/useChecklistDnd'
-import { useChecklistMutations } from '@/hooks/checklist/mutations/useChecklistMutations'
-import { createChecklistItemSchema, type ChecklistItemFormData } from '@/lib/schemas'
-import type { Checklist } from '@/types'
 import { ChecklistMarkdownEditor } from './ChecklistMarkdownEditor'
 import { SortableChecklistItem } from './SortableChecklistItem'
 
@@ -51,19 +54,16 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: `checklist-${checklist.id}` })
+  } = useSortable({
+    id: `checklist-${checklist.id}`,
+    data: { type: 'checklist', checklist },
+  })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : undefined,
+    opacity: isDragging ? 0.4 : 1,
   }
-
-  const { sensors, handleChecklistDragEnd } = useChecklistDnd({
-    boardId,
-    cardId,
-    checklists: [checklist],
-  })
 
   const {
     updateChecklist,
@@ -72,7 +72,20 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
     updateChecklistItem: updateItem,
     deleteChecklistItem: deleteItem,
     syncChecklistItems,
+    moveChecklistItem,
   } = useChecklistMutations(boardId, cardId)
+
+  const { sensors, handleDragStart, handleDragEnd } =
+    useChecklistItemDnd({
+      boardId,
+      cardId,
+      checklist,
+      moveMutate: moveChecklistItem.mutate,
+    })
+
+  const sortedItems = useMemo(() => {
+    return [...checklist.items].sort((a, b) => a.position - b.position)
+  }, [checklist.items])
 
   const handleTitleSave = () => {
     const trimmed = titleValue.trim()
@@ -153,10 +166,6 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
 
   const handleShowItemForm = () => setShowItemForm(true)
 
-  const sortedItems = [...(checklist.items ?? [])].sort(
-    (a, b) => a.position - b.position,
-  )
-
   return (
     <div
       ref={setNodeRef}
@@ -195,7 +204,9 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
           <Button
             variant="ghost"
             size="icon"
-            title={t(markdownMode ? 'checklist.uiMode' : 'checklist.markdownMode')}
+            title={t(
+              markdownMode ? 'checklist.uiMode' : 'checklist.markdownMode',
+            )}
             className={`h-6 w-6 ${markdownMode ? 'text-blue-500' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
             onClick={() => setMarkdownMode((v) => !v)}
           >
@@ -259,9 +270,11 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
       ) : (
         <>
           <DndContext
+            id={`checklist-items-dnd-${checklist.id}`}
             sensors={sensors}
             collisionDetection={closestCenter}
-            onDragEnd={handleChecklistDragEnd}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
           >
             <SortableContext
               items={sortedItems.map((item) => `checklist-item-${item.id}`)}
@@ -273,13 +286,17 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
                     setEditingItemId(item.id)
                     setEditItemValue(item.text)
                   }
-                  const handleEditSave = () => handleItemTextSave(item.id, item.text)
+                  const handleEditSave = () =>
+                    handleItemTextSave(item.id, item.text)
                   const handleEditCancel = () => {
                     setEditItemValue(item.text)
                     setEditingItemId(null)
                   }
                   const handleToggle = (checked: boolean) =>
-                    updateItem.mutate({ id: item.id, data: { completed: checked } })
+                    updateItem.mutate({
+                      id: item.id,
+                      data: { completed: checked },
+                    })
                   const handleDelete = () => deleteItem.mutate(item.id)
                   return (
                     <SortableChecklistItem

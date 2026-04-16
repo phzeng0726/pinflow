@@ -1,11 +1,20 @@
-import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
+import {
+  defaultAnimateLayoutChanges,
+  useSortable,
+  type AnimateLayoutChanges,
+} from '@dnd-kit/sortable'
+
+const animateLayoutChanges: AnimateLayoutChanges = (args) => {
+  if (args.wasDragging) return false
+  return defaultAnimateLayoutChanges(args)
+}
+import { CSS } from '@dnd-kit/utilities'
+import { GripVertical, X } from 'lucide-react'
 
 export interface SortableChecklistItemProps {
   item: { id: number; text: string; completed: boolean; position: number }
@@ -39,12 +48,16 @@ export function SortableChecklistItem(props: SortableChecklistItemProps) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: `checklist-item-${item.id}` })
+  } = useSortable({
+    id: `checklist-item-${item.id}`,
+    data: { type: 'checklist-item', item },
+    animateLayoutChanges,
+  })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : undefined,
+    opacity: isDragging ? 0.4 : 1,
   }
 
   const handleToggle = (checked: boolean | 'indeterminate') => {
@@ -79,10 +92,7 @@ export function SortableChecklistItem(props: SortableChecklistItemProps) {
       >
         <GripVertical className="h-3.5 w-3.5" />
       </button>
-      <Checkbox
-        checked={item.completed}
-        onCheckedChange={handleToggle}
-      />
+      <Checkbox checked={item.completed} onCheckedChange={handleToggle} />
       {isEditing ? (
         <Input
           value={editItemValue}

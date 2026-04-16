@@ -63,11 +63,8 @@ export function BoardPage() {
   const {
     sensors,
     activeCard,
-    activeCardDndId,
     activeColumn,
-    overId,
     handleDragStart,
-    handleDragOver,
     handleDragEnd,
   } = useBoardDnd({
     boardId: id,
@@ -240,7 +237,7 @@ export function BoardPage() {
         <DndContext
           sensors={sensors}
           onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
+
           onDragEnd={handleDragEnd}
         >
           <SortableContext
@@ -253,8 +250,6 @@ export function BoardPage() {
                   key={col.id}
                   boardId={id}
                   column={col}
-                  overId={overId}
-                  activeCardDndId={activeCardDndId}
                 />
               ))}
 

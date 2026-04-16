@@ -3,7 +3,6 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
-  type DragOverEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
 import { useQueryClient } from '@tanstack/react-query'
@@ -35,9 +34,7 @@ export function useBoardDnd(params: UseBoardDndParams) {
 
   const qc = useQueryClient()
   const [activeCard, setActiveCard] = useState<Card | null>(null)
-  const [activeCardDndId, setActiveCardDndId] = useState<string | null>(null)
   const [activeColumn, setActiveColumn] = useState<Column | null>(null)
-  const [overId, setOverId] = useState<string | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -53,21 +50,14 @@ export function useBoardDnd(params: UseBoardDndParams) {
     const data = e.active.data.current
     if (data?.type === 'card') {
       setActiveCard(data.card)
-      setActiveCardDndId(`card-${data.card.id}`)
     } else if (data?.type === 'column') {
       setActiveColumn(data.column)
     }
   }
 
-  const handleDragOver = (e: DragOverEvent) => {
-    setOverId(e.over ? String(e.over.id) : null)
-  }
-
   const handleDragEnd = (e: DragEndEvent) => {
     setActiveCard(null)
-    setActiveCardDndId(null)
     setActiveColumn(null)
-    setOverId(null)
 
     const { active, over } = e
     if (!over || active.id === over.id) return
@@ -134,8 +124,22 @@ export function useBoardDnd(params: UseBoardDndParams) {
     const overIdx = overCardId
       ? sorted.findIndex((c) => c.id === overCardId)
       : sorted.length
-    const before = sorted[overIdx - 1]?.position ?? null
-    const after = sorted[overIdx]?.position ?? null
+
+    // Determine insert position based on drag direction
+    let insertIdx: number
+    if (overCardId === null) {
+      // Dropped on column drop zone → append at end
+      insertIdx = sorted.length
+    } else {
+      const activeIdx = sorted.findIndex((c) => c.id === dragged.id)
+      // Same column: if dragging down, insert AFTER over card; if dragging up, insert BEFORE
+      // Cross column: activeIdx === -1, insert BEFORE the over card
+      insertIdx =
+        activeIdx !== -1 && activeIdx < overIdx ? overIdx + 1 : overIdx
+    }
+
+    const before = sorted[insertIdx - 1]?.position ?? null
+    const after = sorted[insertIdx]?.position ?? null
     const position = midPosition(before, after)
 
     // Synchronous cache update before mutate — prevents flicker
@@ -165,11 +169,8 @@ export function useBoardDnd(params: UseBoardDndParams) {
   return {
     sensors,
     activeCard,
-    activeCardDndId,
     activeColumn,
-    overId,
     handleDragStart,
-    handleDragOver,
     handleDragEnd,
   }
 }

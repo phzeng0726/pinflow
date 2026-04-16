@@ -1,8 +1,8 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
-import * as api from '@/lib/api'
 import { queryKeys } from '@/hooks/queryKeys'
+import * as api from '@/lib/api'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 
 export function useChecklistMutations(boardId: number, cardId: number) {
   const qc = useQueryClient()
@@ -96,6 +96,30 @@ export function useChecklistMutations(boardId: number, cardId: number) {
     onError: () => toast.error(t('toast.checklist.itemsSyncError')),
   })
 
+  const moveChecklist = useMutation({
+    mutationFn: ({ id, position }: { id: number; position: number }) =>
+      api.updateChecklist(id, { position }),
+    onSuccess: async () => {
+      await invalidateCardDetail()
+    },
+    onError: async () => {
+      await invalidateCardDetail()
+      toast.error(t('toast.checklist.listUpdateError'))
+    },
+  })
+
+  const moveChecklistItem = useMutation({
+    mutationFn: ({ id, position }: { id: number; position: number }) =>
+      api.updateChecklistItem(id, { position }),
+    onSuccess: async () => {
+      await invalidateCardDetail()
+    },
+    onError: async () => {
+      await invalidateCardDetail()
+      toast.error(t('toast.checklist.itemUpdateError'))
+    },
+  })
+
   return {
     createChecklist: createList,
     updateChecklist: updateList,
@@ -104,5 +128,7 @@ export function useChecklistMutations(boardId: number, cardId: number) {
     updateChecklistItem: updateItem,
     deleteChecklistItem: deleteItem,
     syncChecklistItems: syncItems,
+    moveChecklist,
+    moveChecklistItem,
   }
 }

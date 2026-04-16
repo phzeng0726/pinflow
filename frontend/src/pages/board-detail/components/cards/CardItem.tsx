@@ -7,6 +7,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
+import { formatCardDate, getScheduleUrgencyClass } from '@/lib/dates'
 import { createEditCardSchema, type EditCardForm } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import {
@@ -17,7 +18,6 @@ import type { Card } from '@/types'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { format, parseISO } from 'date-fns'
 import {
   Calendar,
   CheckSquare,
@@ -62,15 +62,7 @@ export function CardItem(props: CardItemProps) {
   const checklists = card.checklists ?? []
   const hasSchedule = !!card.startTime || !!card.endTime
 
-  const scheduleUrgencyClass = (() => {
-    const referenceIso = card.endTime ?? card.startTime
-    if (!referenceIso) return 'text-gray-400'
-    const diff =
-      (parseISO(referenceIso).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-    if (diff < 0) return 'text-red-500'
-    if (diff <= 3) return 'text-orange-500'
-    return 'text-gray-400'
-  })()
+  const scheduleUrgencyClass = getScheduleUrgencyClass(card.endTime, card.startTime)
   const totalItems = checklists.reduce(
     (n, cl) => n + (cl.totalCount ?? cl.items?.length ?? 0),
     0,
@@ -258,11 +250,11 @@ export function CardItem(props: CardItemProps) {
                     >
                       <Calendar className="h-3 w-3" />
                       {card.startTime
-                        ? format(parseISO(card.startTime), 'M/d')
-                        : format(parseISO(card.endTime!), 'M/d')}
+                        ? formatCardDate(card.startTime)
+                        : formatCardDate(card.endTime!)}
                       {card.startTime &&
                         card.endTime &&
-                        ` – ${format(parseISO(card.endTime), 'M/d')}`}
+                        ` – ${formatCardDate(card.endTime)}`}
                     </span>
                   )}
                   {totalItems > 0 && (

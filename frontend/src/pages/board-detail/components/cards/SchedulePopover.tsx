@@ -7,8 +7,8 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
+import { formatScheduleSummary } from '@/lib/dates'
 import type { Card } from '@/types'
-import { format, parseISO } from 'date-fns'
 import { Calendar, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -16,27 +16,6 @@ import { useTranslation } from 'react-i18next'
 interface SchedulePopoverProps {
   boardId: number
   card: Card
-}
-
-function formatShortDate(iso: string | null | undefined): string | null {
-  if (!iso) return null
-  try {
-    return format(parseISO(iso), 'yyyy/M/d')
-  } catch {
-    return null
-  }
-}
-
-function buildSummary(
-  startTime: string | null,
-  endTime: string | null,
-): string | null {
-  const start = formatShortDate(startTime)
-  const end = formatShortDate(endTime)
-  if (start && end) return `${start} → ${end}`
-  if (start) return `${start} →`
-  if (end) return `→ ${end}`
-  return null
 }
 
 export function SchedulePopover(props: SchedulePopoverProps) {
@@ -93,7 +72,10 @@ export function SchedulePopover(props: SchedulePopoverProps) {
     setError(null)
   }
 
-  const summary = buildSummary(card.startTime ?? null, card.endTime ?? null)
+  const summary = formatScheduleSummary(
+    card.startTime ?? null,
+    card.endTime ?? null,
+  )
   const hasAnyDate = !!(card.startTime || card.endTime)
 
   return (
@@ -122,36 +104,33 @@ export function SchedulePopover(props: SchedulePopoverProps) {
           </button>
         </div>
         <div className="px-3 py-3">
-        <div className="space-y-3">
-          <div>
-            <Label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
-              {t('schedule.startTime')}
-            </Label>
-            <DateTimePicker
-              value={startTime}
-              onChange={handleStartTimeChange}
-            />
+          <div className="space-y-3">
+            <div>
+              <Label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
+                {t('schedule.startTime')}
+              </Label>
+              <DateTimePicker
+                value={startTime}
+                onChange={handleStartTimeChange}
+              />
+            </div>
+            <div>
+              <Label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
+                {t('schedule.endTime')}
+              </Label>
+              <DateTimePicker value={endTime} onChange={handleEndTimeChange} />
+            </div>
+            {error && <p className="text-xs text-red-500">{error}</p>}
           </div>
-          <div>
-            <Label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
-              {t('schedule.endTime')}
-            </Label>
-            <DateTimePicker
-              value={endTime}
-              onChange={handleEndTimeChange}
-            />
-          </div>
-          {error && <p className="text-xs text-red-500">{error}</p>}
-        </div>
-        {hasAnyDate && (
-          <button
-            type="button"
-            onClick={handleClearAll}
-            className="mt-3 w-full rounded py-1 text-xs text-gray-500 hover:bg-gray-100 hover:text-red-500 dark:hover:bg-gray-700"
-          >
-            {t('schedule.clearAll')}
-          </button>
-        )}
+          {hasAnyDate && (
+            <button
+              type="button"
+              onClick={handleClearAll}
+              className="mt-3 w-full rounded py-1 text-xs text-gray-500 hover:bg-gray-100 hover:text-red-500 dark:hover:bg-gray-700"
+            >
+              {t('schedule.clearAll')}
+            </button>
+          )}
         </div>
       </PopoverContent>
     </Popover>

@@ -5,16 +5,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { formatRelativeTime } from '@/lib/dates'
 import { useLocaleStore } from '@/stores/localeStore'
 import type { Comment } from '@/types'
-import { formatDistanceToNow } from 'date-fns'
-import { enUS, zhTW } from 'date-fns/locale'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
-export interface CommentItemProps {
+interface CommentItemProps {
   comment: Comment
   onUpdate: (id: number, text: string) => void
   onDelete: (id: number) => void
@@ -60,11 +59,7 @@ export function CommentItem(props: CommentItemProps) {
     e.preventDefault()
   }
 
-  const dateFnsLocale = locale === 'zh-TW' ? zhTW : enUS
-  const relativeTime = formatDistanceToNow(new Date(comment.createdAt), {
-    addSuffix: true,
-    locale: dateFnsLocale,
-  })
+  const relativeTime = formatRelativeTime(comment.createdAt, locale)
 
   return (
     <div className="rounded border bg-white p-3 dark:border-gray-700 dark:bg-gray-800">

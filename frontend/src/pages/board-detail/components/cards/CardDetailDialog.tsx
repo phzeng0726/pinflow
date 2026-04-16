@@ -1,14 +1,14 @@
+import { MarkdownEditor } from '@/components/common/markdown-editor'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { MarkdownEditor } from '@/components/ui/markdown-editor'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { useCardDetail } from '@/hooks/card/queries/useCardDetail'
 import { useDependencyMutations } from '@/hooks/dependency/mutations/useDependencyMutations'
 import { useDependencies } from '@/hooks/dependency/queries/useDependencies'
 import { useTagMutations } from '@/hooks/tag/mutations/useTagMutations'
-import { type EditCardForm, editCardSchema } from '@/lib/schemas'
+import { type EditCardForm, createEditCardSchema } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import { ChecklistSection } from '@/pages/board-detail/components/checklists/ChecklistSection'
 import { CommentSection } from '@/pages/board-detail/components/comments/CommentSection'
@@ -19,7 +19,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Label } from '@radix-ui/react-label'
 import { Notebook, X } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { DependencyPopover } from './DependencyPopover'
@@ -41,6 +41,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
   const { detachTag } = useTagMutations(boardId)
   const [tagsOpen, setTagsOpen] = useState(false)
   const { t } = useTranslation()
+  const editCardSchema = useMemo(() => createEditCardSchema(t), [t])
   const { data: dependencies = [] } = useDependencies(cardId)
   const { deleteDep } = useDependencyMutations(cardId, boardId)
 
@@ -60,12 +61,13 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
   })
 
   // 統一處理提交邏輯
-  const onSubmit = async (form: EditCardForm) => {
+  const onSubmit = (form: EditCardForm) => {
     // 只有當內容真的有變動時才發送請求 (優化效能)
-    if (form.title === card?.title && form.description === card?.description)
+    if (form.title === card?.title && form.description === card?.description) {
       return
+    }
 
-    await updateCard.mutateAsync({
+    updateCard.mutate({
       id: cardId,
       form: {
         title: form.title,
@@ -81,14 +83,34 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
     handleSubmit(onSubmit)()
   }
 
-  if (isLoading) return <div>{t('common.loading')}</div>
-  if (!card) return <div>{t('cardDetail.dialogTitle')}</div>
+  const handleDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      onClose()
+    }
+  }
+
+  const handleOpenAutoFocus = (e: Event) => {
+    e.preventDefault()
+  }
+
+  const handleDescriptionChange = (md: string) => {
+    setValue('description', md, { shouldDirty: true })
+  }
+
+  const handleTagBadgeClick = () => setTagsOpen(true)
+
+  if (isLoading) {
+    return <div>{t('common.loading')}</div>
+  }
+  if (!card) {
+    return <div>{t('cardDetail.dialogTitle')}</div>
+  }
 
   return (
-    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={true} onOpenChange={handleDialogOpenChange}>
       <DialogContent
         className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden p-0"
-        onOpenAutoFocus={(e) => e.preventDefault()}
+        onOpenAutoFocus={handleOpenAutoFocus}
       >
         <DialogTitle className="sr-only">
           {t('cardDetail.dialogTitle')}
@@ -174,6 +196,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                           dep,
                           card.id,
                         )
+                        const handleDeleteDep = () => deleteDep.mutate(dep.id)
                         return (
                           <Badge
                             key={dep.id}
@@ -186,7 +209,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                             <span>{otherCardTitle}</span>
                             <button
                               type="button"
-                              onClick={() => deleteDep.mutate(dep.id)}
+                              onClick={handleDeleteDep}
                               className="ml-0.5 h-3 w-3 opacity-60 hover:opacity-100"
                             >
                               <X className="h-3 w-3" />
@@ -206,11 +229,15 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                     <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
                       {(card.tags ?? []).map((tag) => {
                         const colorCls = getTagColorClasses(tag.color)
+                        const handleDetachTag = (e: React.MouseEvent) => {
+                          e.stopPropagation()
+                          detachTag.mutate({ cardId: card.id, tagId: tag.id })
+                        }
                         return (
                           <Badge
                             key={tag.id}
                             variant={tag.color ? 'outline' : 'secondary'}
-                            onClick={() => setTagsOpen(true)}
+                            onClick={handleTagBadgeClick}
                             className={cn(
                               'flex h-8 cursor-pointer items-center gap-1 rounded px-2 py-0.5 text-xs',
                               tag.color &&
@@ -220,13 +247,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                             {tag.name}
                             <button
                               type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                detachTag.mutate({
-                                  cardId: card.id,
-                                  tagId: tag.id,
-                                })
-                              }}
+                              onClick={handleDetachTag}
                               className={cn(
                                 'ml-0.5 h-3 w-3 p-0 opacity-60 hover:opacity-100',
                                 tag.color ? 'text-white' : '',
@@ -256,9 +277,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
 
                   <MarkdownEditor
                     value={descriptionValue ?? ''}
-                    onChange={(md) =>
-                      setValue('description', md, { shouldDirty: true })
-                    }
+                    onChange={handleDescriptionChange}
                     onBlur={handleBlur}
                     placeholder={t('cardDetail.descPlaceholder')}
                   />

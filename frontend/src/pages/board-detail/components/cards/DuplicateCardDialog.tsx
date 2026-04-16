@@ -1,8 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import type { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -23,10 +22,8 @@ import {
 import { useBoardDetail } from '@/hooks/board/queries/useBoardDetail'
 import { useBoards } from '@/hooks/board/queries/useBoards'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
-import { duplicateCardSchema } from '@/lib/schemas'
+import { createDuplicateCardSchema, type DuplicateCardFormData } from '@/lib/schemas'
 import type { Card } from '@/types'
-
-type DuplicateCardForm = z.infer<typeof duplicateCardSchema>
 
 interface DuplicateCardDialogProps {
   card: Card
@@ -37,6 +34,7 @@ interface DuplicateCardDialogProps {
 export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
   const { card, boardId, onClose } = props
   const { t } = useTranslation()
+  const duplicateCardSchema = useMemo(() => createDuplicateCardSchema(t), [t])
 
   const tags = card.tags ?? []
   const checklists = card.checklists ?? []
@@ -52,7 +50,7 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
     watch,
     setValue,
     formState: { errors },
-  } = useForm<DuplicateCardForm>({
+  } = useForm<DuplicateCardFormData>({
     resolver: zodResolver(duplicateCardSchema),
     defaultValues: {
       title: card.title,
@@ -88,7 +86,13 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
     setValue('position', 0)
   }
 
-  const onSubmit = (data: DuplicateCardForm) => {
+  const handleWrapperClick = (e: React.MouseEvent) => e.stopPropagation()
+
+  const handleDialogOpenChange = (open: boolean) => {
+    if (!open) onClose()
+  }
+
+  const onSubmit = (data: DuplicateCardFormData) => {
     duplicate.mutate(
       {
         id: card.id,
@@ -108,12 +112,10 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
 
   return (
     // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-    <div onClick={(e) => e.stopPropagation()}>
+    <div onClick={handleWrapperClick}>
       <Dialog
         open={true}
-        onOpenChange={(open) => {
-          if (!open) onClose()
-        }}
+        onOpenChange={handleDialogOpenChange}
       >
         <DialogContent className="w-80 p-4">
           <DialogHeader className="mb-4">

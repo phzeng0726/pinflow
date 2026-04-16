@@ -1,12 +1,15 @@
-import { type NewOrEditBoardForm, newOrEditBoardSchema } from '@/lib/schemas'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate } from '@tanstack/react-router'
-import { LayoutDashboard, Moon, Plus, Sun, Trash2 } from 'lucide-react'
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { useTranslation } from 'react-i18next'
-import { LocaleToggle } from '@/components/LocaleToggle'
-import { Button } from '@/components/ui/button'
+import { LocaleToggle } from '@/components/common/LocaleToggle'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   Tooltip,
@@ -15,7 +18,14 @@ import {
 } from '@/components/ui/tooltip'
 import { useBoardMutations } from '@/hooks/board/mutations/useBoardMutations'
 import { useBoards } from '@/hooks/board/queries/useBoards'
+import { type NewOrEditBoardForm, createBoardSchema } from '@/lib/schemas'
 import { useThemeStore } from '@/stores/themeStore'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useNavigate } from '@tanstack/react-router'
+import { LayoutDashboard, Moon, Plus, Sun, Trash2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 
 export function BoardListPage() {
   const { data: boards = [], isLoading } = useBoards()
@@ -24,7 +34,12 @@ export function BoardListPage() {
   const theme = useThemeStore((s) => s.theme)
   const toggleTheme = useThemeStore((s) => s.toggle)
   const [creating, setCreating] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<{
+    id: number
+    name: string
+  } | null>(null)
   const { t } = useTranslation()
+  const boardSchema = useMemo(() => createBoardSchema(t), [t])
 
   const {
     register,
@@ -32,21 +47,45 @@ export function BoardListPage() {
     reset,
     formState: { errors },
   } = useForm<NewOrEditBoardForm>({
-    resolver: zodResolver(newOrEditBoardSchema),
+    resolver: zodResolver(boardSchema),
   })
 
-  const onSubmit = async (form: NewOrEditBoardForm) => {
-    await createBoard.mutateAsync(form)
+  const onSubmit = (form: NewOrEditBoardForm) => {
+    createBoard.mutate(form, {
+      onSuccess: () => {
+        reset()
+        setCreating(false)
+      },
+    })
+  }
+
+  const handleStartCreating = () => setCreating(true)
+
+  const handleCancelCreating = () => {
     reset()
     setCreating(false)
   }
 
-  if (isLoading)
+  const handleDeleteDialogOpenChange = (o: boolean) => {
+    if (!o) {
+      setShowDeleteConfirm(null)
+    }
+  }
+
+  const handleConfirmDeleteBoard = () => {
+    if (showDeleteConfirm) {
+      deleteBoard.mutate(showDeleteConfirm.id)
+      setShowDeleteConfirm(null)
+    }
+  }
+
+  if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50 text-gray-500 dark:bg-gray-900 dark:text-gray-400">
         {t('common.loading')}
       </div>
     )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 dark:bg-gray-900">
@@ -78,7 +117,7 @@ export function BoardListPage() {
               </TooltipContent>
             </Tooltip>
             <Button
-              onClick={() => setCreating(true)}
+              onClick={handleStartCreating}
               className="flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
@@ -103,10 +142,7 @@ export function BoardListPage() {
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => {
-                  reset()
-                  setCreating(false)
-                }}
+                onClick={handleCancelCreating}
               >
                 {t('common.cancel')}
               </Button>
@@ -118,40 +154,43 @@ export function BoardListPage() {
         )}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {boards.map((board) => (
-            <div
-              key={board.id}
-              className="group cursor-pointer rounded-lg border bg-white p-4 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
-              onClick={() =>
-                navigate({
-                  to: '/boards/$boardId',
-                  params: { boardId: String(board.id) },
-                })
-              }
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="font-semibold text-gray-900 dark:text-gray-100">
-                    {board.name}
-                  </h2>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    {t('board.columns', { count: board.columns?.length ?? 0 })}
-                  </p>
+          {boards.map((board) => {
+            const handleNavigateToBoard = () =>
+              navigate({
+                to: '/boards/$boardId',
+                params: { boardId: String(board.id) },
+              })
+            const handleRequestDeleteBoard = (e: React.MouseEvent) => {
+              e.stopPropagation()
+              setShowDeleteConfirm({ id: board.id, name: board.name })
+            }
+            return (
+              <div
+                key={board.id}
+                className="group cursor-pointer rounded-lg border bg-white p-4 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+                onClick={handleNavigateToBoard}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+                      {board.name}
+                    </h2>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {t('board.columns', { count: board.columns?.length ?? 0 })}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-gray-400 opacity-0 transition-all hover:text-red-500 group-hover:opacity-100"
+                    onClick={handleRequestDeleteBoard}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-gray-400 opacity-0 transition-all hover:text-red-500 group-hover:opacity-100"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    deleteBoard.mutate(board.id)
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
               </div>
-            </div>
-          ))}
+            )
+          })}
 
           {boards.length === 0 && !creating && (
             <div className="col-span-3 py-12 text-center text-gray-400 dark:text-gray-600">
@@ -161,6 +200,31 @@ export function BoardListPage() {
           )}
         </div>
       </div>
+
+      <AlertDialog
+        open={showDeleteConfirm !== null}
+        onOpenChange={handleDeleteDialogOpenChange}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('confirm.deleteBoardTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('confirm.deleteBoardDesc', {
+                name: showDeleteConfirm?.name ?? '',
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              className={buttonVariants({ variant: 'destructive' })}
+              onClick={handleConfirmDeleteBoard}
+            >
+              {t('common.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

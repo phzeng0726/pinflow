@@ -154,3 +154,18 @@ export const PRIORITIES: {
 export function getPriorityConfig(priority: number | null | undefined) {
   return PRIORITIES.find((p) => p.value === priority) ?? null
 }
+
+// ── Column Colors ─────────────────────────────────────────────────────────────
+
+export const COLUMN_COLORS = [
+  'bg-red-500',
+  'bg-orange-500',
+  'bg-blue-500',
+  'bg-green-500',
+  'bg-blue-500',
+  'bg-purple-500',
+]
+
+// ── Story Points ──────────────────────────────────────────────────────────────
+
+export const STORY_POINTS = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]

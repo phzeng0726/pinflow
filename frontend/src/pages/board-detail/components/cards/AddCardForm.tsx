@@ -1,12 +1,12 @@
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { newCardSchema, type NewCardForm } from '@/lib/schemas'
+import { createCardSchema, type NewCardForm } from '@/lib/schemas'
 
 interface AddCardFormProps {
   boardId: number
@@ -19,14 +19,22 @@ export function AddCardForm(props: AddCardFormProps) {
   const [open, setOpen] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
+  const cardSchema = useMemo(() => createCardSchema(t), [t])
 
   const { createCard } = useCardMutations(boardId)
 
   const { register, handleSubmit, reset, watch } = useForm<NewCardForm>({
-    resolver: zodResolver(newCardSchema),
+    resolver: zodResolver(cardSchema),
   })
 
   const titleValue = watch('title')
+
+  const handleOpen = () => setOpen(true)
+
+  const handleCancel = () => {
+    reset()
+    setOpen(false)
+  }
 
   const onSubmit = (form: NewCardForm) => {
     createCard.mutate({ columnId, form })
@@ -53,7 +61,7 @@ export function AddCardForm(props: AddCardFormProps) {
   if (!open) {
     return (
       <button
-        onClick={() => setOpen(true)}
+        onClick={handleOpen}
         className="flex w-full items-center gap-1 rounded px-2 py-1.5 text-left text-sm text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
       >
         <Plus className="h-4 w-4" />
@@ -80,10 +88,7 @@ export function AddCardForm(props: AddCardFormProps) {
             type="button"
             size="icon"
             variant="ghost"
-            onClick={() => {
-              reset()
-              setOpen(false)
-            }}
+            onClick={handleCancel}
             className="h-7 w-7"
           >
             <X className="h-3 w-3" />

@@ -1,6 +1,6 @@
-import { newColumnSchema, type NewColumnForm } from '@/lib/schemas'
+import { createColumnSchema, type NewColumnForm } from '@/lib/schemas'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { type Dispatch, type SetStateAction } from 'react'
+import { type Dispatch, type SetStateAction, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ interface AddColumnFormProps {
 export function AddColumnForm(props: AddColumnFormProps) {
   const { board, setAddingColumn } = props
   const { t } = useTranslation()
+  const columnSchema = useMemo(() => createColumnSchema(t), [t])
 
   const { createColumn } = useColumnMutations(board.id)
 
@@ -23,13 +24,16 @@ export function AddColumnForm(props: AddColumnFormProps) {
     handleSubmit: handleSubmitCol,
     reset: resetCol,
   } = useForm<NewColumnForm>({
-    resolver: zodResolver(newColumnSchema),
+    resolver: zodResolver(columnSchema),
   })
 
-  const handleAddColumn = async (data: NewColumnForm) => {
-    await createColumn.mutateAsync(data)
-    resetCol()
-    setAddingColumn(false)
+  const handleAddColumn = (data: NewColumnForm) => {
+    createColumn.mutate(data, {
+      onSuccess: () => {
+        resetCol()
+        setAddingColumn(false)
+      },
+    })
   }
 
   const handleCancel = () => {

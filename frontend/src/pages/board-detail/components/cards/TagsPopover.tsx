@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/popover'
 import { useTagMutations } from '@/hooks/tag/mutations/useTagMutations'
 import { useTags } from '@/hooks/tag/queries/useTags'
+import { createTagSchema } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import {
   TAG_COLORS,
@@ -15,7 +16,7 @@ import {
 } from '@/pages/board-detail/components/styleConfig'
 import type { Card, Tag } from '@/types'
 import { ArrowLeft, Check, Pencil, Plus, X } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 type View =
@@ -30,6 +31,8 @@ interface TagsPopoverProps {
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export function TagsPopover(props: TagsPopoverProps) {
   const {
@@ -47,14 +50,15 @@ export function TagsPopover(props: TagsPopoverProps) {
   const [editColor, setEditColor] = useState('')
 
   const { t } = useTranslation()
+  const tagSchema = useMemo(() => createTagSchema(t), [t])
   const { data: allTags = [] } = useTags()
   const { createTag, updateTag, deleteTag, attachTag, detachTag } =
     useTagMutations(boardId)
 
-  const cardTagIds = new Set(card.tags?.map((t) => t.id) ?? [])
+  const cardTagIds = new Set(card.tags?.map((tg) => tg.id) ?? [])
 
-  const filteredTags = allTags.filter((t) =>
-    t.name.toLowerCase().includes(search.toLowerCase()),
+  const filteredTags = allTags.filter((tg) =>
+    tg.name.toLowerCase().includes(search.toLowerCase()),
   )
 
   const handleOpenChange = (isOpen: boolean) => {
@@ -69,6 +73,8 @@ export function TagsPopover(props: TagsPopoverProps) {
     }
   }
 
+  const handleClose = () => handleOpenChange(false)
+
   const enterEdit = (tag: Tag) => {
     setEditName(tag.name)
     setEditColor(tag.color)
@@ -81,8 +87,152 @@ export function TagsPopover(props: TagsPopoverProps) {
     setView('create')
   }
 
-  // ── List View ──────────────────────────────────────────────────────────
-  const renderList = () => (
+  const handleSave = (mode: 'create' | 'edit', tag?: Tag) => {
+    if (mode === 'create') {
+      createTag.mutate(
+        { name: editName, color: editColor },
+        { onSuccess: () => setView('list') },
+      )
+    } else if (tag) {
+      updateTag.mutate(
+        { id: tag.id, data: { name: editName, color: editColor } },
+        { onSuccess: () => setView('list') },
+      )
+    }
+  }
+
+  const handleDelete = (tag: Tag) => {
+    deleteTag.mutate(tag.id, { onSuccess: () => setView('list') })
+  }
+
+  const handleBackToList = () => setView('list')
+  const handleCreateSave = () => handleSave('create')
+
+  const renderView = () => {
+    if (view === 'list') {
+      return (
+        <TagListView
+          search={search}
+          onSearchChange={setSearch}
+          filteredTags={filteredTags}
+          cardTagIds={cardTagIds}
+          card={card}
+          attachTag={attachTag}
+          detachTag={detachTag}
+          onClose={handleClose}
+          onEnterEdit={enterEdit}
+          onEnterCreate={enterCreate}
+        />
+      )
+    }
+    if (view === 'create') {
+      return (
+        <TagCreateEditView
+          mode="create"
+          editName={editName}
+          editColor={editColor}
+          onEditNameChange={setEditName}
+          onEditColorChange={setEditColor}
+          onBack={handleBackToList}
+          onClose={handleClose}
+          onSave={handleCreateSave}
+          onShowDeleteConfirm={undefined}
+          isSavePending={createTag.isPending}
+          isValid={tagSchema.safeParse({ name: editName, color: editColor }).success}
+        />
+      )
+    }
+    if (typeof view === 'object' && view.mode === 'edit') {
+      const tag = view.tag
+      const handleEditSave = () => handleSave('edit', tag)
+      const handleShowDeleteConfirm = () => setView({ mode: 'delete-confirm', tag })
+      return (
+        <TagCreateEditView
+          mode="edit"
+          tag={tag}
+          editName={editName}
+          editColor={editColor}
+          onEditNameChange={setEditName}
+          onEditColorChange={setEditColor}
+          onBack={handleBackToList}
+          onClose={handleClose}
+          onSave={handleEditSave}
+          onShowDeleteConfirm={handleShowDeleteConfirm}
+          isSavePending={updateTag.isPending}
+          isValid={tagSchema.safeParse({ name: editName, color: editColor }).success}
+        />
+      )
+    }
+    if (typeof view === 'object' && view.mode === 'delete-confirm') {
+      const tag = view.tag
+      const handleBackToEdit = () => setView({ mode: 'edit', tag })
+      const handleConfirmDelete = () => handleDelete(tag)
+      return (
+        <TagDeleteConfirmView
+          tag={tag}
+          onBack={handleBackToEdit}
+          onDelete={handleConfirmDelete}
+          isDeleting={deleteTag.isPending}
+        />
+      )
+    }
+    return null
+  }
+
+  return (
+    <Popover open={open} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-7 w-7 p-0"
+        >
+          <Plus className="h-3.5 w-3.5" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 p-0" align="start">
+        {renderView()}
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+// ─── TagListView ──────────────────────────────────────────────────────────────
+
+interface TagListViewProps {
+  search: string
+  onSearchChange: (v: string) => void
+  filteredTags: Tag[]
+  cardTagIds: Set<number>
+  card: Card
+  attachTag: ReturnType<typeof useTagMutations>['attachTag']
+  detachTag: ReturnType<typeof useTagMutations>['detachTag']
+  onClose: () => void
+  onEnterEdit: (tag: Tag) => void
+  onEnterCreate: () => void
+}
+
+function TagListView(props: TagListViewProps) {
+  const {
+    search,
+    onSearchChange,
+    filteredTags,
+    cardTagIds,
+    card,
+    attachTag,
+    detachTag,
+    onClose,
+    onEnterEdit,
+    onEnterCreate,
+  } = props
+  const { t } = useTranslation()
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onSearchChange(e.target.value)
+  }
+
+  return (
     <div className="flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between border-b px-3 py-2 dark:border-gray-700">
@@ -91,7 +241,7 @@ export function TagsPopover(props: TagsPopoverProps) {
         </span>
         <button
           type="button"
-          onClick={() => handleOpenChange(false)}
+          onClick={onClose}
           className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
         >
           <X className="h-4 w-4" />
@@ -102,7 +252,7 @@ export function TagsPopover(props: TagsPopoverProps) {
       <div className="px-3 py-2">
         <Input
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={handleSearchChange}
           placeholder={t('tags.searchPlaceholder')}
           className="h-7 text-xs"
           autoFocus
@@ -121,11 +271,16 @@ export function TagsPopover(props: TagsPopoverProps) {
             fn.mutate({ cardId: card.id, tagId: tag.id })
           }
 
+          const handleCheckboxChange = (checked: boolean | 'indeterminate') =>
+            toggleTag(checked === true)
+          const handleTagClick = () => toggleTag()
+          const handleEditClick = () => onEnterEdit(tag)
+
           return (
             <div key={tag.id} className="mb-1 flex items-center gap-2">
               <Checkbox
                 checked={attached}
-                onCheckedChange={(checked) => toggleTag(checked === true)}
+                onCheckedChange={handleCheckboxChange}
                 className="shrink-0"
               />
               <div
@@ -136,13 +291,13 @@ export function TagsPopover(props: TagsPopoverProps) {
                     : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
                   'cursor-pointer',
                 )}
-                onClick={() => toggleTag()}
+                onClick={handleTagClick}
               >
                 {tag.name}
               </div>
               <button
                 type="button"
-                onClick={() => enterEdit(tag)}
+                onClick={handleEditClick}
                 className="shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
               >
                 <Pencil className="h-3.5 w-3.5" />
@@ -156,7 +311,7 @@ export function TagsPopover(props: TagsPopoverProps) {
       <div className="border-t px-3 py-2 dark:border-gray-700">
         <button
           type="button"
-          onClick={enterCreate}
+          onClick={onEnterCreate}
           className="w-full text-left text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
         >
           {t('tags.createNew')}
@@ -164,71 +319,99 @@ export function TagsPopover(props: TagsPopoverProps) {
       </div>
     </div>
   )
+}
 
-  // ── Create / Edit View ─────────────────────────────────────────────────
-  const renderCreateEdit = (mode: 'create' | 'edit', tag?: Tag) => {
-    const title =
-      mode === 'create' ? t('tags.createTitle') : t('tags.editTitle')
-    const previewCls = editColor
-      ? getTagColorClasses(editColor).bg
-      : 'bg-gray-200 dark:bg-gray-600'
+// ─── TagCreateEditView ────────────────────────────────────────────────────────
 
-    const handleSave = async () => {
-      if (mode === 'create') {
-        await createTag.mutateAsync({ name: editName, color: editColor })
-        setView('list')
-      } else if (tag) {
-        await updateTag.mutateAsync({
-          id: tag.id,
-          data: { name: editName, color: editColor },
-        })
-        setView('list')
-      }
-    }
+interface TagCreateEditViewProps {
+  mode: 'create' | 'edit'
+  tag?: Tag
+  editName: string
+  editColor: string
+  onEditNameChange: (v: string) => void
+  onEditColorChange: (v: string) => void
+  onBack: () => void
+  onClose: () => void
+  onSave: () => void
+  onShowDeleteConfirm: (() => void) | undefined
+  isSavePending: boolean
+  isValid: boolean
+}
 
-    return (
-      <div className="flex flex-col">
-        {/* Header */}
-        <div className="flex items-center gap-2 border-b px-3 py-2 dark:border-gray-700">
-          <button
-            type="button"
-            onClick={() => setView('list')}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </button>
-          <span className="flex-1 text-sm font-semibold text-gray-700 dark:text-gray-300">
-            {title}
-          </span>
-          <button
-            type="button"
-            onClick={() => handleOpenChange(false)}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+function TagCreateEditView(props: TagCreateEditViewProps) {
+  const {
+    mode,
+    editName,
+    editColor,
+    onEditNameChange,
+    onEditColorChange,
+    onBack,
+    onClose,
+    onSave,
+    onShowDeleteConfirm,
+    isSavePending,
+    isValid,
+  } = props
+  const { t } = useTranslation()
 
-        <div className="space-y-3 px-3 py-2">
-          {/* Color preview bar */}
-          <div className={cn('h-8 w-full rounded', previewCls)} />
+  const title = mode === 'create' ? t('tags.createTitle') : t('tags.editTitle')
+  const previewCls = editColor
+    ? getTagColorClasses(editColor).bg
+    : 'bg-gray-200 dark:bg-gray-600'
 
-          {/* Title input */}
-          <Input
-            value={editName}
-            onChange={(e) => setEditName(e.target.value)}
-            placeholder={t('tags.namePlaceholder')}
-            className="h-7 text-xs"
-            autoFocus
-          />
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onEditNameChange(e.target.value)
+  }
 
-          {/* Color grid */}
-          <div className="grid grid-cols-5 gap-1.5">
-            {TAG_COLORS.map((color) => (
+  const handleRemoveColor = () => {
+    onEditColorChange('')
+  }
+
+  return (
+    <div className="flex flex-col">
+      {/* Header */}
+      <div className="flex items-center gap-2 border-b px-3 py-2 dark:border-gray-700">
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+        <span className="flex-1 text-sm font-semibold text-gray-700 dark:text-gray-300">
+          {title}
+        </span>
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="space-y-3 px-3 py-2">
+        {/* Color preview bar */}
+        <div className={cn('h-8 w-full rounded', previewCls)} />
+
+        {/* Title input */}
+        <Input
+          value={editName}
+          onChange={handleNameChange}
+          placeholder={t('tags.namePlaceholder')}
+          className="h-7 text-xs"
+          autoFocus
+        />
+
+        {/* Color grid */}
+        <div className="grid grid-cols-5 gap-1.5">
+          {TAG_COLORS.map((color) => {
+            const handleColorSelect = () => onEditColorChange(color.key)
+            return (
               <button
                 key={color.key}
                 type="button"
-                onClick={() => setEditColor(color.key)}
+                onClick={handleColorSelect}
                 className={cn(
                   'flex h-6 items-center justify-center rounded',
                   color.bg,
@@ -249,62 +432,73 @@ export function TagsPopover(props: TagsPopoverProps) {
                   />
                 )}
               </button>
-            ))}
-          </div>
+            )
+          })}
+        </div>
 
-          {/* Remove color */}
-          <button
-            type="button"
-            onClick={() => setEditColor('')}
-            className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-          >
-            {t('tags.removeColor')}
-          </button>
+        {/* Remove color */}
+        <button
+          type="button"
+          onClick={handleRemoveColor}
+          className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+        >
+          {t('tags.removeColor')}
+        </button>
 
-          {/* Footer buttons */}
-          <div className="flex gap-2">
-            {mode === 'create' ? (
+        {/* Footer buttons */}
+        <div className="flex gap-2">
+          {mode === 'create' ? (
+            <Button
+              type="button"
+              size="sm"
+              className="h-7 flex-1 text-xs"
+              onClick={onSave}
+              disabled={!isValid || isSavePending}
+            >
+              {t('tags.create')}
+            </Button>
+          ) : (
+            <>
               <Button
                 type="button"
                 size="sm"
                 className="h-7 flex-1 text-xs"
-                onClick={handleSave}
-                disabled={!editName.trim() || createTag.isPending}
+                onClick={onSave}
+                disabled={!isValid || isSavePending}
               >
-                {t('tags.create')}
+                {t('tags.save')}
               </Button>
-            ) : (
-              <>
-                <Button
-                  type="button"
-                  size="sm"
-                  className="h-7 flex-1 text-xs"
-                  onClick={handleSave}
-                  disabled={!editName.trim() || updateTag.isPending}
-                >
-                  {t('tags.save')}
-                </Button>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={() =>
-                    tag && setView({ mode: 'delete-confirm', tag })
-                  }
-                >
-                  {t('tags.delete')}
-                </Button>
-              </>
-            )}
-          </div>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={onShowDeleteConfirm}
+              >
+                {t('tags.delete')}
+              </Button>
+            </>
+          )}
         </div>
       </div>
-    )
-  }
+    </div>
+  )
+}
 
-  // ── Delete Confirm View ────────────────────────────────────────────────
-  const renderDeleteConfirm = (tag: Tag) => (
+// ─── TagDeleteConfirmView ─────────────────────────────────────────────────────
+
+interface TagDeleteConfirmViewProps {
+  tag: Tag
+  onBack: () => void
+  onDelete: () => void
+  isDeleting: boolean
+}
+
+function TagDeleteConfirmView(props: TagDeleteConfirmViewProps) {
+  const { onBack, onDelete, isDeleting } = props
+  const { t } = useTranslation()
+
+  return (
     <div className="flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between border-b px-3 py-2 dark:border-gray-700">
@@ -313,7 +507,7 @@ export function TagsPopover(props: TagsPopoverProps) {
         </span>
         <button
           type="button"
-          onClick={() => setView({ mode: 'edit', tag })}
+          onClick={onBack}
           className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
         >
           <X className="h-4 w-4" />
@@ -330,7 +524,7 @@ export function TagsPopover(props: TagsPopoverProps) {
             variant="outline"
             size="sm"
             className="h-7 flex-1 text-xs"
-            onClick={() => setView({ mode: 'edit', tag })}
+            onClick={onBack}
           >
             {t('tags.cancel')}
           </Button>
@@ -339,44 +533,13 @@ export function TagsPopover(props: TagsPopoverProps) {
             variant="destructive"
             size="sm"
             className="h-7 flex-1 text-xs"
-            onClick={async () => {
-              await deleteTag.mutateAsync(tag.id)
-              setView('list')
-            }}
-            disabled={deleteTag.isPending}
+            onClick={onDelete}
+            disabled={isDeleting}
           >
             {t('tags.delete')}
           </Button>
         </div>
       </div>
     </div>
-  )
-
-  const renderView = () => {
-    if (view === 'list') return renderList()
-    if (view === 'create') return renderCreateEdit('create')
-    if (typeof view === 'object' && view.mode === 'edit')
-      return renderCreateEdit('edit', view.tag)
-    if (typeof view === 'object' && view.mode === 'delete-confirm')
-      return renderDeleteConfirm(view.tag)
-    return null
-  }
-
-  return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 w-7 p-0"
-        >
-          <Plus className="h-3.5 w-3.5" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-64 p-0" align="start">
-        {renderView()}
-      </PopoverContent>
-    </Popover>
   )
 }

@@ -3,9 +3,11 @@ import { toast } from 'sonner'
 import * as api from '@/lib/api'
 import type { DependencyType } from '@/types'
 import { queryKeys } from '@/hooks/queryKeys'
+import { useTranslation } from 'react-i18next'
 
 export function useDependencyMutations(cardId: number, boardId?: number) {
   const qc = useQueryClient()
+  const { t } = useTranslation()
 
   const invalidateDependencies = () =>
     qc.invalidateQueries({ queryKey: queryKeys.dependencies.byCard(cardId) })
@@ -27,18 +29,18 @@ export function useDependencyMutations(cardId: number, boardId?: number) {
     }) => api.createDependency(fromCardId, toCardId, type),
     onSuccess: async () => {
       await Promise.all([invalidateDependencies(), invalidateBoardDetail()])
-      toast.success('Dependency 已建立')
+      toast.success(t('toast.dependency.created'))
     },
-    onError: () => toast.error('建立 Dependency 失敗'),
+    onError: () => toast.error(t('toast.dependency.createError')),
   })
 
   const deleteDep = useMutation({
     mutationFn: (dependencyId: number) => api.deleteDependency(dependencyId),
     onSuccess: async () => {
       await Promise.all([invalidateDependencies(), invalidateBoardDetail()])
-      toast.success('Dependency 已移除')
+      toast.success(t('toast.dependency.deleted'))
     },
-    onError: () => toast.error('移除 Dependency 失敗'),
+    onError: () => toast.error(t('toast.dependency.deleteError')),
   })
 
   return { createDep, deleteDep }

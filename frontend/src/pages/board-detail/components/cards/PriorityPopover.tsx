@@ -40,6 +40,8 @@ export function PriorityPopover(props: PriorityPopoverProps) {
     setOpen(false)
   }
 
+  const handleClose = () => setOpen(false)
+
   const hasValue = card.priority != null && card.priority > 0
   const activePriority = PRIORITIES.find((p) => p.value === card.priority)
 
@@ -65,7 +67,7 @@ export function PriorityPopover(props: PriorityPopoverProps) {
           </span>
           <button
             type="button"
-            onClick={() => setOpen(false)}
+            onClick={handleClose}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
           >
             <X className="h-4 w-4" />
@@ -73,22 +75,25 @@ export function PriorityPopover(props: PriorityPopoverProps) {
         </div>
         <div className="px-3 py-3">
           <div className="flex flex-col gap-1">
-            {PRIORITIES.map((p) => (
-              <button
-                key={p.value}
-                type="button"
-                onClick={() => handleSelect(p.value)}
-                className={cn(
-                  'flex h-8 w-full items-center rounded px-2 text-xs font-medium transition-colors',
-                  card.priority === p.value
-                    ? p.activeClass
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600',
-                )}
-              >
-                <span className="mr-2 font-bold">P{p.value}</span>
-                {p.label}
-              </button>
-            ))}
+            {PRIORITIES.map((p) => {
+              const handleSelectPriority = () => handleSelect(p.value)
+              return (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={handleSelectPriority}
+                  className={cn(
+                    'flex h-8 w-full items-center rounded px-2 text-xs font-medium transition-colors',
+                    card.priority === p.value
+                      ? p.activeClass
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600',
+                  )}
+                >
+                  <span className="mr-2 font-bold">P{p.value}</span>
+                  {p.label}
+                </button>
+              )
+            })}
           </div>
           {hasValue && (
             <button
@@ -96,7 +101,7 @@ export function PriorityPopover(props: PriorityPopoverProps) {
               onClick={handleRemove}
               className="mt-2 w-full rounded py-1 text-xs text-gray-500 hover:bg-gray-100 hover:text-red-500 dark:hover:bg-gray-700"
             >
-              {t('priority.remove')}
+              {t('common.remove')}
             </button>
           )}
         </div>

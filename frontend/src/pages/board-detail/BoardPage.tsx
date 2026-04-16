@@ -1,12 +1,4 @@
-import { DndContext, DragOverlay } from '@dnd-kit/core'
-import {
-  SortableContext,
-  horizontalListSortingStrategy,
-} from '@dnd-kit/sortable'
-import { useNavigate, useParams } from '@tanstack/react-router'
-import { ArrowLeft, Moon, Pin, Plus, Sun } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { LocaleToggle } from '@/components/common/LocaleToggle'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,16 +15,24 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { LocaleToggle } from '@/components/LocaleToggle'
 import { useBoardDetail } from '@/hooks/board/queries/useBoardDetail'
 import { useBoardDnd } from '@/hooks/board/useBoardDnd'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { usePinnedCards } from '@/hooks/card/queries/usePinnedCards'
 import { useColumnMutations } from '@/hooks/column/mutations/useColumnMutations'
-import { useThemeStore } from '@/stores/themeStore'
-import type { Card } from '@/types'
 import { AddColumnForm } from '@/pages/board-detail/components/columns/AddColumnForm'
 import { ColumnView } from '@/pages/board-detail/components/columns/ColumnView'
+import { useThemeStore } from '@/stores/themeStore'
+import type { Card } from '@/types'
+import { DndContext, DragOverlay } from '@dnd-kit/core'
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { useNavigate, useParams } from '@tanstack/react-router'
+import { ArrowLeft, Moon, Pin, Plus, Sun } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export function BoardPage() {
   const navigate = useNavigate()
@@ -58,6 +58,8 @@ export function BoardPage() {
     (a, b) => a.position - b.position,
   )
 
+  const handleMoveOutAutoPin = (card: Card) => setPendingUnpinCard(card)
+
   const {
     sensors,
     activeCard,
@@ -72,7 +74,7 @@ export function BoardPage() {
     columns,
     moveColumnMutate: moveColumn.mutate,
     moveCardMutate: moveCard.mutate,
-    onMoveOutAutoPin: (card: Card) => setPendingUnpinCard(card),
+    onMoveOutAutoPin: handleMoveOutAutoPin,
   })
 
   const handleCardUnpin = () => {
@@ -80,6 +82,23 @@ export function BoardPage() {
     togglePin.mutate(pendingUnpinCard.id, {
       onSettled: () => setPendingUnpinCard(null),
     })
+  }
+
+  const handleNavigateBack = () => navigate({ to: '/' })
+
+  const handlePinPopoverToggle = () => setPinPopoverOpen((v) => !v)
+
+  const handleElectronPinWindow = () => {
+    ;(window as any).electronAPI.togglePinWindow()
+    setPinPopoverOpen(false)
+  }
+
+  const handleStartAddingColumn = () => setAddingColumn(true)
+
+  const handleUnpinDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      setPendingUnpinCard(null)
+    }
   }
 
   useEffect(() => {
@@ -96,18 +115,20 @@ export function BoardPage() {
     return () => document.removeEventListener('mousedown', handler)
   }, [pinPopoverOpen])
 
-  if (isLoading)
+  if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         {t('common.loading')}
       </div>
     )
-  if (!board)
+  }
+  if (!board) {
     return (
       <div className="flex h-screen items-center justify-center">
         {t('boardPage.boardNotFound')}
       </div>
     )
+  }
 
   return (
     <div className="flex h-screen flex-col bg-gray-100 dark:bg-gray-900">
@@ -118,7 +139,7 @@ export function BoardPage() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate({ to: '/' })}
+              onClick={handleNavigateBack}
               className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -158,7 +179,7 @@ export function BoardPage() {
               variant="outline"
               size="sm"
               className="flex items-center gap-1.5 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
-              onClick={() => setPinPopoverOpen((v) => !v)}
+              onClick={handlePinPopoverToggle}
             >
               <Pin className="h-3.5 w-3.5" />
               {t('boardPage.pinnedTasks')}
@@ -202,10 +223,7 @@ export function BoardPage() {
                       variant="link"
                       size="sm"
                       className="h-auto w-full justify-start p-0 text-xs text-blue-600 dark:text-blue-400"
-                      onClick={() => {
-                        ;(window as any).electronAPI.togglePinWindow()
-                        setPinPopoverOpen(false)
-                      }}
+                      onClick={handleElectronPinWindow}
                     >
                       {t('boardPage.floatWindow')}
                     </Button>
@@ -248,7 +266,7 @@ export function BoardPage() {
                   />
                 ) : (
                   <button
-                    onClick={() => setAddingColumn(true)}
+                    onClick={handleStartAddingColumn}
                     className="flex w-full items-center justify-center gap-1 rounded-xl border-2 border-dashed border-gray-300 p-4 text-sm text-gray-400 transition-colors hover:border-gray-400 hover:text-gray-500 dark:border-gray-600 dark:text-gray-500 dark:hover:border-gray-500 dark:hover:text-gray-400"
                   >
                     <Plus className="h-4 w-4" />
@@ -274,7 +292,9 @@ export function BoardPage() {
                   {activeColumn.name}
                 </p>
                 <p className="mt-1 text-xs text-gray-400">
-                  {t('boardPage.cards', { count: activeColumn.cards?.length ?? 0 })}
+                  {t('boardPage.cards', {
+                    count: activeColumn.cards?.length ?? 0,
+                  })}
                 </p>
               </div>
             )}
@@ -285,13 +305,13 @@ export function BoardPage() {
       {/* 卡片移出自動釘選欄位時跳提醒框 */}
       <AlertDialog
         open={!!pendingUnpinCard}
-        onOpenChange={(open) => {
-          if (!open) setPendingUnpinCard(null)
-        }}
+        onOpenChange={handleUnpinDialogOpenChange}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('boardPage.moveOutAutoPinTitle')}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t('boardPage.moveOutAutoPinTitle')}
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {t('boardPage.moveOutAutoPinDesc')}
             </AlertDialogDescription>

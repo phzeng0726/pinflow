@@ -2,9 +2,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import * as api from '@/lib/api'
 import { queryKeys } from '@/hooks/queryKeys'
+import { useTranslation } from 'react-i18next'
 
 export function useCommentMutations(cardId: number, boardId: number) {
   const qc = useQueryClient()
+  const { t } = useTranslation()
 
   const invalidateCardDetail = () =>
     qc.invalidateQueries({ queryKey: queryKeys.cards.detail(cardId) })
@@ -16,7 +18,7 @@ export function useCommentMutations(cardId: number, boardId: number) {
     onSuccess: async () => {
       await invalidateCardDetail()
     },
-    onError: () => toast.error('新增留言失敗'),
+    onError: () => toast.error(t('toast.comment.createError')),
   })
 
   const update = useMutation({
@@ -25,7 +27,7 @@ export function useCommentMutations(cardId: number, boardId: number) {
     onSuccess: async () => {
       await invalidateCardDetail()
     },
-    onError: () => toast.error('更新留言失敗'),
+    onError: () => toast.error(t('toast.comment.updateError')),
   })
 
   const remove = useMutation({
@@ -33,7 +35,7 @@ export function useCommentMutations(cardId: number, boardId: number) {
     onSuccess: async () => {
       await Promise.all([invalidateCardDetail(), invalidateBoardDetail()])
     },
-    onError: () => toast.error('刪除留言失敗'),
+    onError: () => toast.error(t('toast.comment.deleteError')),
   })
 
   return { create, update, remove }

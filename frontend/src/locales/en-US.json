@@ -7,7 +7,7 @@
     "edit": "Edit",
     "delete": "Delete",
     "confirm": "Confirm",
-    "remove": "REMOVE",
+    "remove": "Remove",
     "create": "Create",
     "back": "Back",
     "preview": "Preview",
@@ -95,8 +95,7 @@
     "createCard": "Create Card"
   },
   "priority": {
-    "title": "Priority",
-    "remove": "REMOVE"
+    "title": "Priority"
   },
   "schedule": {
     "title": "Schedule",
@@ -106,8 +105,7 @@
     "clearAll": "Clear All"
   },
   "storyPoint": {
-    "title": "Story Points",
-    "remove": "REMOVE"
+    "title": "Story Points"
   },
   "tags": {
     "title": "Tags",
@@ -150,7 +148,6 @@
     "edit": "Edit",
     "delete": "Delete",
     "deleteConfirmTitle": "Are you sure you want to delete this comment?",
-    "confirmDelete": "Confirm Delete",
     "cancel": "Cancel",
     "noComments": "No comments yet"
   },
@@ -175,5 +172,87 @@
     "orderedList": "Ordered List",
     "checkboxList": "Checkbox List",
     "linkPrompt": "Enter URL:"
+  },
+  "confirm": {
+    "deleteBoardTitle": "Delete Board",
+    "deleteBoardDesc": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+    "deleteColumnTitle": "Delete Column",
+    "deleteColumnDesc": "Are you sure you want to delete \"{{name}}\"? All cards in this column will also be deleted. This action cannot be undone.",
+    "deleteChecklistTitle": "Delete this checklist?"
+  },
+  "validation": {
+    "boardName": "Please enter a board name",
+    "columnName": "Please enter a column name",
+    "cardTitle": "Please enter a title",
+    "endBeforeStart": "End time cannot be earlier than start time",
+    "tagName": "Please enter a tag name",
+    "checklistTitle": "Please enter a checklist title",
+    "checklistItemText": "Please enter item text",
+    "targetColumn": "Please select a target column"
+  },
+  "toast": {
+    "board": {
+      "createSuccess": "Board created",
+      "createError": "Failed to create board",
+      "updateSuccess": "Board updated",
+      "updateError": "Failed to update board",
+      "deleteSuccess": "Board deleted",
+      "deleteError": "Failed to delete board"
+    },
+    "card": {
+      "createSuccess": "Card created",
+      "createError": "Failed to create card",
+      "moveError": "Failed to move card",
+      "pinned": "Pinned",
+      "unpinned": "Unpinned",
+      "togglePinError": "Failed to toggle pin",
+      "updateSuccess": "Card updated",
+      "updateError": "Failed to update card",
+      "scheduleError": "Failed to update schedule",
+      "deleteSuccess": "Card deleted",
+      "deleteError": "Failed to delete card",
+      "duplicateSuccess": "Card duplicated",
+      "duplicateError": "Failed to duplicate card"
+    },
+    "column": {
+      "createSuccess": "Column created",
+      "createError": "Failed to create column",
+      "updateSuccess": "Column updated",
+      "updateError": "Failed to update column",
+      "moveError": "Failed to move column",
+      "deleteSuccess": "Column deleted",
+      "deleteError": "Failed to delete column"
+    },
+    "checklist": {
+      "listCreated": "Checklist created",
+      "listCreateError": "Failed to create checklist",
+      "listUpdateError": "Failed to update checklist",
+      "listDeleted": "Checklist deleted",
+      "listDeleteError": "Failed to delete checklist",
+      "itemCreateError": "Failed to add item",
+      "itemUpdateError": "Failed to update item",
+      "itemDeleteError": "Failed to delete item"
+    },
+    "comment": {
+      "createError": "Failed to add comment",
+      "updateError": "Failed to update comment",
+      "deleteError": "Failed to delete comment"
+    },
+    "dependency": {
+      "created": "Dependency created",
+      "createError": "Failed to create dependency",
+      "deleted": "Dependency removed",
+      "deleteError": "Failed to remove dependency"
+    },
+    "tag": {
+      "createSuccess": "Tag created",
+      "createError": "Failed to create tag",
+      "updateSuccess": "Tag updated",
+      "updateError": "Failed to update tag",
+      "deleteSuccess": "Tag deleted",
+      "deleteError": "Failed to delete tag",
+      "attachError": "Failed to add tag",
+      "detachError": "Failed to remove tag"
+    }
   }
 }

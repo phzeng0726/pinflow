@@ -6,8 +6,7 @@ import { LexicalComposer } from '@lexical/react/LexicalComposer'
 import { ContentEditable } from '@lexical/react/LexicalContentEditable'
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary'
 import { CheckListPlugin } from '@lexical/react/LexicalCheckListPlugin'
-import { HorizontalRuleNode } from '@lexical/react/LexicalHorizontalRuleNode'
-import { HorizontalRulePlugin } from '@lexical/react/LexicalHorizontalRulePlugin'
+import { HorizontalRuleNode } from '@lexical/extension'
 import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin'
 import { ListPlugin } from '@lexical/react/LexicalListPlugin'
 import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin'
@@ -19,13 +18,13 @@ import { $createParagraphNode, $createTextNode, $getRoot } from 'lexical'
 import { useCallback, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { ToolbarPlugin } from './ToolbarPlugin'
 import {
   AutoFocusPlugin,
   InitialValuePlugin,
   OnBlurPlugin,
   OnChangePlugin,
   SourcePlugin,
+  ToolbarPlugin,
 } from './plugins'
 
 interface MarkdownEditorProps {
@@ -262,7 +261,6 @@ export function MarkdownEditor({
           <ListPlugin />
           <CheckListPlugin />
           <LinkPlugin />
-          <HorizontalRulePlugin />
         </LexicalComposer>
       )}
     </div>

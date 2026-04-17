@@ -21,7 +21,7 @@ export function ColumnView(props: ColumnViewProps) {
 
   const cards = (column.cards ?? []).sort((a, b) => a.position - b.position)
   const cardIds = cards.map((c) => `card-${c.id}`)
-  const colDropId = `column-drop-${column.id}`
+  const colDropId = `col-drop-${column.id}`
 
   const { setNodeRef: setDropRef, isOver } = useDroppable({ id: colDropId })
 

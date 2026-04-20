@@ -86,7 +86,7 @@ export function CommentItem(props: CommentItemProps) {
           </div>
         </div>
       ) : (
-        <div className="prose prose-sm dark:prose-invert max-w-none">
+        <div className="prose prose-sm dark:prose-invert max-w-none text-sm">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {comment.text}
           </ReactMarkdown>
@@ -116,11 +116,7 @@ export function CommentItem(props: CommentItemProps) {
                 {t('comment.deleteConfirmTitle')}
               </p>
               <div className="flex justify-end gap-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleCancelDelete}
-                >
+                <Button size="sm" variant="ghost" onClick={handleCancelDelete}>
                   {t('comment.cancel')}
                 </Button>
                 <Button

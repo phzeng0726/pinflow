@@ -236,6 +236,11 @@ definitions:
     - targetColumnId
     - title
     type: object
+  dto.ImageUploadResponse:
+    properties:
+      url:
+        type: string
+    type: object
   dto.MoveCardRequest:
     properties:
       columnId:
@@ -672,6 +677,39 @@ paths:
       summary: Create a column in a board
       tags:
       - columns
+  /boards/{id}/images/{filename}:
+    get:
+      parameters:
+      - description: Board ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Image filename
+        in: path
+        name: filename
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Serve a board image
+      tags:
+      - images
   /cards/{id}:
     delete:
       parameters:
@@ -960,6 +998,49 @@ paths:
       summary: Duplicate a card
       tags:
       - cards
+  /cards/{id}/images:
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Image file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ImageUploadResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Upload an image for a card
+      tags:
+      - images
   /cards/{id}/move:
     patch:
       consumes:

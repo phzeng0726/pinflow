@@ -1,4 +1,5 @@
-import { $convertFromMarkdownString, TRANSFORMERS } from '@lexical/markdown'
+import { $convertFromMarkdownString } from '@lexical/markdown'
+import { EDITOR_TRANSFORMERS } from '../transformers'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import type { RefObject } from 'react'
 import { useEffect } from 'react'
@@ -21,7 +22,7 @@ export function InitialValuePlugin({
     if (value === lastExportRef.current) return
     lastExportRef.current = value
     editor.update(() => {
-      $convertFromMarkdownString(value, TRANSFORMERS)
+      $convertFromMarkdownString(value, EDITOR_TRANSFORMERS)
     })
   }, [editor, value, lastExportRef])
 

@@ -173,7 +173,10 @@
     "bulletList": "Bullet List",
     "orderedList": "Ordered List",
     "checkboxList": "Checkbox List",
-    "linkPrompt": "Enter URL:"
+    "linkPrompt": "Enter URL:",
+    "image": "Insert Image",
+    "imageSizeError": "Image must be less than 5 MB",
+    "imageUploadError": "Failed to upload image"
   },
   "confirm": {
     "deleteBoardTitle": "Delete Board",

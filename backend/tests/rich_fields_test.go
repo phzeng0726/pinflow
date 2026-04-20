@@ -94,7 +94,7 @@ func TestCardService_UpdateCard_ScheduleValidation(t *testing.T) {
 	cardRepo := repository.NewFileCardRepository(fs)
 	colRepo := repository.NewFileColumnRepository(fs)
 	boardRepo := repository.NewFileBoardRepository(fs)
-	svc := service.NewCardService(cardRepo, colRepo, boardRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs), nil)
+	svc := service.NewCardService(cardRepo, colRepo, boardRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs), nil, nil)
 
 	board := &model.Board{Name: "B"}
 	_ = boardRepo.Create(board)
@@ -117,7 +117,7 @@ func TestCardService_UpdateCard_ScheduleSet(t *testing.T) {
 	cardRepo := repository.NewFileCardRepository(fs)
 	colRepo := repository.NewFileColumnRepository(fs)
 	boardRepo := repository.NewFileBoardRepository(fs)
-	svc := service.NewCardService(cardRepo, colRepo, boardRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs), nil)
+	svc := service.NewCardService(cardRepo, colRepo, boardRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs), nil, nil)
 
 	board := &model.Board{Name: "B"}
 	_ = boardRepo.Create(board)
@@ -219,7 +219,7 @@ func TestCardService_UpdateCard_StoryPoint(t *testing.T) {
 	cardRepo := repository.NewFileCardRepository(fs)
 	colRepo := repository.NewFileColumnRepository(fs)
 	boardRepo := repository.NewFileBoardRepository(fs)
-	svc := service.NewCardService(cardRepo, colRepo, boardRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs), nil)
+	svc := service.NewCardService(cardRepo, colRepo, boardRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs), nil, nil)
 
 	board := &model.Board{Name: "B"}
 	_ = boardRepo.Create(board)
@@ -254,7 +254,7 @@ func TestCardService_UpdateCard_StoryPointNegative(t *testing.T) {
 	cardRepo := repository.NewFileCardRepository(fs)
 	colRepo := repository.NewFileColumnRepository(fs)
 	boardRepo := repository.NewFileBoardRepository(fs)
-	svc := service.NewCardService(cardRepo, colRepo, boardRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs), nil)
+	svc := service.NewCardService(cardRepo, colRepo, boardRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs), nil, nil)
 
 	board := &model.Board{Name: "B"}
 	_ = boardRepo.Create(board)

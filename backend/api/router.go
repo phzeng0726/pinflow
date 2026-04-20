@@ -19,6 +19,7 @@ type RouterDeps struct {
 	ChecklistItemH *ChecklistItemHandler
 	DependencyH    *DependencyHandler
 	CommentH       *CommentHandler
+	ImageH         *ImageHandler
 }
 
 func NewRouter(
@@ -30,8 +31,10 @@ func NewRouter(
 	checklistItemH *ChecklistItemHandler,
 	dependencyH *DependencyHandler,
 	commentH *CommentHandler,
+	imageH *ImageHandler,
 ) *gin.Engine {
 	r := gin.Default()
+	r.MaxMultipartMemory = 5 << 20
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -56,6 +59,7 @@ func NewRouter(
 			boards.PUT("/:id", boardH.UpdateBoard)
 			boards.DELETE("/:id", boardH.DeleteBoard)
 			boards.POST("/:id/columns", columnH.CreateColumn)
+			boards.GET("/:id/images/:filename", imageH.ServeImage)
 		}
 
 		columns := v1.Group("/columns")
@@ -83,6 +87,7 @@ func NewRouter(
 			cards.GET("/:id/dependencies", dependencyH.ListDependencies)
 			cards.POST("/:id/dependencies", dependencyH.CreateDependency)
 			cards.POST("/:id/comments", commentH.CreateComment)
+			cards.POST("/:id/images", imageH.UploadImage)
 		}
 
 		dependencies := v1.Group("/dependencies")

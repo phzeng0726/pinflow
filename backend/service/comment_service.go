@@ -22,14 +22,16 @@ type commentService struct {
 	commentRepo repository.CommentRepository
 	cardRepo    repository.CardRepository
 	fs          *store.FileStore
+	imageSvc    ImageService
 }
 
 func NewCommentService(
 	commentRepo repository.CommentRepository,
 	cardRepo repository.CardRepository,
 	fs *store.FileStore,
+	imageSvc ImageService,
 ) CommentService {
-	return &commentService{commentRepo: commentRepo, cardRepo: cardRepo, fs: fs}
+	return &commentService{commentRepo: commentRepo, cardRepo: cardRepo, fs: fs, imageSvc: imageSvc}
 }
 
 func (s *commentService) CreateComment(cardID uint, req dto.CreateCommentRequest) (*dto.CommentResponse, error) {
@@ -84,13 +86,18 @@ func (s *commentService) UpdateComment(id uint, req dto.UpdateCommentRequest) (*
 	if err := s.commentRepo.Update(c); err != nil {
 		return nil, err
 	}
+	if s.imageSvc != nil {
+		s.imageSvc.ReconcileBoardImages(c.CardID)
+	}
 	resp := toCommentResponse(c)
 	return &resp, nil
 }
 
 func (s *commentService) DeleteComment(id uint) error {
-	if _, err := s.commentRepo.FindByID(id); err != nil {
-		return err
+	if s.imageSvc != nil {
+		if c, err := s.commentRepo.FindByID(id); err == nil {
+			s.imageSvc.CleanupImages(c.Text)
+		}
 	}
 	return s.commentRepo.Delete(id)
 }

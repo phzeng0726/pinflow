@@ -1,4 +1,5 @@
 import { $isCodeNode, $createCodeNode } from '@lexical/code'
+import { insertImageFromFile } from './ImagePlugin'
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link'
 import {
   $isListNode,
@@ -27,6 +28,7 @@ import {
   Heading1,
   Heading2,
   Heading3,
+  Image,
   Italic,
   Link,
   List,
@@ -36,7 +38,7 @@ import {
   Quote,
   Type,
 } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   $createParagraphNode,
@@ -56,9 +58,18 @@ type BlockType =
   | 'number'
   | 'check'
 
-export function ToolbarPlugin() {
+export function ToolbarPlugin({
+  cardId,
+  suppressBlurRef,
+  onChange,
+}: {
+  cardId?: number
+  suppressBlurRef?: React.MutableRefObject<boolean>
+  onChange?: (md: string) => void
+}) {
   const [editor] = useLexicalComposerContext()
   const { t } = useTranslation()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [blockType, setBlockType] = useState<BlockType>('paragraph')
   const [isBold, setIsBold] = useState(false)
   const [isItalic, setIsItalic] = useState(false)
@@ -308,6 +319,44 @@ export function ToolbarPlugin() {
       >
         <ListChecks className="h-4 w-4" />
       </button>
+
+      {sep}
+
+      {/* 圖片上傳 */}
+      <button
+        type="button"
+        onMouseDown={(e) => {
+          e.preventDefault()
+          // 開啟 OS 檔案選擇器時，瀏覽器視窗失焦會觸發 ContentEditable blur。
+          // 設旗標讓 OnBlurPlugin 在此期間略過 blur，避免編輯器被關閉。
+          if (suppressBlurRef) suppressBlurRef.current = true
+          // 當視窗重新取得焦點（選擇完畢或取消），解除旗標並還原焦點。
+          const onWindowFocus = () => {
+            if (suppressBlurRef) suppressBlurRef.current = false
+            editor.focus()
+          }
+          window.addEventListener('focus', onWindowFocus, { once: true })
+          fileInputRef.current?.click()
+        }}
+        className={btn(false)}
+        title={t('toolbar.image')}
+      >
+        <Image className="h-4 w-4" />
+      </button>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file) insertImageFromFile(editor, cardId, file, t, onChange)
+          e.target.value = ''
+          // window.focus 已在上方以 { once: true } 處理，這裡只需還原焦點
+          if (suppressBlurRef) suppressBlurRef.current = false
+          editor.focus()
+        }}
+      />
     </div>
   )
 }

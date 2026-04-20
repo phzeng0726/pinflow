@@ -180,6 +180,7 @@ func ToCardResponse(card *model.Card) dto.CardResponse {
 			ID:             cl.ID,
 			CardID:         cl.CardID,
 			Title:          cl.Title,
+			Position:       cl.Position,
 			Items:          items,
 			CompletedCount: completedCount,
 			TotalCount:     len(cl.Items),

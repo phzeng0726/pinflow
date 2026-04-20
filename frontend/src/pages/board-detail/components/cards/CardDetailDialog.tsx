@@ -282,7 +282,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                     placeholder={t('cardDetail.descPlaceholder')}
                   />
                 </div>
-                <ChecklistSection boardId={boardId} card={card} />
+                <ChecklistSection boardId={boardId} cardId={card.id} />
               </div>
             </div>
           </div>

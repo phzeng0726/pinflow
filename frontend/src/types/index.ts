@@ -1,7 +1,7 @@
 export interface Board {
   id: number
   name: string
-  columns?: Column[]
+  columns: Column[]
   createdAt: string
   updatedAt: string
 }
@@ -41,7 +41,11 @@ export interface Checklist {
   totalCount?: number
 }
 
-export type DependencyType = 'blocks' | 'parent_of' | 'duplicates' | 'related_to'
+export type DependencyType =
+  | 'blocks'
+  | 'parent_of'
+  | 'duplicates'
+  | 'related_to'
 
 export interface DependencyCardRef {
   id: number

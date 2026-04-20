@@ -63,12 +63,11 @@ export function BoardPage() {
   const {
     sensors,
     activeCard,
-    activeCardDndId,
     activeColumn,
-    overId,
     handleDragStart,
-    handleDragOver,
     handleDragEnd,
+    handleDragOver,
+    handleDragCancel,
   } = useBoardDnd({
     boardId: id,
     columns,
@@ -240,8 +239,9 @@ export function BoardPage() {
         <DndContext
           sensors={sensors}
           onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
+          onDragOver={handleDragOver}
+          onDragCancel={handleDragCancel}
         >
           <SortableContext
             items={columns.map((c) => `col-${c.id}`)}
@@ -249,13 +249,7 @@ export function BoardPage() {
           >
             <div className="flex h-full items-start gap-3">
               {columns.map((col) => (
-                <ColumnView
-                  key={col.id}
-                  boardId={id}
-                  column={col}
-                  overId={overId}
-                  activeCardDndId={activeCardDndId}
-                />
+                <ColumnView key={col.id} boardId={id} column={col} />
               ))}
 
               <div className="w-64 shrink-0">

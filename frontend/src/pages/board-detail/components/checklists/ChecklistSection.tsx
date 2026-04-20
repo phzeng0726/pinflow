@@ -1,39 +1,51 @@
-import { DndContext, closestCenter } from '@dnd-kit/core'
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useCardDetail } from '@/hooks/card/queries/useCardDetail'
+import { useChecklistMutations } from '@/hooks/checklist/mutations/useChecklistMutations'
+import { useChecklistBlockDnd } from '@/hooks/checklist/useChecklistBlockDnd'
+import { createChecklistSchema, type ChecklistFormData } from '@/lib/schemas'
+import type { Modifier } from '@dnd-kit/core'
+import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { CheckSquare, Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useChecklistDnd } from '@/hooks/checklist/useChecklistDnd'
-import { useChecklistMutations } from '@/hooks/checklist/mutations/useChecklistMutations'
-import { createChecklistSchema, type ChecklistFormData } from '@/lib/schemas'
-import type { Card } from '@/types'
 import { ChecklistBlock } from './ChecklistBlock'
+
+const shiftLeft: Modifier = ({ transform }) => ({
+  ...transform,
+  x: transform.x - 280,
+})
 
 interface ChecklistSectionProps {
   boardId: number
-  card: Card
+  cardId: number
 }
 
 export function ChecklistSection(props: ChecklistSectionProps) {
-  const { boardId, card } = props
+  const { boardId, cardId } = props
+  const { data: card } = useCardDetail(cardId)
+  if (!card) return null
   const { t } = useTranslation()
   const checklistSchema = useMemo(() => createChecklistSchema(t), [t])
 
   const [showNewForm, setShowNewForm] = useState(false)
-  const { createChecklist } = useChecklistMutations(boardId, card.id)
-  const { sensors, handleChecklistDragEnd } = useChecklistDnd({
+  const { createChecklist, moveChecklist } = useChecklistMutations(
     boardId,
-    cardId: card.id,
-    checklists: card.checklists ?? [],
-  })
+    card.id,
+  )
+  const { sensors, activeChecklist, handleDragStart, handleDragEnd } =
+    useChecklistBlockDnd({
+      card,
+      moveMutate: moveChecklist.mutate,
+    })
+
+  const sortedChecklists = [...card.checklists].sort(
+    (a, b) => a.position - b.position,
+  )
 
   const { register, handleSubmit, reset } = useForm<ChecklistFormData>({
     resolver: zodResolver(checklistSchema),
@@ -62,19 +74,18 @@ export function ChecklistSection(props: ChecklistSectionProps) {
 
   const handleShowForm = () => setShowNewForm(true)
 
-  const sortedChecklists = [...(card.checklists ?? [])].sort(
-    (a, b) => a.position - b.position,
-  )
-
   return (
     <div>
       <Label className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
         <CheckSquare className="h-4 w-4" /> {t('checklist.title')}
       </Label>
+
       <DndContext
+        id={`checklist-section-dnd-${card.id}`}
         sensors={sensors}
         collisionDetection={closestCenter}
-        onDragEnd={handleChecklistDragEnd}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
       >
         <SortableContext
           items={sortedChecklists.map((cl) => `checklist-${cl.id}`)}
@@ -91,7 +102,18 @@ export function ChecklistSection(props: ChecklistSectionProps) {
             ))}
           </div>
         </SortableContext>
+
+        <DragOverlay dropAnimation={null} modifiers={[shiftLeft]}>
+          {activeChecklist && (
+            <div className="cursor-grabbing rounded-lg border bg-white p-3 opacity-95 shadow-2xl dark:border-gray-600 dark:bg-gray-700">
+              <p className="select-none text-sm font-medium text-gray-900 dark:text-gray-100">
+                {activeChecklist.title}
+              </p>
+            </div>
+          )}
+        </DragOverlay>
       </DndContext>
+
       {showNewForm ? (
         <form onSubmit={handleSubmit(onSubmit)} className="mt-3 flex gap-2">
           <Input

@@ -1,6 +1,8 @@
 export { AutoFocusPlugin } from './AutoFocusPlugin'
+export { ImagePlugin } from './ImagePlugin'
 export { InitialValuePlugin } from './InitialValuePlugin'
 export { OnBlurPlugin } from './OnBlurPlugin'
 export { OnChangePlugin } from './OnChangePlugin'
+export { SourceImagePastePlugin } from './SourceImagePastePlugin'
 export { SourcePlugin } from './SourcePlugin'
 export { ToolbarPlugin } from './ToolbarPlugin'

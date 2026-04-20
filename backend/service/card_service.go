@@ -31,6 +31,7 @@ type cardService struct {
 	checklistRepo     repository.ChecklistRepository
 	checklistItemRepo repository.ChecklistItemRepository
 	depRepo           repository.DependencyRepository
+	imageSvc          ImageService
 }
 
 func NewCardService(
@@ -41,6 +42,7 @@ func NewCardService(
 	checklistRepo repository.ChecklistRepository,
 	checklistItemRepo repository.ChecklistItemRepository,
 	depRepo repository.DependencyRepository,
+	imageSvc ImageService,
 ) CardService {
 	return &cardService{
 		cardRepo:          cardRepo,
@@ -50,6 +52,7 @@ func NewCardService(
 		checklistRepo:     checklistRepo,
 		checklistItemRepo: checklistItemRepo,
 		depRepo:           depRepo,
+		imageSvc:          imageSvc,
 	}
 }
 
@@ -135,6 +138,9 @@ func (s *cardService) UpdateCard(id uint, title, description *string, storyPoint
 	}
 	if err := s.cardRepo.Update(card); err != nil {
 		return nil, err
+	}
+	if description != nil && s.imageSvc != nil {
+		s.imageSvc.ReconcileBoardImages(card.ID)
 	}
 	return card, nil
 }
@@ -302,8 +308,16 @@ func (s *cardService) Search(query string, limit int) ([]dto.CardSearchResult, e
 }
 
 func (s *cardService) DeleteCard(id uint) error {
-	if _, err := s.cardRepo.FindByID(id); err != nil {
-		return err
+	if s.imageSvc != nil {
+		if detail, err := s.cardRepo.FindDetail(id); err == nil {
+			var combined strings.Builder
+			combined.WriteString(detail.Description)
+			for _, c := range detail.Comments {
+				combined.WriteString("\n")
+				combined.WriteString(c.Text)
+			}
+			s.imageSvc.CleanupImages(combined.String())
+		}
 	}
 	return s.cardRepo.Delete(id)
 }

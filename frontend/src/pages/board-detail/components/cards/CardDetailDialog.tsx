@@ -280,6 +280,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                     onChange={handleDescriptionChange}
                     onBlur={handleBlur}
                     placeholder={t('cardDetail.descPlaceholder')}
+                    cardId={card.id}
                   />
                 </div>
                 <ChecklistSection boardId={boardId} cardId={card.id} />

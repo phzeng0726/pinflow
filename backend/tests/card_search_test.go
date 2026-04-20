@@ -20,7 +20,7 @@ func TestCardSearch_Service(t *testing.T) {
 	depRepo := repository.NewFileDependencyRepository(fs)
 	clRepo := repository.NewFileChecklistRepository(fs)
 	itemRepo := repository.NewFileChecklistItemRepository(fs)
-	cardSvc := service.NewCardService(cardRepo, colRepo, boardRepo, nil, clRepo, itemRepo, depRepo)
+	cardSvc := service.NewCardService(cardRepo, colRepo, boardRepo, nil, clRepo, itemRepo, depRepo, nil)
 
 	board := &model.Board{Name: "My Board"}
 	_ = boardRepo.Create(board)
@@ -45,7 +45,7 @@ func TestCardSearch_Service(t *testing.T) {
 
 func TestCardSearch_Handler(t *testing.T) {
 	deps := setupRouter(t)
-	r := api.NewRouter(deps.BoardH, deps.ColumnH, deps.CardH, deps.TagH, deps.ChecklistH, deps.ChecklistItemH, deps.DependencyH, deps.CommentH)
+	r := api.NewRouter(deps.BoardH, deps.ColumnH, deps.CardH, deps.TagH, deps.ChecklistH, deps.ChecklistItemH, deps.DependencyH, deps.CommentH, deps.ImageH)
 
 	createBoardAndColumn(t, r)
 	createCardInColumn(t, r, 1)

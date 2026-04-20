@@ -241,6 +241,9 @@ func (s *FileStore) CreateBoard(b *model.Board) error {
 	if err := os.MkdirAll(filepath.Join(dir, "cards"), 0755); err != nil {
 		return err
 	}
+	if err := os.MkdirAll(filepath.Join(dir, "images"), 0755); err != nil {
+		return err
+	}
 	if err := writeJSON(filepath.Join(dir, "board.json"), b); err != nil {
 		return err
 	}

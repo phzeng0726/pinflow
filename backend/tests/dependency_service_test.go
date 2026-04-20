@@ -21,7 +21,7 @@ func setupDepService(t *testing.T) (service.DependencyService, service.CardServi
 	itemRepo := repository.NewFileChecklistItemRepository(fs)
 
 	depSvc := service.NewDependencyService(depRepo, cardRepo, colRepo, boardRepo)
-	cardSvc := service.NewCardService(cardRepo, colRepo, boardRepo, nil, clRepo, itemRepo, depRepo)
+	cardSvc := service.NewCardService(cardRepo, colRepo, boardRepo, nil, clRepo, itemRepo, depRepo, nil)
 	return depSvc, cardSvc, cardRepo, colRepo, boardRepo
 }
 

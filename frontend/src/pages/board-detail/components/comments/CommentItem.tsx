@@ -15,6 +15,7 @@ import remarkGfm from 'remark-gfm'
 
 interface CommentItemProps {
   comment: Comment
+  cardId: number
   onUpdate: (id: number, text: string) => void
   onDelete: (id: number) => void
   isUpdating: boolean
@@ -22,7 +23,7 @@ interface CommentItemProps {
 }
 
 export function CommentItem(props: CommentItemProps) {
-  const { comment, onUpdate, onDelete, isUpdating, isDeleting } = props
+  const { comment, cardId, onUpdate, onDelete, isUpdating, isDeleting } = props
   const { t } = useTranslation()
   const locale = useLocaleStore((s) => s.locale)
   const [editing, setEditing] = useState(false)
@@ -70,6 +71,7 @@ export function CommentItem(props: CommentItemProps) {
             onChange={setEditText}
             onBlur={handleCancel}
             defaultEditing
+            cardId={cardId}
           />
           <div className="flex gap-2">
             <Button

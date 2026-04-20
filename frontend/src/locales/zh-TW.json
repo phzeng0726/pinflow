@@ -173,7 +173,10 @@
     "bulletList": "無序清單",
     "orderedList": "有序清單",
     "checkboxList": "Checkbox 清單",
-    "linkPrompt": "請輸入連結 URL:"
+    "linkPrompt": "請輸入連結 URL:",
+    "image": "插入圖片",
+    "imageSizeError": "圖片大小不得超過 5 MB",
+    "imageUploadError": "圖片上傳失敗"
   },
   "confirm": {
     "deleteBoardTitle": "刪除看板",

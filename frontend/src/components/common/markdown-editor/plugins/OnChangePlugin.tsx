@@ -1,4 +1,5 @@
-import { $convertToMarkdownString, TRANSFORMERS } from '@lexical/markdown'
+import { $convertToMarkdownString } from '@lexical/markdown'
+import { EDITOR_TRANSFORMERS } from '../transformers'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import type { RefObject } from 'react'
 import { useEffect, useRef } from 'react'
@@ -26,7 +27,7 @@ export function OnChangePlugin({
       ({ editorState, dirtyElements, dirtyLeaves }) => {
         if (dirtyElements.size === 0 && dirtyLeaves.size === 0) return
         editorState.read(() => {
-          const md = $convertToMarkdownString(TRANSFORMERS)
+          const md = $convertToMarkdownString(EDITOR_TRANSFORMERS)
           lastExportRef.current = md
           onChangeRef.current(md)
         })

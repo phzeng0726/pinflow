@@ -1,7 +1,7 @@
 import { CodeHighlightNode, CodeNode } from '@lexical/code'
 import { LinkNode } from '@lexical/link'
 import { ListNode, ListItemNode } from '@lexical/list'
-import { $convertFromMarkdownString, TRANSFORMERS } from '@lexical/markdown'
+import { $convertFromMarkdownString } from '@lexical/markdown'
 import { LexicalComposer } from '@lexical/react/LexicalComposer'
 import { ContentEditable } from '@lexical/react/LexicalContentEditable'
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary'
@@ -15,17 +15,21 @@ import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin'
 import { HeadingNode, QuoteNode } from '@lexical/rich-text'
 import { cn } from '@/lib/utils'
 import { $createParagraphNode, $createTextNode, $getRoot } from 'lexical'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useRef, useState, type MutableRefObject } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import {
   AutoFocusPlugin,
+  ImagePlugin,
   InitialValuePlugin,
   OnBlurPlugin,
   OnChangePlugin,
+  SourceImagePastePlugin,
   SourcePlugin,
   ToolbarPlugin,
 } from './plugins'
+import { ImageNode } from './nodes/ImageNode'
+import { EDITOR_TRANSFORMERS } from './transformers'
 
 interface MarkdownEditorProps {
   value: string
@@ -33,6 +37,7 @@ interface MarkdownEditorProps {
   onBlur: () => void
   placeholder?: string
   defaultEditing?: boolean
+  cardId?: number
 }
 
 /** Lexical 節點列表（Rich 模式用） */
@@ -45,6 +50,7 @@ const RICH_NODES = [
   CodeHighlightNode,
   LinkNode,
   HorizontalRuleNode,
+  ImageNode,
 ]
 
 /** Lexical theme（Rich 模式用）：直接使用 Tailwind utility class */
@@ -84,6 +90,7 @@ export function MarkdownEditor({
   onBlur,
   placeholder,
   defaultEditing = false,
+  cardId,
 }: MarkdownEditorProps) {
   const [isEditing, setIsEditing] = useState(defaultEditing)
   const [editorMode, setEditorMode] = useState<'source' | 'rich'>('source')
@@ -94,6 +101,12 @@ export function MarkdownEditor({
    * 讓 InitialValuePlugin 能分辨「自己匯出後帶回的 value」與「外部真正的變更」。
    */
   const lastExportRef = useRef(value)
+
+  /**
+   * 圖片上傳按鈕開啟 OS 檔案選擇器時設為 true，
+   * 讓 OnBlurPlugin 略過這段期間的 blur 事件，防止編輯器被關閉。
+   */
+  const suppressBlurRef = useRef(false) as MutableRefObject<boolean>
 
   const handleSwitchToView = useCallback(() => setIsEditing(false), [])
 
@@ -146,7 +159,7 @@ export function MarkdownEditor({
     theme: RICH_THEME,
     nodes: RICH_NODES,
     editorState: () => {
-      $convertFromMarkdownString(value, TRANSFORMERS)
+      $convertFromMarkdownString(value, EDITOR_TRANSFORMERS)
     },
   }
 
@@ -191,7 +204,7 @@ export function MarkdownEditor({
       {/* Source 編輯器 */}
       {editorMode === 'source' && (
         <LexicalComposer initialConfig={sourceInitialConfig}>
-          <div className="overflow-hidden rounded-md border border-gray-300 focus-within:ring-1 focus-within:ring-ring dark:border-gray-500">
+          <div className="overflow-hidden rounded-md border border-gray-300 focus-within:ring-1 focus-within:ring-ring dark:border-gray-500" data-lexical-editor-container>
             <div className="flex">
               {/* 行號欄 */}
               <div
@@ -226,16 +239,17 @@ export function MarkdownEditor({
             </div>
           </div>
           <SourcePlugin onChange={onChange} setLineCount={setLineCount} />
-          <OnBlurPlugin onBlur={onBlur} onSwitchToView={handleSwitchToView} />
+          <OnBlurPlugin onBlur={onBlur} onSwitchToView={handleSwitchToView} suppressBlurRef={suppressBlurRef} />
           <AutoFocusPlugin />
+          <SourceImagePastePlugin cardId={cardId} />
         </LexicalComposer>
       )}
 
       {/* Rich 編輯器 */}
       {editorMode === 'rich' && (
         <LexicalComposer initialConfig={richInitialConfig}>
-          <div className="overflow-hidden rounded-md border border-gray-300 focus-within:ring-1 focus-within:ring-ring dark:border-gray-500">
-            <ToolbarPlugin />
+          <div className="overflow-hidden rounded-md border border-gray-300 focus-within:ring-1 focus-within:ring-ring dark:border-gray-500" data-lexical-editor-container>
+            <ToolbarPlugin cardId={cardId} suppressBlurRef={suppressBlurRef} onChange={onChange} />
             <div className="relative">
               <RichTextPlugin
                 contentEditable={
@@ -254,10 +268,11 @@ export function MarkdownEditor({
             </div>
           </div>
           <OnChangePlugin onChange={onChange} lastExportRef={lastExportRef} />
-          <OnBlurPlugin onBlur={onBlur} onSwitchToView={handleSwitchToView} />
+          <OnBlurPlugin onBlur={onBlur} onSwitchToView={handleSwitchToView} suppressBlurRef={suppressBlurRef} />
           <InitialValuePlugin value={value} lastExportRef={lastExportRef} />
           <AutoFocusPlugin />
-          <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
+          <ImagePlugin cardId={cardId} onChange={onChange} />
+          <MarkdownShortcutPlugin transformers={EDITOR_TRANSFORMERS} />
           <ListPlugin />
           <CheckListPlugin />
           <LinkPlugin />

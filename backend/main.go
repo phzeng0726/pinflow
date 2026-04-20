@@ -37,11 +37,12 @@ func main() {
 
 	boardSvc := service.NewBoardService(boardRepo)
 	columnSvc := service.NewColumnService(boardRepo, columnRepo)
-	cardSvc := service.NewCardService(cardRepo, columnRepo, boardRepo, tagRepo, checklistRepo, checklistItemRepo, depRepo)
+	imageSvc := service.NewImageService(cardRepo, columnRepo, fs.BasePath())
+	cardSvc := service.NewCardService(cardRepo, columnRepo, boardRepo, tagRepo, checklistRepo, checklistItemRepo, depRepo, imageSvc)
 	tagSvc := service.NewTagService(tagRepo, cardRepo)
 	checklistSvc := service.NewChecklistService(checklistRepo, checklistItemRepo, cardRepo)
 	depSvc := service.NewDependencyService(depRepo, cardRepo, columnRepo, boardRepo)
-	commentSvc := service.NewCommentService(commentRepo, cardRepo, fs)
+	commentSvc := service.NewCommentService(commentRepo, cardRepo, fs, imageSvc)
 
 	boardH := api.NewBoardHandler(boardSvc)
 	columnH := api.NewColumnHandler(columnSvc)
@@ -51,8 +52,9 @@ func main() {
 	checklistItemH := api.NewChecklistItemHandler(checklistSvc)
 	depH := api.NewDependencyHandler(depSvc)
 	commentH := api.NewCommentHandler(commentSvc)
+	imageH := api.NewImageHandler(imageSvc)
 
-	router := api.NewRouter(boardH, columnH, cardH, tagH, checklistH, checklistItemH, depH, commentH)
+	router := api.NewRouter(boardH, columnH, cardH, tagH, checklistH, checklistItemH, depH, commentH, imageH)
 
 	log.Println("Starting PinFlow API on :34115")
 	if err := router.Run(":34115"); err != nil {

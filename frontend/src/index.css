@@ -166,4 +166,8 @@
   .markdown-preview .task-list-item input[type='checkbox'] {
     @apply mt-0.5 shrink-0 accent-gray-500;
   }
+  .markdown-preview img,
+  .markdown-editor-content img {
+    @apply my-2 max-w-full rounded;
+  }
 }

@@ -79,6 +79,7 @@ export function CommentSection(props: CommentSectionProps) {
               onBlur={handleEditorBlur}
               placeholder={t('comment.writePlaceholder')}
               defaultEditing
+              cardId={cardId}
             />
             <Button
               size="sm"
@@ -110,6 +111,7 @@ export function CommentSection(props: CommentSectionProps) {
           <CommentItem
             key={comment.id}
             comment={comment}
+            cardId={cardId}
             onUpdate={handleUpdateComment}
             onDelete={handleDeleteComment}
             isUpdating={update.isPending}

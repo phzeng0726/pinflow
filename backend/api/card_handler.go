@@ -14,11 +14,7 @@ func parseUintFromString(s string) (uint64, error) {
 }
 
 type CardHandler struct {
-	svc service.CardService
-}
-
-func NewCardHandler(svc service.CardService) *CardHandler {
-	return &CardHandler{svc: svc}
+	services *service.Services
 }
 
 // CreateCard godoc
@@ -42,7 +38,7 @@ func (h *CardHandler) CreateCard(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	card, err := h.svc.CreateCard(columnID, req.Title, req.Description)
+	card, err := h.services.Card.CreateCard(columnID, req.Title, req.Description)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -63,7 +59,7 @@ func (h *CardHandler) GetCard(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	card, err := h.svc.GetCardDetail(id)
+	card, err := h.services.Card.GetCardDetail(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "card not found"})
 		return
@@ -97,7 +93,7 @@ func (h *CardHandler) UpdateCard(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "priority must be between 1 and 5"})
 		return
 	}
-	card, err := h.svc.UpdateCard(id, req.Title, req.Description, req.StoryPoint, req.Priority, req.StartTime, req.EndTime)
+	card, err := h.services.Card.UpdateCard(id, req.Title, req.Description, req.StoryPoint, req.Priority, req.StartTime, req.EndTime)
 	if err != nil {
 		if err.Error() == "endTime must be after startTime" || err.Error() == "priority must be between 1 and 5" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -131,7 +127,7 @@ func (h *CardHandler) UpdateSchedule(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	card, err := h.svc.UpdateSchedule(id, req.StartTime, req.EndTime)
+	card, err := h.services.Card.UpdateSchedule(id, req.StartTime, req.EndTime)
 	if err != nil {
 		if err.Error() == "endTime must be after startTime" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -165,7 +161,7 @@ func (h *CardHandler) MoveCard(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	card, err := h.svc.MoveCard(id, req.ColumnID, req.Position)
+	card, err := h.services.Card.MoveCard(id, req.ColumnID, req.Position)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -185,7 +181,7 @@ func (h *CardHandler) TogglePin(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	card, err := h.svc.TogglePin(id)
+	card, err := h.services.Card.TogglePin(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -205,7 +201,7 @@ func (h *CardHandler) DeleteCard(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	if err := h.svc.DeleteCard(id); err != nil {
+	if err := h.services.Card.DeleteCard(id); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "card not found"})
 		return
 	}
@@ -233,7 +229,7 @@ func (h *CardHandler) DuplicateCard(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	card, err := h.svc.DuplicateCard(id, req)
+	card, err := h.services.Card.DuplicateCard(id, req)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -248,7 +244,7 @@ func (h *CardHandler) DuplicateCard(c *gin.Context) {
 // @Success     200 {array} dto.PinnedCardResponse
 // @Router      /cards/pinned [get]
 func (h *CardHandler) GetPinnedCards(c *gin.Context) {
-	cards, err := h.svc.GetPinnedCards()
+	cards, err := h.services.Card.GetPinnedCards()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -272,7 +268,7 @@ func (h *CardHandler) SearchCards(c *gin.Context) {
 			limit = int(parsed)
 		}
 	}
-	results, err := h.svc.Search(query, limit)
+	results, err := h.services.Card.Search(query, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

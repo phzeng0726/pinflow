@@ -6,24 +6,13 @@ import (
 	"pinflow/repository"
 )
 
-type ChecklistService interface {
-	CreateChecklist(cardID uint, title string) (*model.Checklist, error)
-	ListByCard(cardID uint) ([]model.Checklist, error)
-	UpdateChecklist(id uint, req dto.UpdateChecklistRequest) (*model.Checklist, error)
-	DeleteChecklist(id uint) error
-	CreateItem(checklistID uint, text string, position float64) (*model.ChecklistItem, error)
-	UpdateItem(id uint, req dto.UpdateChecklistItemRequest) (*model.ChecklistItem, error)
-	DeleteItem(id uint) error
-	SyncItems(checklistID uint, items []dto.SyncChecklistItemEntry) (*model.Checklist, error)
-}
-
 type checklistService struct {
 	clRepo   repository.ChecklistRepository
 	itemRepo repository.ChecklistItemRepository
 	cardRepo repository.CardRepository
 }
 
-func NewChecklistService(
+func newChecklistService(
 	clRepo repository.ChecklistRepository,
 	itemRepo repository.ChecklistItemRepository,
 	cardRepo repository.CardRepository,

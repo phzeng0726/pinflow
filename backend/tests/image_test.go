@@ -33,8 +33,8 @@ func makePNG(t *testing.T) []byte {
 }
 
 // setupRouterWithImages builds a full router with a real ImageService wired in.
-// Returns the router deps, the router itself, and the workspace basePath.
-func setupRouterWithImages(t *testing.T) (*api.RouterDeps, interface {
+// Returns the router and the workspace basePath.
+func setupRouterWithImages(t *testing.T) (interface {
 	ServeHTTP(http.ResponseWriter, *http.Request)
 }, string) {
 	t.Helper()
@@ -44,42 +44,11 @@ func setupRouterWithImages(t *testing.T) (*api.RouterDeps, interface {
 	}
 	basePath := fs.BasePath()
 
-	boardRepo := repository.NewFileBoardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	cardRepo := repository.NewFileCardRepository(fs)
-	tagRepo := repository.NewFileTagRepository(fs)
-	clRepo := repository.NewFileChecklistRepository(fs)
-	itemRepo := repository.NewFileChecklistItemRepository(fs)
-	depRepo := repository.NewFileDependencyRepository(fs)
-	commentRepo := repository.NewFileCommentRepository(fs)
-
-	imageSvc := service.NewImageService(cardRepo, colRepo, basePath)
-
-	boardSvc := service.NewBoardService(boardRepo)
-	colSvc := service.NewColumnService(boardRepo, colRepo)
-	cardSvc := service.NewCardService(cardRepo, colRepo, boardRepo, tagRepo, clRepo, itemRepo, depRepo, imageSvc)
-	tagSvc := service.NewTagService(tagRepo, cardRepo)
-	clSvc := service.NewChecklistService(clRepo, itemRepo, cardRepo)
-	depSvc := service.NewDependencyService(depRepo, cardRepo, colRepo, boardRepo)
-	commentSvc := service.NewCommentService(commentRepo, cardRepo, fs, imageSvc)
-
-	boardH := api.NewBoardHandler(boardSvc)
-	colH := api.NewColumnHandler(colSvc)
-	cardH := api.NewCardHandler(cardSvc)
-	tagH := api.NewTagHandler(tagSvc)
-	clH := api.NewChecklistHandler(clSvc)
-	clItemH := api.NewChecklistItemHandler(clSvc)
-	depH := api.NewDependencyHandler(depSvc)
-	commentH := api.NewCommentHandler(commentSvc)
-	imageH := api.NewImageHandler(imageSvc)
-
-	deps := &api.RouterDeps{
-		BoardH: boardH, ColumnH: colH, CardH: cardH, TagH: tagH,
-		ChecklistH: clH, ChecklistItemH: clItemH, DependencyH: depH,
-		CommentH: commentH, ImageH: imageH,
-	}
-	r := api.NewRouter(boardH, colH, cardH, tagH, clH, clItemH, depH, commentH, imageH)
-	return deps, r, basePath
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
+	handlers := api.NewHandlers(services)
+	r := api.NewRouter(handlers)
+	return r, basePath
 }
 
 // makeMultipartBody constructs a multipart/form-data body with a single file field.
@@ -98,7 +67,7 @@ func makeMultipartBody(t *testing.T, fieldName, filename string, content []byte)
 	return &buf, w.FormDataContentType()
 }
 
-// createBoardColumnCard は board → column → card を作成して card ID を返す。
+// createBoardColumnCard creates board → column → card and returns the card ID.
 func createBoardColumnCard(t *testing.T, r interface {
 	ServeHTTP(http.ResponseWriter, *http.Request)
 }) int {
@@ -110,7 +79,7 @@ func createBoardColumnCard(t *testing.T, r interface {
 // ── Handler tests ─────────────────────────────────────────────
 
 func TestHandler_UploadImage_Valid(t *testing.T) {
-	_, r, _ := setupRouterWithImages(t)
+	r, _ := setupRouterWithImages(t)
 	cardID := createBoardColumnCard(t, r)
 
 	body, ct := makeMultipartBody(t, "file", "test.png", makePNG(t))
@@ -131,7 +100,7 @@ func TestHandler_UploadImage_Valid(t *testing.T) {
 }
 
 func TestHandler_UploadImage_InvalidCardID(t *testing.T) {
-	_, r, _ := setupRouterWithImages(t)
+	r, _ := setupRouterWithImages(t)
 
 	body, ct := makeMultipartBody(t, "file", "test.png", makePNG(t))
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/cards/99999/images", body)
@@ -145,7 +114,7 @@ func TestHandler_UploadImage_InvalidCardID(t *testing.T) {
 }
 
 func TestHandler_UploadImage_Oversized(t *testing.T) {
-	_, r, _ := setupRouterWithImages(t)
+	r, _ := setupRouterWithImages(t)
 	cardID := createBoardColumnCard(t, r)
 
 	oversized := make([]byte, 5*1024*1024+1) // 5MB + 1 byte
@@ -163,7 +132,7 @@ func TestHandler_UploadImage_Oversized(t *testing.T) {
 }
 
 func TestHandler_UploadImage_InvalidFormat(t *testing.T) {
-	_, r, _ := setupRouterWithImages(t)
+	r, _ := setupRouterWithImages(t)
 	cardID := createBoardColumnCard(t, r)
 
 	body, ct := makeMultipartBody(t, "file", "document.txt", []byte("Hello, this is plain text"))
@@ -178,7 +147,7 @@ func TestHandler_UploadImage_InvalidFormat(t *testing.T) {
 }
 
 func TestHandler_ServeImage_InvalidFilename(t *testing.T) {
-	_, r, _ := setupRouterWithImages(t)
+	r, _ := setupRouterWithImages(t)
 
 	cases := []struct {
 		name     string
@@ -203,7 +172,7 @@ func TestHandler_ServeImage_InvalidFilename(t *testing.T) {
 }
 
 func TestHandler_ServeImage_NotFound(t *testing.T) {
-	_, r, _ := setupRouterWithImages(t)
+	r, _ := setupRouterWithImages(t)
 
 	// Valid filename format but file does not exist
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/boards/1/images/00000000-0000-0000-0000-000000000000.webp", nil)
@@ -225,9 +194,9 @@ func setupImageService(t *testing.T) (service.ImageService, string) {
 		t.Fatalf("store.New: %v", err)
 	}
 	basePath := fs.BasePath()
-	cardRepo := repository.NewFileCardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	return service.NewImageService(cardRepo, colRepo, basePath), basePath
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
+	return services.Image, basePath
 }
 
 func TestImageService_CleanupImages_DeletesReferencedFiles(t *testing.T) {

@@ -7,19 +7,11 @@ import (
 	"strings"
 )
 
-type BoardService interface {
-	CreateBoard(name string) (*model.Board, error)
-	GetAllBoards() ([]model.Board, error)
-	GetBoardByID(id uint) (*model.Board, error)
-	UpdateBoard(id uint, name string) (*model.Board, error)
-	DeleteBoard(id uint) error
-}
-
 type boardService struct {
 	repo repository.BoardRepository
 }
 
-func NewBoardService(repo repository.BoardRepository) BoardService {
+func newBoardService(repo repository.BoardRepository) BoardService {
 	return &boardService{repo: repo}
 }
 

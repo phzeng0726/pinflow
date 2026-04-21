@@ -7,12 +7,6 @@ import (
 	"strings"
 )
 
-type ColumnService interface {
-	CreateColumn(boardID uint, name string) (*model.Column, error)
-	UpdateColumn(id uint, req UpdateColumnInput) (*model.Column, error)
-	DeleteColumn(id uint) error
-}
-
 type UpdateColumnInput struct {
 	Name     *string
 	AutoPin  *bool
@@ -24,7 +18,7 @@ type columnService struct {
 	columnRepo repository.ColumnRepository
 }
 
-func NewColumnService(boardRepo repository.BoardRepository, columnRepo repository.ColumnRepository) ColumnService {
+func newColumnService(boardRepo repository.BoardRepository, columnRepo repository.ColumnRepository) ColumnService {
 	return &columnService{boardRepo: boardRepo, columnRepo: columnRepo}
 }
 

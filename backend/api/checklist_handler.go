@@ -10,11 +10,7 @@ import (
 )
 
 type ChecklistHandler struct {
-	svc service.ChecklistService
-}
-
-func NewChecklistHandler(svc service.ChecklistService) *ChecklistHandler {
-	return &ChecklistHandler{svc: svc}
+	services *service.Services
 }
 
 // CreateChecklist godoc
@@ -37,7 +33,7 @@ func (h *ChecklistHandler) CreateChecklist(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	cl, err := h.svc.CreateChecklist(cardID, req.Title)
+	cl, err := h.services.Checklist.CreateChecklist(cardID, req.Title)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -57,7 +53,7 @@ func (h *ChecklistHandler) ListChecklists(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	cls, err := h.svc.ListByCard(cardID)
+	cls, err := h.services.Checklist.ListByCard(cardID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -95,7 +91,7 @@ func (h *ChecklistHandler) UpdateChecklist(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "title must not be empty"})
 		return
 	}
-	cl, err := h.svc.UpdateChecklist(id, req)
+	cl, err := h.services.Checklist.UpdateChecklist(id, req)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -115,7 +111,7 @@ func (h *ChecklistHandler) DeleteChecklist(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	if err := h.svc.DeleteChecklist(id); err != nil {
+	if err := h.services.Checklist.DeleteChecklist(id); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}

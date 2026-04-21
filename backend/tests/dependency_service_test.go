@@ -10,39 +10,32 @@ import (
 	"pinflow/store"
 )
 
-func setupDepService(t *testing.T) (service.DependencyService, service.CardService, repository.CardRepository, repository.ColumnRepository, repository.BoardRepository) {
+func setupDepService(t *testing.T) (*service.Services, *repository.Repositories) {
 	t.Helper()
 	fs := setupTestStore(t)
-	depRepo := repository.NewFileDependencyRepository(fs)
-	cardRepo := repository.NewFileCardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	boardRepo := repository.NewFileBoardRepository(fs)
-	clRepo := repository.NewFileChecklistRepository(fs)
-	itemRepo := repository.NewFileChecklistItemRepository(fs)
-
-	depSvc := service.NewDependencyService(depRepo, cardRepo, colRepo, boardRepo)
-	cardSvc := service.NewCardService(cardRepo, colRepo, boardRepo, nil, clRepo, itemRepo, depRepo, nil)
-	return depSvc, cardSvc, cardRepo, colRepo, boardRepo
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
+	return services, repos
 }
 
-func createCard(t *testing.T, cardRepo repository.CardRepository, colRepo repository.ColumnRepository, boardRepo repository.BoardRepository) *model.Card {
+func createCard(t *testing.T, repos *repository.Repositories) *model.Card {
 	t.Helper()
 	board := &model.Board{Name: "Board"}
-	_ = boardRepo.Create(board)
+	_ = repos.Board.Create(board)
 	col := &model.Column{BoardID: board.ID, Name: "Col", Position: 1}
-	_ = colRepo.Create(col)
+	_ = repos.Column.Create(col)
 	card := &model.Card{ColumnID: col.ID, Title: "Card"}
-	_ = cardRepo.Create(card)
+	_ = repos.Card.Create(card)
 	return card
 }
 
 func TestDepService_Create(t *testing.T) {
-	depSvc, _, cardRepo, colRepo, boardRepo := setupDepService(t)
+	services, repos := setupDepService(t)
 
-	card1 := createCard(t, cardRepo, colRepo, boardRepo)
-	card2 := createCard(t, cardRepo, colRepo, boardRepo)
+	card1 := createCard(t, repos)
+	card2 := createCard(t, repos)
 
-	resp, err := depSvc.CreateForCard(card1.ID, dto.CreateDependencyRequest{
+	resp, err := services.Dependency.CreateForCard(card1.ID, dto.CreateDependencyRequest{
 		ToCardID: card2.ID,
 		Type:     model.DependencyTypeBlocks,
 	})
@@ -61,18 +54,18 @@ func TestDepService_Create(t *testing.T) {
 }
 
 func TestDepService_ListByCard_BothSides(t *testing.T) {
-	depSvc, _, cardRepo, colRepo, boardRepo := setupDepService(t)
+	services, repos := setupDepService(t)
 
-	card1 := createCard(t, cardRepo, colRepo, boardRepo)
-	card2 := createCard(t, cardRepo, colRepo, boardRepo)
-	card3 := createCard(t, cardRepo, colRepo, boardRepo)
+	card1 := createCard(t, repos)
+	card2 := createCard(t, repos)
+	card3 := createCard(t, repos)
 
 	// card1 blocks card2
-	_, _ = depSvc.CreateForCard(card1.ID, dto.CreateDependencyRequest{ToCardID: card2.ID, Type: model.DependencyTypeBlocks})
+	_, _ = services.Dependency.CreateForCard(card1.ID, dto.CreateDependencyRequest{ToCardID: card2.ID, Type: model.DependencyTypeBlocks})
 	// card3 related to card1
-	_, _ = depSvc.CreateForCard(card3.ID, dto.CreateDependencyRequest{ToCardID: card1.ID, Type: model.DependencyTypeRelatedTo})
+	_, _ = services.Dependency.CreateForCard(card3.ID, dto.CreateDependencyRequest{ToCardID: card1.ID, Type: model.DependencyTypeRelatedTo})
 
-	deps, err := depSvc.ListByCard(card1.ID)
+	deps, err := services.Dependency.ListByCard(card1.ID)
 	if err != nil {
 		t.Fatalf("ListByCard error: %v", err)
 	}
@@ -82,11 +75,11 @@ func TestDepService_ListByCard_BothSides(t *testing.T) {
 }
 
 func TestDepService_SelfReference_Rejected(t *testing.T) {
-	depSvc, _, cardRepo, colRepo, boardRepo := setupDepService(t)
+	services, repos := setupDepService(t)
 
-	card := createCard(t, cardRepo, colRepo, boardRepo)
+	card := createCard(t, repos)
 
-	_, err := depSvc.CreateForCard(card.ID, dto.CreateDependencyRequest{
+	_, err := services.Dependency.CreateForCard(card.ID, dto.CreateDependencyRequest{
 		ToCardID: card.ID,
 		Type:     model.DependencyTypeBlocks,
 	})
@@ -96,46 +89,46 @@ func TestDepService_SelfReference_Rejected(t *testing.T) {
 }
 
 func TestDepService_Duplicate_Rejected(t *testing.T) {
-	depSvc, _, cardRepo, colRepo, boardRepo := setupDepService(t)
+	services, repos := setupDepService(t)
 
-	card1 := createCard(t, cardRepo, colRepo, boardRepo)
-	card2 := createCard(t, cardRepo, colRepo, boardRepo)
+	card1 := createCard(t, repos)
+	card2 := createCard(t, repos)
 
-	_, _ = depSvc.CreateForCard(card1.ID, dto.CreateDependencyRequest{ToCardID: card2.ID, Type: model.DependencyTypeBlocks})
-	_, err := depSvc.CreateForCard(card1.ID, dto.CreateDependencyRequest{ToCardID: card2.ID, Type: model.DependencyTypeBlocks})
+	_, _ = services.Dependency.CreateForCard(card1.ID, dto.CreateDependencyRequest{ToCardID: card2.ID, Type: model.DependencyTypeBlocks})
+	_, err := services.Dependency.CreateForCard(card1.ID, dto.CreateDependencyRequest{ToCardID: card2.ID, Type: model.DependencyTypeBlocks})
 	if err != store.ErrDependencyConflict {
 		t.Errorf("expected ErrDependencyConflict, got %v", err)
 	}
 }
 
 func TestDepService_RelatedTo_BidirectionalDuplicate_Rejected(t *testing.T) {
-	depSvc, _, cardRepo, colRepo, boardRepo := setupDepService(t)
+	services, repos := setupDepService(t)
 
-	card1 := createCard(t, cardRepo, colRepo, boardRepo)
-	card2 := createCard(t, cardRepo, colRepo, boardRepo)
+	card1 := createCard(t, repos)
+	card2 := createCard(t, repos)
 
-	_, _ = depSvc.CreateForCard(card1.ID, dto.CreateDependencyRequest{ToCardID: card2.ID, Type: model.DependencyTypeRelatedTo})
-	_, err := depSvc.CreateForCard(card2.ID, dto.CreateDependencyRequest{ToCardID: card1.ID, Type: model.DependencyTypeRelatedTo})
+	_, _ = services.Dependency.CreateForCard(card1.ID, dto.CreateDependencyRequest{ToCardID: card2.ID, Type: model.DependencyTypeRelatedTo})
+	_, err := services.Dependency.CreateForCard(card2.ID, dto.CreateDependencyRequest{ToCardID: card1.ID, Type: model.DependencyTypeRelatedTo})
 	if err != store.ErrDependencyConflict {
 		t.Errorf("expected ErrDependencyConflict for reverse related_to, got %v", err)
 	}
 }
 
 func TestDepService_DeleteCard_CleansUpDependencies(t *testing.T) {
-	depSvc, cardSvc, cardRepo, colRepo, boardRepo := setupDepService(t)
+	services, repos := setupDepService(t)
 
-	card1 := createCard(t, cardRepo, colRepo, boardRepo)
-	card2 := createCard(t, cardRepo, colRepo, boardRepo)
+	card1 := createCard(t, repos)
+	card2 := createCard(t, repos)
 
-	_, _ = depSvc.CreateForCard(card1.ID, dto.CreateDependencyRequest{ToCardID: card2.ID, Type: model.DependencyTypeBlocks})
+	_, _ = services.Dependency.CreateForCard(card1.ID, dto.CreateDependencyRequest{ToCardID: card2.ID, Type: model.DependencyTypeBlocks})
 
 	// Delete card1
-	if err := cardSvc.DeleteCard(card1.ID); err != nil {
+	if err := services.Card.DeleteCard(card1.ID); err != nil {
 		t.Fatalf("DeleteCard error: %v", err)
 	}
 
 	// card2 should have no deps now
-	deps, _ := depSvc.ListByCard(card2.ID)
+	deps, _ := services.Dependency.ListByCard(card2.ID)
 	if len(deps) != 0 {
 		t.Errorf("expected 0 deps after card deletion, got %d", len(deps))
 	}

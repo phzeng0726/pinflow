@@ -11,13 +11,6 @@ import (
 	"pinflow/store"
 )
 
-type CommentService interface {
-	CreateComment(cardID uint, req dto.CreateCommentRequest) (*dto.CommentResponse, error)
-	ListByCard(cardID uint) ([]dto.CommentResponse, error)
-	UpdateComment(id uint, req dto.UpdateCommentRequest) (*dto.CommentResponse, error)
-	DeleteComment(id uint) error
-}
-
 type commentService struct {
 	commentRepo repository.CommentRepository
 	cardRepo    repository.CardRepository
@@ -25,7 +18,7 @@ type commentService struct {
 	imageSvc    ImageService
 }
 
-func NewCommentService(
+func newCommentService(
 	commentRepo repository.CommentRepository,
 	cardRepo repository.CardRepository,
 	fs *store.FileStore,

@@ -7,12 +7,6 @@ import (
 	"pinflow/repository"
 )
 
-type DependencyService interface {
-	CreateForCard(fromCardID uint, req dto.CreateDependencyRequest) (*dto.DependencyResponse, error)
-	ListByCard(cardID uint) ([]dto.DependencyResponse, error)
-	Delete(id uint) error
-}
-
 type dependencyService struct {
 	depRepo    repository.DependencyRepository
 	cardRepo   repository.CardRepository
@@ -20,7 +14,7 @@ type dependencyService struct {
 	boardRepo  repository.BoardRepository
 }
 
-func NewDependencyService(
+func newDependencyService(
 	depRepo repository.DependencyRepository,
 	cardRepo repository.CardRepository,
 	columnRepo repository.ColumnRepository,

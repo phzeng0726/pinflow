@@ -9,22 +9,12 @@ import (
 	"pinflow/repository"
 )
 
-type TagService interface {
-	CreateOrGet(name string, color string) (*model.Tag, error)
-	ListAll() ([]model.Tag, error)
-	UpdateTag(id uint, req dto.UpdateTagRequest) (*model.Tag, error)
-	DeleteTag(id uint) error
-	AttachToCard(cardID, tagID uint) error
-	DetachFromCard(cardID, tagID uint) error
-	ListByCard(cardID uint) ([]model.Tag, error)
-}
-
 type tagService struct {
 	tagRepo  repository.TagRepository
 	cardRepo repository.CardRepository
 }
 
-func NewTagService(tagRepo repository.TagRepository, cardRepo repository.CardRepository) TagService {
+func newTagService(tagRepo repository.TagRepository, cardRepo repository.CardRepository) TagService {
 	return &tagService{tagRepo: tagRepo, cardRepo: cardRepo}
 }
 

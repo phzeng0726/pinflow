@@ -11,11 +11,7 @@ import (
 )
 
 type CommentHandler struct {
-	svc service.CommentService
-}
-
-func NewCommentHandler(svc service.CommentService) *CommentHandler {
-	return &CommentHandler{svc: svc}
+	services *service.Services
 }
 
 // CreateComment godoc
@@ -39,7 +35,7 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	resp, err := h.svc.CreateComment(cardID, req)
+	resp, err := h.services.Comment.CreateComment(cardID, req)
 	if err != nil {
 		if err == store.ErrNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "card not found"})
@@ -72,7 +68,7 @@ func (h *CommentHandler) UpdateComment(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	resp, err := h.svc.UpdateComment(id, req)
+	resp, err := h.services.Comment.UpdateComment(id, req)
 	if err != nil {
 		if err == store.ErrNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "comment not found"})
@@ -96,7 +92,7 @@ func (h *CommentHandler) DeleteComment(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	if err := h.svc.DeleteComment(id); err != nil {
+	if err := h.services.Comment.DeleteComment(id); err != nil {
 		if err == store.ErrNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "comment not found"})
 		} else {

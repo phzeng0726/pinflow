@@ -10,11 +10,7 @@ import (
 )
 
 type DependencyHandler struct {
-	svc service.DependencyService
-}
-
-func NewDependencyHandler(svc service.DependencyService) *DependencyHandler {
-	return &DependencyHandler{svc: svc}
+	services *service.Services
 }
 
 // CreateDependency godoc
@@ -40,7 +36,7 @@ func (h *DependencyHandler) CreateDependency(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	dep, err := h.svc.CreateForCard(fromCardID, req)
+	dep, err := h.services.Dependency.CreateForCard(fromCardID, req)
 	if err != nil {
 		switch err {
 		case store.ErrSelfReference:
@@ -68,7 +64,7 @@ func (h *DependencyHandler) ListDependencies(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	deps, err := h.svc.ListByCard(cardID)
+	deps, err := h.services.Dependency.ListByCard(cardID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -88,7 +84,7 @@ func (h *DependencyHandler) DeleteDependency(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	if err := h.svc.Delete(id); err != nil {
+	if err := h.services.Dependency.Delete(id); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "dependency not found"})
 		return
 	}

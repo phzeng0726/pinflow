@@ -9,30 +9,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// RouterDeps holds handler dependencies (used in tests).
-type RouterDeps struct {
-	BoardH         *BoardHandler
-	ColumnH        *ColumnHandler
-	CardH          *CardHandler
-	TagH           *TagHandler
-	ChecklistH     *ChecklistHandler
-	ChecklistItemH *ChecklistItemHandler
-	DependencyH    *DependencyHandler
-	CommentH       *CommentHandler
-	ImageH         *ImageHandler
-}
-
-func NewRouter(
-	boardH *BoardHandler,
-	columnH *ColumnHandler,
-	cardH *CardHandler,
-	tagH *TagHandler,
-	checklistH *ChecklistHandler,
-	checklistItemH *ChecklistItemHandler,
-	dependencyH *DependencyHandler,
-	commentH *CommentHandler,
-	imageH *ImageHandler,
-) *gin.Engine {
+func NewRouter(h *Handlers) *gin.Engine {
 	r := gin.Default()
 	r.MaxMultipartMemory = 5 << 20
 
@@ -53,74 +30,74 @@ func NewRouter(
 	{
 		boards := v1.Group("/boards")
 		{
-			boards.POST("", boardH.CreateBoard)
-			boards.GET("", boardH.GetBoards)
-			boards.GET("/:id", boardH.GetBoard)
-			boards.PUT("/:id", boardH.UpdateBoard)
-			boards.DELETE("/:id", boardH.DeleteBoard)
-			boards.POST("/:id/columns", columnH.CreateColumn)
-			boards.GET("/:id/images/:filename", imageH.ServeImage)
+			boards.POST("", h.Board.CreateBoard)
+			boards.GET("", h.Board.GetBoards)
+			boards.GET("/:id", h.Board.GetBoard)
+			boards.PUT("/:id", h.Board.UpdateBoard)
+			boards.DELETE("/:id", h.Board.DeleteBoard)
+			boards.POST("/:id/columns", h.Column.CreateColumn)
+			boards.GET("/:id/images/:filename", h.Image.ServeImage)
 		}
 
 		columns := v1.Group("/columns")
 		{
-			columns.PATCH("/:id", columnH.UpdateColumn)
-			columns.DELETE("/:id", columnH.DeleteColumn)
-			columns.POST("/:id/cards", cardH.CreateCard)
+			columns.PATCH("/:id", h.Column.UpdateColumn)
+			columns.DELETE("/:id", h.Column.DeleteColumn)
+			columns.POST("/:id/cards", h.Card.CreateCard)
 		}
 
 		cards := v1.Group("/cards")
 		{
-			cards.GET("/pinned", cardH.GetPinnedCards)
-			cards.GET("/search", cardH.SearchCards)
-			cards.GET("/:id", cardH.GetCard)
-			cards.PATCH("/:id", cardH.UpdateCard)
-			cards.PATCH("/:id/move", cardH.MoveCard)
-			cards.PATCH("/:id/pin", cardH.TogglePin)
-			cards.PATCH("/:id/schedule", cardH.UpdateSchedule)
-			cards.DELETE("/:id", cardH.DeleteCard)
-			cards.POST("/:id/duplicate", cardH.DuplicateCard)
-			cards.POST("/:id/tags", tagH.AttachTag)
-			cards.DELETE("/:id/tags/:tagId", tagH.DetachTag)
-			cards.GET("/:id/checklists", checklistH.ListChecklists)
-			cards.POST("/:id/checklists", checklistH.CreateChecklist)
-			cards.GET("/:id/dependencies", dependencyH.ListDependencies)
-			cards.POST("/:id/dependencies", dependencyH.CreateDependency)
-			cards.POST("/:id/comments", commentH.CreateComment)
-			cards.POST("/:id/images", imageH.UploadImage)
+			cards.GET("/pinned", h.Card.GetPinnedCards)
+			cards.GET("/search", h.Card.SearchCards)
+			cards.GET("/:id", h.Card.GetCard)
+			cards.PATCH("/:id", h.Card.UpdateCard)
+			cards.PATCH("/:id/move", h.Card.MoveCard)
+			cards.PATCH("/:id/pin", h.Card.TogglePin)
+			cards.PATCH("/:id/schedule", h.Card.UpdateSchedule)
+			cards.DELETE("/:id", h.Card.DeleteCard)
+			cards.POST("/:id/duplicate", h.Card.DuplicateCard)
+			cards.POST("/:id/tags", h.Tag.AttachTag)
+			cards.DELETE("/:id/tags/:tagId", h.Tag.DetachTag)
+			cards.GET("/:id/checklists", h.Checklist.ListChecklists)
+			cards.POST("/:id/checklists", h.Checklist.CreateChecklist)
+			cards.GET("/:id/dependencies", h.Dependency.ListDependencies)
+			cards.POST("/:id/dependencies", h.Dependency.CreateDependency)
+			cards.POST("/:id/comments", h.Comment.CreateComment)
+			cards.POST("/:id/images", h.Image.UploadImage)
 		}
 
 		dependencies := v1.Group("/dependencies")
 		{
-			dependencies.DELETE("/:id", dependencyH.DeleteDependency)
+			dependencies.DELETE("/:id", h.Dependency.DeleteDependency)
 		}
 
 		tags := v1.Group("/tags")
 		{
-			tags.GET("", tagH.ListTags)
-			tags.POST("", tagH.CreateTag)
-			tags.PATCH("/:id", tagH.UpdateTag)
-			tags.DELETE("/:id", tagH.DeleteTag)
+			tags.GET("", h.Tag.ListTags)
+			tags.POST("", h.Tag.CreateTag)
+			tags.PATCH("/:id", h.Tag.UpdateTag)
+			tags.DELETE("/:id", h.Tag.DeleteTag)
 		}
 
 		checklists := v1.Group("/checklists")
 		{
-			checklists.PATCH("/:id", checklistH.UpdateChecklist)
-			checklists.DELETE("/:id", checklistH.DeleteChecklist)
-			checklists.POST("/:id/items", checklistItemH.CreateItem)
-			checklists.PUT("/:id/items", checklistItemH.SyncItems)
+			checklists.PATCH("/:id", h.Checklist.UpdateChecklist)
+			checklists.DELETE("/:id", h.Checklist.DeleteChecklist)
+			checklists.POST("/:id/items", h.ChecklistItem.CreateItem)
+			checklists.PUT("/:id/items", h.ChecklistItem.SyncItems)
 		}
 
 		checklistItems := v1.Group("/checklist-items")
 		{
-			checklistItems.PATCH("/:id", checklistItemH.UpdateItem)
-			checklistItems.DELETE("/:id", checklistItemH.DeleteItem)
+			checklistItems.PATCH("/:id", h.ChecklistItem.UpdateItem)
+			checklistItems.DELETE("/:id", h.ChecklistItem.DeleteItem)
 		}
 
 		comments := v1.Group("/comments")
 		{
-			comments.PATCH("/:id", commentH.UpdateComment)
-			comments.DELETE("/:id", commentH.DeleteComment)
+			comments.PATCH("/:id", h.Comment.UpdateComment)
+			comments.DELETE("/:id", h.Comment.DeleteComment)
 		}
 	}
 

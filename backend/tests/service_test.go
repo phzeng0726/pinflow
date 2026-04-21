@@ -10,14 +10,15 @@ import (
 
 func TestBoardService_CreateValidation(t *testing.T) {
 	fs := setupTestStore(t)
-	svc := service.NewBoardService(repository.NewFileBoardRepository(fs))
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
-	_, err := svc.CreateBoard("")
+	_, err := services.Board.CreateBoard("")
 	if err == nil {
 		t.Fatal("expected error for empty board name")
 	}
 
-	board, err := svc.CreateBoard("  MyBoard  ")
+	board, err := services.Board.CreateBoard("  MyBoard  ")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -28,9 +29,10 @@ func TestBoardService_CreateValidation(t *testing.T) {
 
 func TestBoardService_Delete_NotFound(t *testing.T) {
 	fs := setupTestStore(t)
-	svc := service.NewBoardService(repository.NewFileBoardRepository(fs))
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
-	err := svc.DeleteBoard(999)
+	err := services.Board.DeleteBoard(999)
 	if err == nil {
 		t.Fatal("expected error deleting non-existent board")
 	}
@@ -38,14 +40,12 @@ func TestBoardService_Delete_NotFound(t *testing.T) {
 
 func TestColumnService_CreateColumn_Position(t *testing.T) {
 	fs := setupTestStore(t)
-	boardRepo := repository.NewFileBoardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	boardSvc := service.NewBoardService(boardRepo)
-	colSvc := service.NewColumnService(boardRepo, colRepo)
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
-	board, _ := boardSvc.CreateBoard("B")
+	board, _ := services.Board.CreateBoard("B")
 
-	col1, err := colSvc.CreateColumn(board.ID, "Todo")
+	col1, err := services.Column.CreateColumn(board.ID, "Todo")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -53,7 +53,7 @@ func TestColumnService_CreateColumn_Position(t *testing.T) {
 		t.Errorf("expected position 1.0, got %f", col1.Position)
 	}
 
-	col2, _ := colSvc.CreateColumn(board.ID, "InProgress")
+	col2, _ := services.Column.CreateColumn(board.ID, "InProgress")
 	if col2.Position != 2.0 {
 		t.Errorf("expected position 2.0, got %f", col2.Position)
 	}
@@ -61,16 +61,14 @@ func TestColumnService_CreateColumn_Position(t *testing.T) {
 
 func TestColumnService_AutoPinToggle(t *testing.T) {
 	fs := setupTestStore(t)
-	boardRepo := repository.NewFileBoardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	boardSvc := service.NewBoardService(boardRepo)
-	colSvc := service.NewColumnService(boardRepo, colRepo)
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
-	board, _ := boardSvc.CreateBoard("B")
-	col, _ := colSvc.CreateColumn(board.ID, "InProgress")
+	board, _ := services.Board.CreateBoard("B")
+	col, _ := services.Column.CreateColumn(board.ID, "InProgress")
 
 	autoPin := true
-	updated, err := colSvc.UpdateColumn(col.ID, service.UpdateColumnInput{AutoPin: &autoPin})
+	updated, err := services.Column.UpdateColumn(col.ID, service.UpdateColumnInput{AutoPin: &autoPin})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -81,20 +79,16 @@ func TestColumnService_AutoPinToggle(t *testing.T) {
 
 func TestCardService_CreateCard_AutoPin(t *testing.T) {
 	fs := setupTestStore(t)
-	boardRepo := repository.NewFileBoardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	cardRepo := repository.NewFileCardRepository(fs)
-	boardSvc := service.NewBoardService(boardRepo)
-	colSvc := service.NewColumnService(boardRepo, colRepo)
-	cardSvc := service.NewCardService(cardRepo, colRepo, boardRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs), nil, nil)
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
-	board, _ := boardSvc.CreateBoard("B")
-	col, _ := colSvc.CreateColumn(board.ID, "InProgress")
+	board, _ := services.Board.CreateBoard("B")
+	col, _ := services.Column.CreateColumn(board.ID, "InProgress")
 
 	autoPin := true
-	_, _ = colSvc.UpdateColumn(col.ID, service.UpdateColumnInput{AutoPin: &autoPin})
+	_, _ = services.Column.UpdateColumn(col.ID, service.UpdateColumnInput{AutoPin: &autoPin})
 
-	card, err := cardSvc.CreateCard(col.ID, "Task", "desc")
+	card, err := services.Card.CreateCard(col.ID, "Task", "desc")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -105,26 +99,22 @@ func TestCardService_CreateCard_AutoPin(t *testing.T) {
 
 func TestCardService_MoveCard_TriggersAutoPin(t *testing.T) {
 	fs := setupTestStore(t)
-	boardRepo := repository.NewFileBoardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	cardRepo := repository.NewFileCardRepository(fs)
-	boardSvc := service.NewBoardService(boardRepo)
-	colSvc := service.NewColumnService(boardRepo, colRepo)
-	cardSvc := service.NewCardService(cardRepo, colRepo, boardRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs), nil, nil)
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
-	board, _ := boardSvc.CreateBoard("B")
-	todoCol, _ := colSvc.CreateColumn(board.ID, "Todo")
-	inProgressCol, _ := colSvc.CreateColumn(board.ID, "InProgress")
+	board, _ := services.Board.CreateBoard("B")
+	todoCol, _ := services.Column.CreateColumn(board.ID, "Todo")
+	inProgressCol, _ := services.Column.CreateColumn(board.ID, "InProgress")
 
 	autoPin := true
-	_, _ = colSvc.UpdateColumn(inProgressCol.ID, service.UpdateColumnInput{AutoPin: &autoPin})
+	_, _ = services.Column.UpdateColumn(inProgressCol.ID, service.UpdateColumnInput{AutoPin: &autoPin})
 
-	card, _ := cardSvc.CreateCard(todoCol.ID, "Task", "")
+	card, _ := services.Card.CreateCard(todoCol.ID, "Task", "")
 	if card.IsPinned {
 		t.Error("expected card not pinned initially")
 	}
 
-	moved, err := cardSvc.MoveCard(card.ID, inProgressCol.ID, 1.0)
+	moved, err := services.Card.MoveCard(card.ID, inProgressCol.ID, 1.0)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -135,22 +125,18 @@ func TestCardService_MoveCard_TriggersAutoPin(t *testing.T) {
 
 func TestCardService_TogglePin(t *testing.T) {
 	fs := setupTestStore(t)
-	boardRepo := repository.NewFileBoardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	cardRepo := repository.NewFileCardRepository(fs)
-	boardSvc := service.NewBoardService(boardRepo)
-	colSvc := service.NewColumnService(boardRepo, colRepo)
-	cardSvc := service.NewCardService(cardRepo, colRepo, boardRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs), nil, nil)
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
-	board, _ := boardSvc.CreateBoard("B")
-	col, _ := colSvc.CreateColumn(board.ID, "Todo")
+	board, _ := services.Board.CreateBoard("B")
+	col, _ := services.Column.CreateColumn(board.ID, "Todo")
 
 	card := &model.Card{ColumnID: col.ID, Title: "T", Position: 1.0, IsPinned: false}
-	if err := cardRepo.Create(card); err != nil {
+	if err := repos.Card.Create(card); err != nil {
 		t.Fatalf("create card error: %v", err)
 	}
 
-	toggled, err := cardSvc.TogglePin(card.ID)
+	toggled, err := services.Card.TogglePin(card.ID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -158,7 +144,7 @@ func TestCardService_TogglePin(t *testing.T) {
 		t.Error("expected IsPinned=true after toggle")
 	}
 
-	toggled2, _ := cardSvc.TogglePin(card.ID)
+	toggled2, _ := services.Card.TogglePin(card.ID)
 	if toggled2.IsPinned {
 		t.Error("expected IsPinned=false after second toggle")
 	}
@@ -166,20 +152,16 @@ func TestCardService_TogglePin(t *testing.T) {
 
 func TestCardService_GetPinnedCards(t *testing.T) {
 	fs := setupTestStore(t)
-	boardRepo := repository.NewFileBoardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	cardRepo := repository.NewFileCardRepository(fs)
-	boardSvc := service.NewBoardService(boardRepo)
-	colSvc := service.NewColumnService(boardRepo, colRepo)
-	cardSvc := service.NewCardService(cardRepo, colRepo, boardRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs), nil, nil)
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
-	board, _ := boardSvc.CreateBoard("B")
-	col, _ := colSvc.CreateColumn(board.ID, "Todo")
+	board, _ := services.Board.CreateBoard("B")
+	col, _ := services.Column.CreateColumn(board.ID, "Todo")
 
-	_ = cardRepo.Create(&model.Card{ColumnID: col.ID, Title: "Pinned", Position: 1.0, IsPinned: true})
-	_ = cardRepo.Create(&model.Card{ColumnID: col.ID, Title: "Normal", Position: 2.0, IsPinned: false})
+	_ = repos.Card.Create(&model.Card{ColumnID: col.ID, Title: "Pinned", Position: 1.0, IsPinned: true})
+	_ = repos.Card.Create(&model.Card{ColumnID: col.ID, Title: "Normal", Position: 2.0, IsPinned: false})
 
-	pinned, err := cardSvc.GetPinnedCards()
+	pinned, err := services.Card.GetPinnedCards()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

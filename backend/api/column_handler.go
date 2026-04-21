@@ -9,11 +9,7 @@ import (
 )
 
 type ColumnHandler struct {
-	svc service.ColumnService
-}
-
-func NewColumnHandler(svc service.ColumnService) *ColumnHandler {
-	return &ColumnHandler{svc: svc}
+	services *service.Services
 }
 
 // CreateColumn godoc
@@ -37,7 +33,7 @@ func (h *ColumnHandler) CreateColumn(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	col, err := h.svc.CreateColumn(boardID, req.Name)
+	col, err := h.services.Column.CreateColumn(boardID, req.Name)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -71,7 +67,7 @@ func (h *ColumnHandler) UpdateColumn(c *gin.Context) {
 		AutoPin:  req.AutoPin,
 		Position: req.Position,
 	}
-	col, err := h.svc.UpdateColumn(id, input)
+	col, err := h.services.Column.UpdateColumn(id, input)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -91,7 +87,7 @@ func (h *ColumnHandler) DeleteColumn(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	if err := h.svc.DeleteColumn(id); err != nil {
+	if err := h.services.Column.DeleteColumn(id); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "column not found"})
 		return
 	}

@@ -18,6 +18,7 @@ export const useLocaleStore = create<LocaleState>()(
         const next = get().locale === 'en-US' ? 'zh-TW' : 'en-US'
         set({ locale: next })
         i18n.changeLanguage(next)
+        window.electronAPI?.broadcastSettings?.({ locale: next })
       },
       apply: () => {
         i18n.changeLanguage(get().locale)

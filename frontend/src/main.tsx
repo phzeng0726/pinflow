@@ -6,7 +6,7 @@ import { createRoot } from 'react-dom/client'
 import { TooltipProvider } from './components/ui/tooltip'
 import './index.css'
 
-import { setupWindowQuerySync } from './lib/windowQuerySync'
+import { setupWindowQuerySync, setupWindowSettingsSync } from './lib/windowQuerySync'
 import { routeTree } from './routeTree.gen'
 
 const queryClient = new QueryClient({
@@ -16,6 +16,7 @@ const queryClient = new QueryClient({
 // 讓 Electron 視窗之間可以跨視窗資料同步，因為兩邊不同視窗的狀態會不同
 // 可以透過這個機制，讓兩個視窗跟彼此對話，刷新彼此狀態
 setupWindowQuerySync(queryClient)
+setupWindowSettingsSync()
 
 // 路由設定
 const router = createRouter({ routeTree })

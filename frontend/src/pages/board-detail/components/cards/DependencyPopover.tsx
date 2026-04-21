@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import {
   DEPENDENCY_RELATIONS,
   type DependencyRelationKey,
-} from '@/pages/board-detail/components/styleConfig'
+} from '@/lib/styleConfig'
 import type { Card, CardSearchResult } from '@/types'
 import { Plus, Search, X } from 'lucide-react'
 import { useState } from 'react'

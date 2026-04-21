@@ -15,7 +15,7 @@ import { CommentSection } from '@/pages/board-detail/components/comments/Comment
 import {
   getTagColorClasses,
   resolveDependencyView,
-} from '@/pages/board-detail/components/styleConfig'
+} from '@/lib/styleConfig'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Label } from '@radix-ui/react-label'
 import { Notebook, X } from 'lucide-react'
@@ -32,10 +32,12 @@ interface CardDetailDialogProps {
   boardId: number
   cardId: number
   onClose: () => void
+  /** 獨立視窗模式：略過 Dialog/overlay，直接以 flex 填滿父容器（同時隱藏內建關閉按鈕） */
+  standalone?: boolean
 }
 
 export function CardDetailDialog(props: CardDetailDialogProps) {
-  const { boardId, cardId, onClose } = props
+  const { boardId, cardId, onClose, standalone = false } = props
   const { data: card, isLoading } = useCardDetail(cardId)
   const { updateCard } = useCardMutations(boardId)
   const { detachTag } = useTagMutations(boardId)
@@ -106,6 +108,203 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
     return <div>{t('cardDetail.dialogTitle')}</div>
   }
 
+  const body = (
+    <>
+      {/* 頂部標題區 */}
+      <div className="flex items-start gap-3 border-b px-6 py-3 dark:border-gray-700">
+        <div className="flex-1">
+          <Input
+            {...register('title')}
+            onBlur={handleBlur} // 失去焦點時儲存
+            className="w-full border-transparent bg-transparent px-1 text-xl font-semibold shadow-none focus-visible:ring-1"
+          />
+          {errors.title && (
+            <p className="mt-1 text-xs text-red-500">
+              {errors.title.message}
+            </p>
+          )}
+        </div>
+        {!standalone && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="h-8 w-8"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        )}
+      </div>
+
+      {/* 內容區 */}
+      <div className="flex flex-1 flex-row overflow-hidden">
+        {/* 左側主內容 */}
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="space-y-4">
+            <div className="space-y-6">
+              {/* 屬性區：分層 property list */}
+              <div className="flex flex-col divide-y divide-gray-100 dark:divide-gray-700/60">
+                {/* 第一行：緊湊型屬性並排 */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-4 py-2.5">
+                  {/* Card Number */}
+                  <div className="flex items-center gap-2">
+                    <span className="shrink-0 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      {t('cardDetail.cardNumber')}
+                    </span>
+                    <div className="flex h-8 items-center justify-center rounded border border-gray-300 bg-gray-100 px-2 text-xs font-medium dark:border-gray-600 dark:bg-gray-700">
+                      # {card.id}
+                    </div>
+                  </div>
+
+                  {/* Story Points */}
+                  <div className="flex items-center gap-2">
+                    <span className="shrink-0 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      {t('cardDetail.storyPoints')}
+                    </span>
+                    <StoryPointPopover boardId={boardId} card={card} />
+                  </div>
+
+                  {/* Priority */}
+                  <div className="flex items-center gap-2">
+                    <span className="shrink-0 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      {t('cardDetail.priority')}
+                    </span>
+                    <PriorityPopover boardId={boardId} card={card} />
+                  </div>
+
+                  {/* Schedule */}
+                  <div className="flex items-center gap-2">
+                    <span className="shrink-0 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                      {t('cardDetail.schedule')}
+                    </span>
+                    <SchedulePopover boardId={boardId} card={card} />
+                  </div>
+                </div>
+
+                {/* 第二行：Dependencies */}
+                <div className="flex items-start gap-3 py-2.5">
+                  <span className="w-24 shrink-0 pt-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                    {t('cardDetail.dependencies')}
+                  </span>
+                  <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
+                    {dependencies.map((dep) => {
+                      const { label, otherCardTitle } = resolveDependencyView(
+                        dep,
+                        card.id,
+                      )
+                      const handleDeleteDep = () => deleteDep.mutate(dep.id)
+                      return (
+                        <Badge
+                          key={dep.id}
+                          variant="secondary"
+                          className="flex h-8 items-center gap-1 rounded border border-gray-300 bg-gray-100 px-2 py-0.5 text-xs dark:border-gray-600 dark:bg-gray-700"
+                        >
+                          <span className="text-gray-500 dark:text-gray-400">
+                            {label}:
+                          </span>
+                          <span>{otherCardTitle}</span>
+                          <button
+                            type="button"
+                            onClick={handleDeleteDep}
+                            className="ml-0.5 h-3 w-3 opacity-60 hover:opacity-100"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      )
+                    })}
+                    <DependencyPopover boardId={boardId} card={card} />
+                  </div>
+                </div>
+
+                {/* 第三行：Tags */}
+                <div className="flex items-start gap-3 py-2.5">
+                  <span className="w-24 shrink-0 pt-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                    {t('cardDetail.tags')}
+                  </span>
+                  <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
+                    {(card.tags ?? []).map((tag) => {
+                      const colorCls = getTagColorClasses(tag.color)
+                      const handleDetachTag = (e: React.MouseEvent) => {
+                        e.stopPropagation()
+                        detachTag.mutate({ cardId: card.id, tagId: tag.id })
+                      }
+                      return (
+                        <Badge
+                          key={tag.id}
+                          variant={tag.color ? 'outline' : 'secondary'}
+                          onClick={handleTagBadgeClick}
+                          className={cn(
+                            'flex h-8 cursor-pointer items-center gap-1 rounded px-2 py-0.5 text-xs',
+                            tag.color &&
+                              `${colorCls.bg} border-transparent text-white transition-opacity hover:opacity-80`,
+                          )}
+                        >
+                          {tag.name}
+                          <button
+                            type="button"
+                            onClick={handleDetachTag}
+                            className={cn(
+                              'ml-0.5 h-3 w-3 p-0 opacity-60 hover:opacity-100',
+                              tag.color ? 'text-white' : '',
+                            )}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      )
+                    })}
+                    <TagsPopover
+                      boardId={boardId}
+                      card={card}
+                      open={tagsOpen}
+                      onOpenChange={setTagsOpen}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="space-y-2">
+                <Label className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <Notebook className="h-4 w-4" />{' '}
+                  {t('cardDetail.description')}
+                </Label>
+
+                <MarkdownEditor
+                  value={descriptionValue ?? ''}
+                  onChange={handleDescriptionChange}
+                  onBlur={handleBlur}
+                  placeholder={t('cardDetail.descPlaceholder')}
+                  cardId={card.id}
+                />
+              </div>
+              <ChecklistSection boardId={boardId} cardId={card.id} />
+            </div>
+          </div>
+        </div>
+
+        {/* 右側 CommentSection */}
+        <div className="flex w-80 flex-col border-l dark:border-gray-700">
+          <CommentSection
+            cardId={card.id}
+            boardId={boardId}
+            comments={card.comments ?? []}
+          />
+        </div>
+      </div>
+    </>
+  )
+
+  if (standalone) {
+    return (
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <h2 className="sr-only">{t('cardDetail.dialogTitle')}</h2>
+        {body}
+      </div>
+    )
+  }
+
   return (
     <Dialog open={true} onOpenChange={handleDialogOpenChange}>
       <DialogContent
@@ -115,188 +314,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
         <DialogTitle className="sr-only">
           {t('cardDetail.dialogTitle')}
         </DialogTitle>
-
-        {/* 頂部標題區 */}
-        <div className="flex items-start gap-3 border-b px-6 py-3 dark:border-gray-700">
-          <div className="flex-1">
-            <Input
-              {...register('title')}
-              onBlur={handleBlur} // 失去焦點時儲存
-              className="w-full border-transparent bg-transparent px-1 text-xl font-semibold shadow-none focus-visible:ring-1"
-            />
-            {errors.title && (
-              <p className="mt-1 text-xs text-red-500">
-                {errors.title.message}
-              </p>
-            )}
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="h-8 w-8"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-
-        {/* 內容區 */}
-        <div className="flex flex-1 flex-row overflow-hidden">
-          {/* 左側主內容 */}
-          <div className="flex-1 overflow-y-auto px-6 py-4">
-            <div className="space-y-4">
-              <div className="space-y-6">
-                {/* 屬性區：分層 property list */}
-                <div className="flex flex-col divide-y divide-gray-100 dark:divide-gray-700/60">
-                  {/* 第一行：緊湊型屬性並排 */}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-4 py-2.5">
-                    {/* Card Number */}
-                    <div className="flex items-center gap-2">
-                      <span className="shrink-0 text-xs font-semibold text-gray-500 dark:text-gray-400">
-                        {t('cardDetail.cardNumber')}
-                      </span>
-                      <div className="flex h-8 items-center justify-center rounded border border-gray-300 bg-gray-100 px-2 text-xs font-medium dark:border-gray-600 dark:bg-gray-700">
-                        # {card.id}
-                      </div>
-                    </div>
-
-                    {/* Story Points */}
-                    <div className="flex items-center gap-2">
-                      <span className="shrink-0 text-xs font-semibold text-gray-500 dark:text-gray-400">
-                        {t('cardDetail.storyPoints')}
-                      </span>
-                      <StoryPointPopover boardId={boardId} card={card} />
-                    </div>
-
-                    {/* Priority */}
-                    <div className="flex items-center gap-2">
-                      <span className="shrink-0 text-xs font-semibold text-gray-500 dark:text-gray-400">
-                        {t('cardDetail.priority')}
-                      </span>
-                      <PriorityPopover boardId={boardId} card={card} />
-                    </div>
-
-                    {/* Schedule */}
-                    <div className="flex items-center gap-2">
-                      <span className="shrink-0 text-xs font-semibold text-gray-500 dark:text-gray-400">
-                        {t('cardDetail.schedule')}
-                      </span>
-                      <SchedulePopover boardId={boardId} card={card} />
-                    </div>
-                  </div>
-
-                  {/* 第二行：Dependencies */}
-                  <div className="flex items-start gap-3 py-2.5">
-                    <span className="w-24 shrink-0 pt-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400">
-                      {t('cardDetail.dependencies')}
-                    </span>
-                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
-                      {dependencies.map((dep) => {
-                        const { label, otherCardTitle } = resolveDependencyView(
-                          dep,
-                          card.id,
-                        )
-                        const handleDeleteDep = () => deleteDep.mutate(dep.id)
-                        return (
-                          <Badge
-                            key={dep.id}
-                            variant="secondary"
-                            className="flex h-8 items-center gap-1 rounded border border-gray-300 bg-gray-100 px-2 py-0.5 text-xs dark:border-gray-600 dark:bg-gray-700"
-                          >
-                            <span className="text-gray-500 dark:text-gray-400">
-                              {label}:
-                            </span>
-                            <span>{otherCardTitle}</span>
-                            <button
-                              type="button"
-                              onClick={handleDeleteDep}
-                              className="ml-0.5 h-3 w-3 opacity-60 hover:opacity-100"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        )
-                      })}
-                      <DependencyPopover boardId={boardId} card={card} />
-                    </div>
-                  </div>
-
-                  {/* 第三行：Tags */}
-                  <div className="flex items-start gap-3 py-2.5">
-                    <span className="w-24 shrink-0 pt-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400">
-                      {t('cardDetail.tags')}
-                    </span>
-                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
-                      {(card.tags ?? []).map((tag) => {
-                        const colorCls = getTagColorClasses(tag.color)
-                        const handleDetachTag = (e: React.MouseEvent) => {
-                          e.stopPropagation()
-                          detachTag.mutate({ cardId: card.id, tagId: tag.id })
-                        }
-                        return (
-                          <Badge
-                            key={tag.id}
-                            variant={tag.color ? 'outline' : 'secondary'}
-                            onClick={handleTagBadgeClick}
-                            className={cn(
-                              'flex h-8 cursor-pointer items-center gap-1 rounded px-2 py-0.5 text-xs',
-                              tag.color &&
-                                `${colorCls.bg} border-transparent text-white transition-opacity hover:opacity-80`,
-                            )}
-                          >
-                            {tag.name}
-                            <button
-                              type="button"
-                              onClick={handleDetachTag}
-                              className={cn(
-                                'ml-0.5 h-3 w-3 p-0 opacity-60 hover:opacity-100',
-                                tag.color ? 'text-white' : '',
-                              )}
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        )
-                      })}
-                      <TagsPopover
-                        boardId={boardId}
-                        card={card}
-                        open={tagsOpen}
-                        onOpenChange={setTagsOpen}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Description */}
-                <div className="space-y-2">
-                  <Label className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    <Notebook className="h-4 w-4" />{' '}
-                    {t('cardDetail.description')}
-                  </Label>
-
-                  <MarkdownEditor
-                    value={descriptionValue ?? ''}
-                    onChange={handleDescriptionChange}
-                    onBlur={handleBlur}
-                    placeholder={t('cardDetail.descPlaceholder')}
-                    cardId={card.id}
-                  />
-                </div>
-                <ChecklistSection boardId={boardId} cardId={card.id} />
-              </div>
-            </div>
-          </div>
-
-          {/* 右側 CommentSection */}
-          <div className="flex w-80 flex-col border-l dark:border-gray-700">
-            <CommentSection
-              cardId={card.id}
-              boardId={boardId}
-              comments={card.comments ?? []}
-            />
-          </div>
-        </div>
+        {body}
       </DialogContent>
     </Dialog>
   )

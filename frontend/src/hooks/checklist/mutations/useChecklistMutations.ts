@@ -12,6 +12,8 @@ export function useChecklistMutations(boardId: number, cardId: number) {
     qc.invalidateQueries({ queryKey: queryKeys.boards.detail(boardId) })
   const invalidateCardDetail = () =>
     qc.invalidateQueries({ queryKey: queryKeys.cards.detail(cardId) })
+  const invalidatePinnedCards = () =>
+    qc.invalidateQueries({ queryKey: queryKeys.cards.pinned() })
 
   const createList = useMutation({
     mutationFn: (title: string) => api.createChecklist(cardId, title),
@@ -39,7 +41,7 @@ export function useChecklistMutations(boardId: number, cardId: number) {
   const deleteList = useMutation({
     mutationFn: (id: number) => api.deleteChecklist(id),
     onSuccess: async () => {
-      await Promise.all([invalidateCardDetail(), invalidateBoardDetail()])
+      await Promise.all([invalidateCardDetail(), invalidateBoardDetail(), invalidatePinnedCards()])
       toast.success(t('toast.checklist.listDeleted'))
     },
     onError: () => toast.error(t('toast.checklist.listDeleteError')),
@@ -54,7 +56,7 @@ export function useChecklistMutations(boardId: number, cardId: number) {
       text: string
     }) => api.createChecklistItem(checklistId, text),
     onSuccess: async () => {
-      await Promise.all([invalidateCardDetail(), invalidateBoardDetail()])
+      await Promise.all([invalidateCardDetail(), invalidateBoardDetail(), invalidatePinnedCards()])
     },
     onError: () => toast.error(t('toast.checklist.itemCreateError')),
   })
@@ -68,7 +70,7 @@ export function useChecklistMutations(boardId: number, cardId: number) {
       data: { text?: string; completed?: boolean; position?: number }
     }) => api.updateChecklistItem(id, data),
     onSuccess: async () => {
-      await Promise.all([invalidateCardDetail(), invalidateBoardDetail()])
+      await Promise.all([invalidateCardDetail(), invalidateBoardDetail(), invalidatePinnedCards()])
     },
     onError: () => toast.error(t('toast.checklist.itemUpdateError')),
   })
@@ -76,7 +78,7 @@ export function useChecklistMutations(boardId: number, cardId: number) {
   const deleteItem = useMutation({
     mutationFn: (id: number) => api.deleteChecklistItem(id),
     onSuccess: async () => {
-      await Promise.all([invalidateCardDetail(), invalidateBoardDetail()])
+      await Promise.all([invalidateCardDetail(), invalidateBoardDetail(), invalidatePinnedCards()])
     },
     onError: () => toast.error(t('toast.checklist.itemDeleteError')),
   })
@@ -90,7 +92,7 @@ export function useChecklistMutations(boardId: number, cardId: number) {
       items: { text: string; completed: boolean }[]
     }) => api.syncChecklistItems(checklistId, items),
     onSuccess: async () => {
-      await Promise.all([invalidateCardDetail(), invalidateBoardDetail()])
+      await Promise.all([invalidateCardDetail(), invalidateBoardDetail(), invalidatePinnedCards()])
       toast.success(t('toast.checklist.itemsSynced'))
     },
     onError: () => toast.error(t('toast.checklist.itemsSyncError')),

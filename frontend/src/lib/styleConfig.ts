@@ -157,14 +157,18 @@ export function getPriorityConfig(priority: number | null | undefined) {
 
 // ── Column Colors ─────────────────────────────────────────────────────────────
 
-export const COLUMN_COLORS = [
-  'bg-red-500',
-  'bg-orange-500',
-  'bg-blue-500',
-  'bg-green-500',
-  'bg-blue-500',
-  'bg-purple-500',
+export const COLUMN_COLORS: { bg: string; border: string }[] = [
+  { bg: 'bg-red-500', border: 'border-red-400' },
+  { bg: 'bg-orange-500', border: 'border-orange-400' },
+  { bg: 'bg-blue-500', border: 'border-blue-400' },
+  { bg: 'bg-green-500', border: 'border-green-400' },
+  { bg: 'bg-blue-500', border: 'border-blue-400' },
+  { bg: 'bg-purple-500', border: 'border-purple-400' },
 ]
+
+export function getColumnColor(columnId: number) {
+  return COLUMN_COLORS[columnId % COLUMN_COLORS.length]
+}
 
 // ── Story Points ──────────────────────────────────────────────────────────────
 

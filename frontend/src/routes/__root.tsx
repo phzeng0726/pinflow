@@ -8,10 +8,13 @@ function Root() {
   const apply = useThemeStore((s) => s.apply)
   const theme = useThemeStore((s) => s.theme)
   const applyLocale = useLocaleStore((s) => s.apply)
+  const locale = useLocaleStore((s) => s.locale)
   useEffect(() => {
     apply()
+  }, [apply, theme])
+  useEffect(() => {
     applyLocale()
-  }, [apply, applyLocale])
+  }, [applyLocale, locale])
   return (
     <>
       <Outlet />

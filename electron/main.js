@@ -5,6 +5,7 @@ const {
   Menu,
   ipcMain,
   nativeImage,
+  screen,
 } = require("electron");
 const path = require("path");
 const { spawn } = require("child_process");
@@ -180,12 +181,65 @@ function togglePinWindow() {
 
 // ── IPC ───────────────────────────────────────────────────────────────────────
 
+ipcMain.on("open-card-detail", (_event, { boardId, cardId }) => {
+  const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize;
+  const w = 960;
+  const h = 720;
+  const x = Math.round((sw - w) / 2);
+  const y = Math.round((sh - h) / 2);
+
+  const win = new BrowserWindow({
+    width: w,
+    height: h,
+    x,
+    y,
+    show: false,
+    alwaysOnTop: true,
+    transparent: true,
+    frame: false,
+    title: "PinFlow – Card Detail",
+    icon: path.join(__dirname, "icons", "icon.ico"),
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+
+  win.setAlwaysOnTop(true, "screen-saver");
+  win.once("ready-to-show", () => win.show());
+
+  const route = `/card-detail?boardId=${boardId}&cardId=${cardId}`;
+  if (isDev) {
+    win.loadURL(FRONTEND_DEV_URL + route);
+  } else {
+    const indexPath = path.join(
+      __dirname,
+      "..",
+      "frontend",
+      "dist",
+      "index.html",
+    );
+    win.loadURL(`file://${indexPath}#${route}`);
+  }
+});
+
 ipcMain.on("toggle-pin-window", () => togglePinWindow());
 ipcMain.on("hide-pin-window", () => {
   if (pinWindow && pinWindow.isVisible()) {
     pinWindow.hide();
     updateTrayMenu();
   }
+});
+
+// 接收 theme/locale 設定變更，廣播給其他視窗
+ipcMain.on("broadcast-settings", (event, settings) => {
+  const windows = BrowserWindow.getAllWindows();
+  windows.forEach((win) => {
+    if (win.webContents !== event.sender) {
+      win.webContents.send("settings", settings);
+    }
+  });
 });
 
 // 接收來自任一視窗的 React Query 資料刷新指令，並廣播給其他視窗

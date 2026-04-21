@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PinRouteImport } from './routes/pin'
+import { Route as CardDetailRouteImport } from './routes/card-detail'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BoardsBoardIdRouteImport } from './routes/boards.$boardId'
 
 const PinRoute = PinRouteImport.update({
   id: '/pin',
   path: '/pin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CardDetailRoute = CardDetailRouteImport.update({
+  id: '/card-detail',
+  path: '/card-detail',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -31,30 +37,34 @@ const BoardsBoardIdRoute = BoardsBoardIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/card-detail': typeof CardDetailRoute
   '/pin': typeof PinRoute
   '/boards/$boardId': typeof BoardsBoardIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/card-detail': typeof CardDetailRoute
   '/pin': typeof PinRoute
   '/boards/$boardId': typeof BoardsBoardIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/card-detail': typeof CardDetailRoute
   '/pin': typeof PinRoute
   '/boards/$boardId': typeof BoardsBoardIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/pin' | '/boards/$boardId'
+  fullPaths: '/' | '/card-detail' | '/pin' | '/boards/$boardId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/pin' | '/boards/$boardId'
-  id: '__root__' | '/' | '/pin' | '/boards/$boardId'
+  to: '/' | '/card-detail' | '/pin' | '/boards/$boardId'
+  id: '__root__' | '/' | '/card-detail' | '/pin' | '/boards/$boardId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CardDetailRoute: typeof CardDetailRoute
   PinRoute: typeof PinRoute
   BoardsBoardIdRoute: typeof BoardsBoardIdRoute
 }
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/pin'
       fullPath: '/pin'
       preLoaderRoute: typeof PinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/card-detail': {
+      id: '/card-detail'
+      path: '/card-detail'
+      fullPath: '/card-detail'
+      preLoaderRoute: typeof CardDetailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CardDetailRoute: CardDetailRoute,
   PinRoute: PinRoute,
   BoardsBoardIdRoute: BoardsBoardIdRoute,
 }

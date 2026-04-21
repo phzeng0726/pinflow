@@ -189,4 +189,7 @@ func TestCardService_GetPinnedCards(t *testing.T) {
 	if pinned[0].ColumnName != "Todo" {
 		t.Errorf("expected column name 'Todo', got %q", pinned[0].ColumnName)
 	}
+	if pinned[0].BoardID != board.ID {
+		t.Errorf("expected boardId %d, got %d", board.ID, pinned[0].BoardID)
+	}
 }

@@ -31,7 +31,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
-import { COLUMN_COLORS } from '@/pages/board-detail/components/styleConfig'
+import { getColumnColor } from '@/lib/styleConfig'
 import type { Column } from '@/types'
 
 interface ColumnHeaderProps {
@@ -54,7 +54,7 @@ export function ColumnHeader(props: ColumnHeaderProps) {
     defaultValues: { name: column.name },
   })
 
-  const colorClass = COLUMN_COLORS[column.id % COLUMN_COLORS.length]
+  const colorClass = getColumnColor(column.id).bg
 
   const handleUpdateColumn = (form: EditColumnForm) => {
     updateColumn.mutate({ id: column.id, form })

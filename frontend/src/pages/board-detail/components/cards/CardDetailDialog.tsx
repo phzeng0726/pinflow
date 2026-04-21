@@ -15,7 +15,7 @@ import { CommentSection } from '@/pages/board-detail/components/comments/Comment
 import {
   getTagColorClasses,
   resolveDependencyView,
-} from '@/pages/board-detail/components/styleConfig'
+} from '@/lib/styleConfig'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Label } from '@radix-ui/react-label'
 import { Notebook, X } from 'lucide-react'

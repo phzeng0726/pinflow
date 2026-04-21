@@ -26,12 +26,24 @@ type MoveCardRequest struct {
 	Position float64 `json:"position" binding:"required"`
 }
 
+type ChecklistSummary struct {
+	TotalCount     int `json:"totalCount"`
+	CompletedCount int `json:"completedCount"`
+}
+
 type PinnedCardResponse struct {
-	ID          uint   `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	ColumnID    uint   `json:"columnId"`
-	ColumnName  string `json:"columnName"`
+	ID               uint             `json:"id"`
+	Title            string           `json:"title"`
+	Description      string           `json:"description"`
+	ColumnID         uint             `json:"columnId"`
+	ColumnName       string           `json:"columnName"`
+	Priority         *int             `json:"priority"`
+	StoryPoint       *int             `json:"storyPoint"`
+	StartTime        *time.Time       `json:"startTime"`
+	EndTime          *time.Time       `json:"endTime"`
+	Tags             []TagResponse    `json:"tags"`
+	ChecklistSummary ChecklistSummary `json:"checklistSummary"`
+	DependencyCount  int              `json:"dependencyCount"`
 }
 
 type DuplicateCardRequest struct {

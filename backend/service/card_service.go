@@ -264,10 +264,32 @@ func (s *cardService) GetPinnedCards() ([]dto.PinnedCardResponse, error) {
 	}
 	result := make([]dto.PinnedCardResponse, 0, len(cards))
 	for _, c := range cards {
-		col, err := s.columnRepo.FindByID(c.ColumnID)
+		detail, err := s.cardRepo.FindDetail(c.ID)
+		if err != nil {
+			continue
+		}
 		colName := ""
-		if err == nil {
+		if col, err := s.columnRepo.FindByID(c.ColumnID); err == nil {
 			colName = col.Name
+		}
+		tags := make([]dto.TagResponse, len(detail.Tags))
+		for i, t := range detail.Tags {
+			tags[i] = dto.TagResponse{ID: t.ID, Name: t.Name, Color: t.Color}
+		}
+		var totalCount, completedCount int
+		for _, cl := range detail.Checklists {
+			totalCount += len(cl.Items)
+			for _, item := range cl.Items {
+				if item.Completed {
+					completedCount++
+				}
+			}
+		}
+		depCount := 0
+		if s.depRepo != nil {
+			if count, err := s.depRepo.CountByCard(c.ID); err == nil {
+				depCount = count
+			}
 		}
 		result = append(result, dto.PinnedCardResponse{
 			ID:          c.ID,
@@ -275,6 +297,16 @@ func (s *cardService) GetPinnedCards() ([]dto.PinnedCardResponse, error) {
 			Description: c.Description,
 			ColumnID:    c.ColumnID,
 			ColumnName:  colName,
+			Priority:    c.Priority,
+			StoryPoint:  c.StoryPoint,
+			StartTime:   c.StartTime,
+			EndTime:     c.EndTime,
+			Tags:        tags,
+			ChecklistSummary: dto.ChecklistSummary{
+				TotalCount:     totalCount,
+				CompletedCount: completedCount,
+			},
+			DependencyCount: depCount,
 		})
 	}
 	return result, nil

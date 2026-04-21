@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils'
 import {
   TAG_COLORS,
   getTagColorClasses,
-} from '@/pages/board-detail/components/styleConfig'
+} from '@/lib/styleConfig'
 import type { Card, Tag } from '@/types'
 import { ArrowLeft, Check, Pencil, Plus, X } from 'lucide-react'
 import { useMemo, useState } from 'react'

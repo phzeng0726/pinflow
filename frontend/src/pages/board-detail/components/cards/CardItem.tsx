@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils'
 import {
   getPriorityConfig,
   getTagColorClasses,
-} from '@/pages/board-detail/components/styleConfig'
+} from '@/lib/styleConfig'
 import type { Card } from '@/types'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'

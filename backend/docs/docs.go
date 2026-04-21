@@ -1962,6 +1962,17 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.ChecklistSummary": {
+            "type": "object",
+            "properties": {
+                "completedCount": {
+                    "type": "integer"
+                },
+                "totalCount": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.CommentResponse": {
             "type": "object",
             "properties": {
@@ -2196,17 +2207,41 @@ const docTemplate = `{
         "dto.PinnedCardResponse": {
             "type": "object",
             "properties": {
+                "checklistSummary": {
+                    "$ref": "#/definitions/dto.ChecklistSummary"
+                },
                 "columnId": {
                     "type": "integer"
                 },
                 "columnName": {
                     "type": "string"
                 },
+                "dependencyCount": {
+                    "type": "integer"
+                },
                 "description": {
+                    "type": "string"
+                },
+                "endTime": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "startTime": {
+                    "type": "string"
+                },
+                "storyPoint": {
+                    "type": "integer"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TagResponse"
+                    }
                 },
                 "title": {
                     "type": "string"

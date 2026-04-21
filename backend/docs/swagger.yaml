@@ -95,6 +95,13 @@ definitions:
       totalCount:
         type: integer
     type: object
+  dto.ChecklistSummary:
+    properties:
+      completedCount:
+        type: integer
+      totalCount:
+        type: integer
+    type: object
   dto.CommentResponse:
     properties:
       authorId:
@@ -253,14 +260,30 @@ definitions:
     type: object
   dto.PinnedCardResponse:
     properties:
+      checklistSummary:
+        $ref: '#/definitions/dto.ChecklistSummary'
       columnId:
         type: integer
       columnName:
         type: string
+      dependencyCount:
+        type: integer
       description:
+        type: string
+      endTime:
         type: string
       id:
         type: integer
+      priority:
+        type: integer
+      startTime:
+        type: string
+      storyPoint:
+        type: integer
+      tags:
+        items:
+          $ref: '#/definitions/dto.TagResponse'
+        type: array
       title:
         type: string
     type: object

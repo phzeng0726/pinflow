@@ -115,4 +115,14 @@ export interface PinnedCard {
   description: string
   columnId: number
   columnName: string
+  priority: number | null
+  storyPoint: number | null
+  startTime: string | null
+  endTime: string | null
+  tags: Tag[]
+  checklistSummary: {
+    totalCount: number
+    completedCount: number
+  }
+  dependencyCount: number
 }

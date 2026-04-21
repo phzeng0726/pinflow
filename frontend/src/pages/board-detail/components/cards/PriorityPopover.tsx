@@ -6,7 +6,7 @@ import {
 } from '@/components/ui/popover'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { cn } from '@/lib/utils'
-import { PRIORITIES } from '@/pages/board-detail/components/styleConfig'
+import { PRIORITIES } from '@/lib/styleConfig'
 import type { Card } from '@/types'
 import { Flag, X } from 'lucide-react'
 import { useState } from 'react'

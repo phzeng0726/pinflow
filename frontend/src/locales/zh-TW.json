@@ -156,7 +156,8 @@
   "pin": {
     "pinnedTasks": "釘選任務",
     "noPinnedTasks": "尚無釘選任務",
-    "unpin": "取消釘選"
+    "unpin": "取消釘選",
+    "noChecklistItems": "此清單尚無項目"
   },
   "toolbar": {
     "h1": "標題 H1",

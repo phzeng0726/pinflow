@@ -260,6 +260,8 @@ definitions:
     type: object
   dto.PinnedCardResponse:
     properties:
+      boardId:
+        type: integer
       checklistSummary:
         $ref: '#/definitions/dto.ChecklistSummary'
       columnId:

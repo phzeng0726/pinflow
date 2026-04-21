@@ -115,6 +115,7 @@ export interface PinnedCard {
   description: string
   columnId: number
   columnName: string
+  boardId: number
   priority: number | null
   storyPoint: number | null
   startTime: string | null

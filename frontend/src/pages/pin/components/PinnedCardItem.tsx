@@ -12,12 +12,16 @@ import type { PinnedCard } from '@/types'
 import {
   Calendar,
   CheckSquare,
+  ChevronDown,
+  ChevronUp,
   Flag,
   Flame,
   Link2,
   PinOff,
 } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { PinChecklistPanel } from './PinChecklistPanel'
 
 interface PinnedCardItemProps {
   card: PinnedCard
@@ -27,6 +31,7 @@ interface PinnedCardItemProps {
 export function PinnedCardItem(props: PinnedCardItemProps) {
   const { card, onUnpin } = props
   const { t } = useTranslation()
+  const [expanded, setExpanded] = useState(false)
 
   const tags = card.tags ?? []
   const hasSchedule = !!card.startTime || !!card.endTime
@@ -104,7 +109,9 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
                 </span>
               )}
               {totalCount > 0 && (
-                <span
+                <button
+                  type="button"
+                  onClick={() => setExpanded((prev) => !prev)}
                   className={cn(
                     'flex shrink-0 items-center gap-0.5 whitespace-nowrap text-xs',
                     completedCount === totalCount
@@ -114,7 +121,12 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
                 >
                   <CheckSquare className="h-3 w-3" />
                   {completedCount}/{totalCount}
-                </span>
+                  {expanded ? (
+                    <ChevronUp className="h-3 w-3" />
+                  ) : (
+                    <ChevronDown className="h-3 w-3" />
+                  )}
+                </button>
               )}
               {card.priority != null &&
                 card.priority > 0 &&
@@ -151,6 +163,9 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
           <span className="mt-1 inline-block rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-400">
             {card.columnName}
           </span>
+          {expanded && totalCount > 0 && (
+            <PinChecklistPanel cardId={card.id} boardId={card.boardId} />
+          )}
         </div>
         <Tooltip>
           <TooltipTrigger asChild>

@@ -2207,6 +2207,9 @@ const docTemplate = `{
         "dto.PinnedCardResponse": {
             "type": "object",
             "properties": {
+                "boardId": {
+                    "type": "integer"
+                },
                 "checklistSummary": {
                     "$ref": "#/definitions/dto.ChecklistSummary"
                 },

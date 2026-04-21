@@ -4,6 +4,7 @@ import type { QueryClient } from '@tanstack/react-query'
 interface ElectronAPI {
   broadcastQueryInvalidation?: (queryKey: readonly unknown[]) => void
   onQueryInvalidation?: (cb: (queryKey: readonly unknown[]) => void) => void
+  openCardDetail?: (boardId: number, cardId: number) => void
 }
 
 declare global {

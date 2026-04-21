@@ -5,6 +5,7 @@ const {
   Menu,
   ipcMain,
   nativeImage,
+  screen,
 } = require("electron");
 const path = require("path");
 const { spawn } = require("child_process");
@@ -179,6 +180,49 @@ function togglePinWindow() {
 }
 
 // ── IPC ───────────────────────────────────────────────────────────────────────
+
+ipcMain.on("open-card-detail", (_event, { boardId, cardId }) => {
+  const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize;
+  const w = 960;
+  const h = 720;
+  const x = Math.round((sw - w) / 2);
+  const y = Math.round((sh - h) / 2);
+
+  const win = new BrowserWindow({
+    width: w,
+    height: h,
+    x,
+    y,
+    show: false,
+    alwaysOnTop: true,
+    transparent: true,
+    frame: false,
+    title: "PinFlow – Card Detail",
+    icon: path.join(__dirname, "icons", "icon.ico"),
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+
+  win.setAlwaysOnTop(true, "screen-saver");
+  win.once("ready-to-show", () => win.show());
+
+  const route = `/card-detail?boardId=${boardId}&cardId=${cardId}`;
+  if (isDev) {
+    win.loadURL(FRONTEND_DEV_URL + route);
+  } else {
+    const indexPath = path.join(
+      __dirname,
+      "..",
+      "frontend",
+      "dist",
+      "index.html",
+    );
+    win.loadURL(`file://${indexPath}#${route}`);
+  }
+});
 
 ipcMain.on("toggle-pin-window", () => togglePinWindow());
 ipcMain.on("hide-pin-window", () => {

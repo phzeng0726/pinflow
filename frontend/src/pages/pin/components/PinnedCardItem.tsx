@@ -1,10 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { formatCardDate, getScheduleUrgencyClass } from '@/lib/dates'
 import { getColumnColor, getPriorityConfig, getTagColorClasses } from '@/lib/styleConfig'
 import { cn } from '@/lib/utils'
@@ -14,10 +10,12 @@ import {
   CheckSquare,
   ChevronDown,
   ChevronUp,
+  Ellipsis,
   Flag,
   Flame,
   Link2,
   PinOff,
+  SquarePen,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -26,10 +24,12 @@ import { PinChecklistPanel } from './PinChecklistPanel'
 interface PinnedCardItemProps {
   card: PinnedCard
   onUnpin: (id: number) => void
+  onEdit: (card: PinnedCard) => void
 }
 
 export function PinnedCardItem(props: PinnedCardItemProps) {
-  const { card, onUnpin } = props
+  const { card, onUnpin, onEdit } = props
+  const [popoverOpen, setPopoverOpen] = useState(false)
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
 
@@ -167,20 +167,42 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
             <PinChecklistPanel cardId={card.id} boardId={card.boardId} />
           )}
         </div>
-        <Tooltip>
-          <TooltipTrigger asChild>
+        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+          <PopoverTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              aria-label={t('pin.unpin')}
-              className="mt-0.5 h-6 w-6 shrink-0 text-gray-400 opacity-0 transition-all hover:text-red-500 group-hover:opacity-100"
-              onClick={() => onUnpin(card.id)}
+              aria-label="Actions"
+              className="mt-0.5 h-6 w-6 shrink-0 text-gray-400 opacity-0 transition-all hover:text-gray-700 group-hover:opacity-100 dark:hover:text-gray-200"
+            >
+              <Ellipsis className="h-3.5 w-3.5" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-36 p-1" align="end">
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+              onClick={() => {
+                setPopoverOpen(false)
+                onEdit(card)
+              }}
+            >
+              <SquarePen className="h-3.5 w-3.5" />
+              {t('common.edit')}
+            </button>
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+              onClick={() => {
+                setPopoverOpen(false)
+                onUnpin(card.id)
+              }}
             >
               <PinOff className="h-3.5 w-3.5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{t('pin.unpin')}</TooltipContent>
-        </Tooltip>
+              {t('pin.unpin')}
+            </button>
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
   )

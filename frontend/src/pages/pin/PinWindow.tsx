@@ -2,7 +2,6 @@ import { Pin, X } from 'lucide-react'
 import type React from 'react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { usePinnedCards } from '@/hooks/card/queries/usePinnedCards'
 import { usePinStore } from '@/stores/pinStore'
@@ -30,11 +29,18 @@ export function PinWindow() {
     }
   }, [])
 
+  const handleCardEdit = (card: Parameters<typeof PinnedCardItem>[0]['card']) => {
+    const api = (window as any).electronAPI
+    if (api?.openCardDetail) {
+      api.openCardDetail(card.boardId, card.id)
+    }
+  }
+
   return (
     <div className="flex h-screen select-none flex-col overflow-hidden rounded-2xl bg-white/70 shadow-2xl dark:bg-gray-900/90">
       {/* Title bar */}
       <div
-        className="flex shrink-0 cursor-move items-center justify-between bg-blue-600/80 px-3 py-3 text-white dark:bg-blue-700/80"
+        className="flex shrink-0 cursor-grab items-center justify-between bg-blue-600/80 px-3 py-3 text-white dark:bg-blue-700/80"
         style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
       >
         <div className="flex items-center gap-1.5">
@@ -52,10 +58,9 @@ export function PinWindow() {
           className="flex items-center gap-1"
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 text-white hover:bg-white/20"
+          <button
+            type="button"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-white transition-colors hover:bg-white/20"
             onClick={() => {
               const api = (window as any).electronAPI
               if (api?.hidePinWindow) api.hidePinWindow()
@@ -63,7 +68,7 @@ export function PinWindow() {
             }}
           >
             <X className="h-3.5 w-3.5" />
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -80,6 +85,7 @@ export function PinWindow() {
               key={card.id}
               card={card}
               onUnpin={(id) => togglePin.mutate(id)}
+              onEdit={handleCardEdit}
             />
           ))
         )}

@@ -175,17 +175,6 @@ pnpm dev
 
 ---
 
-## 從舊版 SQLite 遷移
-
-如果你有舊版的 `pinflow.db`，可以用遷移工具轉換為檔案式 workspace：
-
-```bash
-cd backend
-go run ./cmd/migrate --db pinflow.db --out ../../pinflow-workspace
-```
-
----
-
 ## 執行測試
 
 ### Backend 測試
@@ -237,21 +226,20 @@ docker-compose down
 ```
 pinflow/
 ├── backend/              # Go API server
-│   ├── api/              # Gin handlers
-│   ├── service/          # 業務邏輯
-│   ├── repository/       # 檔案式 repository 實作
+│   ├── api/              # Handlers 容器（handler.go）+ Gin handlers + router.go
+│   ├── service/          # Services 容器（service.go）+ 業務邏輯
+│   ├── repository/       # Repositories 容器（repository.go）+ 檔案式實作
 │   ├── store/            # FileStore（記憶體 + JSON 持久化）
 │   ├── model/            # 資料模型
 │   ├── dto/              # 請求/回應 DTO
-│   ├── cmd/migrate/      # SQLite → 檔案式 workspace 遷移工具
 │   ├── docs/             # Swagger 自動生成文件
 │   └── tests/            # 單元 + 整合測試
 ├── frontend/             # React SPA
 │   ├── src/
-│   │   ├── features/     # board/ 與 pin/ 功能模組
-│   │   ├── hooks/        # TanStack Query hooks
-│   │   ├── stores/       # Zustand 狀態
-│   │   ├── lib/          # API client、工具函式
+│   │   ├── pages/        # board-list/ · board-detail/ · pin/ 頁面
+│   │   ├── hooks/        # TanStack Query hooks（依 domain 分組）
+│   │   ├── stores/       # Zustand 狀態（themeStore、pinStore）
+│   │   ├── lib/          # API client（依 domain 拆分）
 │   │   └── routes/       # TanStack Router 路由
 │   └── tests/
 ├── electron/             # Electron 主程序

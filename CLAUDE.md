@@ -76,10 +76,10 @@ pinflow-workspace/
 ```
 store/      → FileStore: in-memory data + JSON file persistence
 model/      → Data structs (Board, Column, Card, Tag, Checklist, ChecklistItem)
-repository/ → File-based repository implementations
-service/    → Business logic; auto-pin logic lives here
+repository/ → Repositories container (repository.go) + file-based implementations
+service/    → Services container (service.go) + business logic; auto-pin logic lives here
 dto/        → Request/Response types for JSON binding
-api/        → Gin handlers + router.go
+api/        → Handlers container (handler.go) + Gin handlers + router.go
 tests/      → All tests (repository, service, handler layers)
 ```
 

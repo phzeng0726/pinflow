@@ -5,7 +5,7 @@ import type React from 'react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-export function CardDetailPage() {
+export function CardDetailWindow() {
   const { boardId, cardId } = Route.useSearch()
   const { t } = useTranslation()
   const [closeHovered, setCloseHovered] = useState(false)

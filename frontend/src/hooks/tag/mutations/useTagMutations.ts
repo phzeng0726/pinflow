@@ -14,6 +14,8 @@ export function useTagMutations(boardId: number) {
     qc.invalidateQueries({ queryKey: queryKeys.boards.detail(boardId) })
   const invalidateCardDetail = (id: number) =>
     qc.invalidateQueries({ queryKey: queryKeys.cards.detail(id) })
+  const invalidatePinned = () =>
+    qc.invalidateQueries({ queryKey: queryKeys.cards.pinned() })
 
   const create = useMutation({
     mutationFn: ({ name, color }: { name: string; color?: string }) =>
@@ -54,7 +56,7 @@ export function useTagMutations(boardId: number) {
     mutationFn: ({ cardId, tagId }: { cardId: number; tagId: number }) =>
       api.attachTag(cardId, tagId),
     onSuccess: async (_, { cardId }) => {
-      await Promise.all([invalidateCardDetail(cardId), invalidateBoardDetail()])
+      await Promise.all([invalidateCardDetail(cardId), invalidateBoardDetail(), invalidatePinned()])
     },
     onError: () => toast.error(t('toast.tag.attachError')),
   })
@@ -64,7 +66,7 @@ export function useTagMutations(boardId: number) {
     mutationFn: ({ cardId, tagId }: { cardId: number; tagId: number }) =>
       api.detachTag(cardId, tagId),
     onSuccess: async (_, { cardId }) => {
-      await Promise.all([invalidateCardDetail(cardId), invalidateBoardDetail()])
+      await Promise.all([invalidateCardDetail(cardId), invalidateBoardDetail(), invalidatePinned()])
     },
     onError: () => toast.error(t('toast.tag.detachError')),
   })

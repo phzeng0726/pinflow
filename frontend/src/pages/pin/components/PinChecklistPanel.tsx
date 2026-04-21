@@ -24,7 +24,9 @@ export function PinChecklistPanel({ cardId, boardId }: PinChecklistPanelProps) {
   const { data: card, isLoading } = useCardDetail(cardId)
   const toggle = usePinChecklistToggle(boardId, cardId)
 
-  const [selectedChecklistId, setSelectedChecklistId] = useState<number | null>(null)
+  const [selectedChecklistId, setSelectedChecklistId] = useState<number | null>(
+    null,
+  )
 
   const checklists = useMemo(() => {
     if (!card?.checklists) return []
@@ -53,7 +55,9 @@ export function PinChecklistPanel({ cardId, boardId }: PinChecklistPanelProps) {
     }
   }, [card, checklists, defaultChecklistId, selectedChecklistId])
 
-  const selectedChecklist = checklists.find((cl) => cl.id === selectedChecklistId)
+  const selectedChecklist = checklists.find(
+    (cl) => cl.id === selectedChecklistId,
+  )
   const items = selectedChecklist?.items ?? []
 
   if (isLoading) {
@@ -78,10 +82,16 @@ export function PinChecklistPanel({ cardId, boardId }: PinChecklistPanelProps) {
             {checklists.map((cl) => {
               const total = cl.items?.length ?? cl.totalCount ?? 0
               const completed =
-                cl.items?.filter((i) => i.completed).length ?? cl.completedCount ?? 0
+                cl.items?.filter((i) => i.completed).length ??
+                cl.completedCount ??
+                0
               const allDone = total > 0 && completed === total
               return (
-                <SelectItem key={cl.id} value={cl.id.toString()} className="text-xs">
+                <SelectItem
+                  key={cl.id}
+                  value={cl.id.toString()}
+                  className="text-xs"
+                >
                   {cl.title}{' '}
                   <span className={allDone ? 'text-green-500' : ''}>
                     ({completed}/{total})
@@ -96,7 +106,7 @@ export function PinChecklistPanel({ cardId, boardId }: PinChecklistPanelProps) {
       {items.length === 0 ? (
         <p className="text-xs text-gray-400">{t('pin.noChecklistItems')}</p>
       ) : (
-        <ul className="space-y-1">
+        <ul className="space-y-1.5">
           {items.map((item) => (
             <li key={item.id} className="flex items-center gap-2">
               <Checkbox
@@ -111,7 +121,9 @@ export function PinChecklistPanel({ cardId, boardId }: PinChecklistPanelProps) {
                 htmlFor={`pin-item-${item.id}`}
                 className={cn(
                   'cursor-pointer text-xs leading-snug',
-                  item.completed ? 'text-gray-400 line-through' : 'text-gray-700 dark:text-gray-300',
+                  item.completed
+                    ? 'text-gray-400 line-through'
+                    : 'text-gray-700 dark:text-gray-300',
                 )}
               >
                 {item.text}

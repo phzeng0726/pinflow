@@ -232,6 +232,16 @@ ipcMain.on("hide-pin-window", () => {
   }
 });
 
+// 接收 theme/locale 設定變更，廣播給其他視窗
+ipcMain.on("broadcast-settings", (event, settings) => {
+  const windows = BrowserWindow.getAllWindows();
+  windows.forEach((win) => {
+    if (win.webContents !== event.sender) {
+      win.webContents.send("settings", settings);
+    }
+  });
+});
+
 // 接收來自任一視窗的 React Query 資料刷新指令，並廣播給其他視窗
 ipcMain.on("broadcast-query-invalidation", (event, queryKey) => {
   // 取得所有開啟的視窗

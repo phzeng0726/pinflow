@@ -1,8 +1,16 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { formatCardDate, getScheduleUrgencyClass } from '@/lib/dates'
-import { getColumnColor, getPriorityConfig, getTagColorClasses } from '@/lib/styleConfig'
+import {
+  getColumnColor,
+  getPriorityConfig,
+  getTagColorClasses,
+} from '@/lib/styleConfig'
 import { cn } from '@/lib/utils'
 import type { PinnedCard } from '@/types'
 import {
@@ -35,7 +43,10 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
 
   const tags = card.tags ?? []
   const hasSchedule = !!card.startTime || !!card.endTime
-  const scheduleUrgencyClass = getScheduleUrgencyClass(card.endTime, card.startTime)
+  const scheduleUrgencyClass = getScheduleUrgencyClass(
+    card.endTime,
+    card.startTime,
+  )
   const { totalCount, completedCount } = card.checklistSummary ?? {
     totalCount: 0,
     completedCount: 0,
@@ -68,7 +79,8 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
                     variant="secondary"
                     className={cn(
                       'rounded px-1 py-0 text-[10px]',
-                      tag.color && `${colorCls.bg} border-transparent text-white`,
+                      tag.color &&
+                        `${colorCls.bg} border-transparent text-white`,
                     )}
                   >
                     {tag.name}
@@ -160,7 +172,7 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
               </span>
             </div>
           )}
-          <span className="mt-1 inline-block rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+          <span className="mt-2 inline-block rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-400">
             {card.columnName}
           </span>
           {expanded && totalCount > 0 && (

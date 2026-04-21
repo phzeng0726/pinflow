@@ -28,7 +28,7 @@ export function CardDetailWindow() {
   }, [])
 
   return (
-    <div className="flex h-screen select-none flex-col overflow-hidden rounded-2xl bg-white/70 shadow-2xl dark:bg-gray-900/90">
+    <div className="flex h-screen select-none flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900">
       {/* 拖曳列 */}
       <div
         className="relative z-[60] flex shrink-0 cursor-grab items-center justify-between bg-blue-600/80 px-3 py-3 text-white dark:bg-blue-700/80"

@@ -10,5 +10,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   openCardDetail: (boardId, cardId) => ipcRenderer.send('open-card-detail', { boardId, cardId }),
 
+  broadcastSettings: (settings) => ipcRenderer.send('broadcast-settings', settings),
+  onSettings: (callback) => ipcRenderer.on('settings', (_event, settings) => callback(settings)),
+
   isElectron: true,
 })

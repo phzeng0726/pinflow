@@ -17,6 +17,7 @@ export const useThemeStore = create<ThemeState>()(
         const next = get().theme === 'light' ? 'dark' : 'light'
         set({ theme: next })
         document.documentElement.classList.toggle('dark', next === 'dark')
+        window.electronAPI?.broadcastSettings?.({ theme: next })
       },
       apply: () => {
         document.documentElement.classList.toggle(

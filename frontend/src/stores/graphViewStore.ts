@@ -15,11 +15,13 @@ interface GraphViewState {
   layoutMode: LayoutMode
   searchQuery: string
   focusedCardId: number | null
+  openedCardId: number | null
   sidebarOpen: boolean
   filters: GraphFilters
   setLayoutMode: (mode: LayoutMode) => void
   setSearchQuery: (query: string) => void
   setFocusedCardId: (id: number | null) => void
+  setOpenedCardId: (id: number | null) => void
   setSidebarOpen: (open: boolean) => void
   setFilters: (filters: Partial<GraphFilters>) => void
   clearFilters: () => void
@@ -38,12 +40,14 @@ export const useGraphViewStore = create<GraphViewState>((set) => ({
   layoutMode: 'hierarchy',
   searchQuery: '',
   focusedCardId: null,
+  openedCardId: null,
   sidebarOpen: true,
   filters: defaultFilters,
 
   setLayoutMode: (mode) => set({ layoutMode: mode }),
   setSearchQuery: (query) => set({ searchQuery: query }),
   setFocusedCardId: (id) => set({ focusedCardId: id }),
+  setOpenedCardId: (id) => set({ openedCardId: id }),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   setFilters: (partial) =>
     set((state) => ({ filters: { ...state.filters, ...partial } })),
@@ -53,6 +57,7 @@ export const useGraphViewStore = create<GraphViewState>((set) => ({
       layoutMode: 'hierarchy',
       searchQuery: '',
       focusedCardId: null,
+      openedCardId: null,
       sidebarOpen: true,
       filters: defaultFilters,
     }),

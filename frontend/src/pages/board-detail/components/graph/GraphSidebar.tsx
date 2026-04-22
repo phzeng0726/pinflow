@@ -13,6 +13,9 @@ export function GraphSidebar({ board }: GraphSidebarProps) {
   const { t } = useTranslation()
   const sidebarOpen = useGraphViewStore((s) => s.sidebarOpen)
   const setSidebarOpen = useGraphViewStore((s) => s.setSidebarOpen)
+  const focusedCardId = useGraphViewStore((s) => s.focusedCardId)
+  const setFocusedCardId = useGraphViewStore((s) => s.setFocusedCardId)
+  const setOpenedCardId = useGraphViewStore((s) => s.setOpenedCardId)
 
   const allCards: Card[] = (board?.columns ?? []).flatMap((col) => col.cards ?? [])
 
@@ -89,8 +92,14 @@ export function GraphSidebar({ board }: GraphSidebarProps) {
             <ul className="space-y-1">
               {needsAttentionCards.map((card) => {
                 const urgency = getCardUrgency(card)
+                const isActive = focusedCardId === card.id
                 return (
-                  <li key={card.id} className="flex items-center gap-1.5 rounded-md px-1.5 py-1 hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <li
+                    key={card.id}
+                    onClick={() => setFocusedCardId(focusedCardId === card.id ? null : card.id)}
+                    onDoubleClick={() => setOpenedCardId(card.id)}
+                    className={`flex cursor-pointer items-center gap-1.5 rounded-md px-1.5 py-1 transition-colors ${isActive ? 'bg-blue-100 dark:bg-blue-900' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                  >
                     <span
                       className={`h-2 w-2 shrink-0 rounded-full ${urgency === 'overdue' ? 'bg-red-500' : 'bg-amber-500'}`}
                     />
@@ -124,8 +133,14 @@ export function GraphSidebar({ board }: GraphSidebarProps) {
               {unlinkedCards.map((card) => {
                 const col = board?.columns.find((c) => c.id === card.columnId)
                 const colColor = col ? getColumnColor(col.id) : null
+                const isActive = focusedCardId === card.id
                 return (
-                  <li key={card.id} className="flex items-center gap-1.5 rounded-md px-1.5 py-1 hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <li
+                    key={card.id}
+                    onClick={() => setFocusedCardId(focusedCardId === card.id ? null : card.id)}
+                    onDoubleClick={() => setOpenedCardId(card.id)}
+                    className={`flex cursor-pointer items-center gap-1.5 rounded-md px-1.5 py-1 transition-colors ${isActive ? 'bg-blue-100 dark:bg-blue-900' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                  >
                     {colColor && (
                       <span className={`h-2 w-2 shrink-0 rounded-full ${colColor.bg}`} />
                     )}

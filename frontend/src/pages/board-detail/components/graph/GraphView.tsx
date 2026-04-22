@@ -21,6 +21,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { CardDetailDialog } from '../cards/CardDetailDialog'
 import { GraphCardNode } from './GraphCardNode'
 import { GraphDependencyEdge } from './GraphDependencyEdge'
 import { GraphFilterPanel } from './GraphFilterPanel'
@@ -48,13 +49,16 @@ export function GraphView({ boardId }: GraphViewProps) {
   const layoutMode = useGraphViewStore((s) => s.layoutMode)
   const searchQuery = useGraphViewStore((s) => s.searchQuery)
   const focusedCardId = useGraphViewStore((s) => s.focusedCardId)
+  const openedCardId = useGraphViewStore((s) => s.openedCardId)
   const filters = useGraphViewStore((s) => s.filters)
   const setFocusedCardId = useGraphViewStore((s) => s.setFocusedCardId)
+  const setOpenedCardId = useGraphViewStore((s) => s.setOpenedCardId)
   const reset = useGraphViewStore((s) => s.reset)
   const theme = useThemeStore((s) => s.theme)
 
   const [filterOpen, setFilterOpen] = useState(false)
   const filterRef = useRef<HTMLDivElement>(null)
+  const lastClickRef = useRef<{ cardId: number; time: number } | null>(null)
 
   // Reset store on unmount
   useEffect(() => () => reset(), [reset])
@@ -100,9 +104,21 @@ export function GraphView({ boardId }: GraphViewProps) {
   const handleNodeClick = useCallback(
     (_: React.MouseEvent, node: RFNode) => {
       const cardId = Number(node.id)
+      const now = Date.now()
+      const lastClick = lastClickRef.current
+
+      // Check for double-click (within 300ms)
+      if (lastClick && lastClick.cardId === cardId && now - lastClick.time < 300) {
+        setOpenedCardId(cardId)
+        lastClickRef.current = null
+        return
+      }
+
+      // Single click: toggle focus
       setFocusedCardId(focusedCardId === cardId ? null : cardId)
+      lastClickRef.current = { cardId, time: now }
     },
-    [focusedCardId, setFocusedCardId],
+    [focusedCardId, setFocusedCardId, setOpenedCardId],
   )
 
   const handlePaneClick = useCallback(() => {
@@ -172,6 +188,15 @@ export function GraphView({ boardId }: GraphViewProps) {
         {/* Legend */}
         <GraphLegend />
       </div>
+
+      {/* Card detail dialog */}
+      {openedCardId !== null && (
+        <CardDetailDialog
+          boardId={boardId}
+          cardId={openedCardId}
+          onClose={() => setOpenedCardId(null)}
+        />
+      )}
     </div>
   )
 }

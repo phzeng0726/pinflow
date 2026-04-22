@@ -12,6 +12,11 @@ export function useDependencyMutations(cardId: number, boardId?: number) {
   const invalidateDependencies = () =>
     qc.invalidateQueries({ queryKey: queryKeys.dependencies.byCard(cardId) })
 
+  const invalidateBoardDependencies = () =>
+    boardId != null
+      ? qc.invalidateQueries({ queryKey: queryKeys.dependencies.byBoard(boardId) })
+      : Promise.resolve()
+
   const invalidateBoardDetail = () =>
     boardId != null
       ? qc.invalidateQueries({ queryKey: queryKeys.boards.detail(boardId) })
@@ -30,7 +35,7 @@ export function useDependencyMutations(cardId: number, boardId?: number) {
       type: DependencyType
     }) => api.createDependency(fromCardId, toCardId, type),
     onSuccess: async () => {
-      await Promise.all([invalidateDependencies(), invalidateBoardDetail(), invalidatePinned()])
+      await Promise.all([invalidateDependencies(), invalidateBoardDependencies(), invalidateBoardDetail(), invalidatePinned()])
       toast.success(t('toast.dependency.created'))
     },
     onError: () => toast.error(t('toast.dependency.createError')),
@@ -39,7 +44,7 @@ export function useDependencyMutations(cardId: number, boardId?: number) {
   const deleteDep = useMutation({
     mutationFn: (dependencyId: number) => api.deleteDependency(dependencyId),
     onSuccess: async () => {
-      await Promise.all([invalidateDependencies(), invalidateBoardDetail(), invalidatePinned()])
+      await Promise.all([invalidateDependencies(), invalidateBoardDependencies(), invalidateBoardDetail(), invalidatePinned()])
       toast.success(t('toast.dependency.deleted'))
     },
     onError: () => toast.error(t('toast.dependency.deleteError')),

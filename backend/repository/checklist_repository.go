@@ -7,15 +7,15 @@ import (
 	"pinflow/store"
 )
 
-type fileChecklistRepository struct {
+type checklistRepository struct {
 	s *store.FileStore
 }
 
-func NewFileChecklistRepository(s *store.FileStore) ChecklistRepository {
-	return &fileChecklistRepository{s: s}
+func newChecklistRepository(s *store.FileStore) ChecklistRepository {
+	return &checklistRepository{s: s}
 }
 
-func (r *fileChecklistRepository) Create(checklist *model.Checklist) error {
+func (r *checklistRepository) Create(checklist *model.Checklist) error {
 	checklist.ID = r.s.NextID("checklist")
 	if checklist.Items == nil {
 		checklist.Items = []model.ChecklistItem{}
@@ -29,7 +29,7 @@ func (r *fileChecklistRepository) Create(checklist *model.Checklist) error {
 	return r.s.UpdateCard(card)
 }
 
-func (r *fileChecklistRepository) FindByID(id uint) (*model.Checklist, error) {
+func (r *checklistRepository) FindByID(id uint) (*model.Checklist, error) {
 	cardID, ok := r.s.CardIDForChecklist(id)
 	if !ok {
 		return nil, store.ErrNotFound
@@ -49,7 +49,7 @@ func (r *fileChecklistRepository) FindByID(id uint) (*model.Checklist, error) {
 	return nil, store.ErrNotFound
 }
 
-func (r *fileChecklistRepository) ListByCard(cardID uint) ([]model.Checklist, error) {
+func (r *checklistRepository) ListByCard(cardID uint) ([]model.Checklist, error) {
 	card, err := r.s.GetCard(cardID)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (r *fileChecklistRepository) ListByCard(cardID uint) ([]model.Checklist, er
 	return result, nil
 }
 
-func (r *fileChecklistRepository) MaxPositionByCard(cardID uint) (float64, error) {
+func (r *checklistRepository) MaxPositionByCard(cardID uint) (float64, error) {
 	card, err := r.s.GetCard(cardID)
 	if err != nil {
 		return 0, err
@@ -83,7 +83,7 @@ func (r *fileChecklistRepository) MaxPositionByCard(cardID uint) (float64, error
 	return max, nil
 }
 
-func (r *fileChecklistRepository) Update(checklist *model.Checklist) error {
+func (r *checklistRepository) Update(checklist *model.Checklist) error {
 	cardID, ok := r.s.CardIDForChecklist(checklist.ID)
 	if !ok {
 		return store.ErrNotFound
@@ -104,7 +104,7 @@ func (r *fileChecklistRepository) Update(checklist *model.Checklist) error {
 	return store.ErrNotFound
 }
 
-func (r *fileChecklistRepository) Delete(id uint) error {
+func (r *checklistRepository) Delete(id uint) error {
 	cardID, ok := r.s.CardIDForChecklist(id)
 	if !ok {
 		return store.ErrNotFound

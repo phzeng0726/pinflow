@@ -10,19 +10,6 @@ import (
 	"strings"
 )
 
-type CardService interface {
-	CreateCard(columnID uint, title, description string) (*model.Card, error)
-	GetCardDetail(id uint) (*dto.CardResponse, error)
-	UpdateCard(id uint, title, description *string, storyPoint *int, priority *int, startTime, endTime *time.Time) (*model.Card, error)
-	UpdateSchedule(id uint, startTime, endTime *time.Time) (*model.Card, error)
-	MoveCard(id uint, columnID uint, position float64) (*model.Card, error)
-	TogglePin(id uint) (*model.Card, error)
-	GetPinnedCards() ([]dto.PinnedCardResponse, error)
-	Search(query string, limit int) ([]dto.CardSearchResult, error)
-	DeleteCard(id uint) error
-	DuplicateCard(id uint, req dto.DuplicateCardRequest) (*dto.CardResponse, error)
-}
-
 type cardService struct {
 	cardRepo          repository.CardRepository
 	columnRepo        repository.ColumnRepository
@@ -34,7 +21,7 @@ type cardService struct {
 	imageSvc          ImageService
 }
 
-func NewCardService(
+func newCardService(
 	cardRepo repository.CardRepository,
 	columnRepo repository.ColumnRepository,
 	boardRepo repository.BoardRepository,

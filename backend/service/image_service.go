@@ -35,23 +35,13 @@ var allowedContentTypes = map[string]bool{
 
 var localImageRegexp = regexp.MustCompile(`/api/v1/boards/(\d+)/images/([a-f0-9-]+\.(webp|svg))`)
 
-// ImageService handles image upload, retrieval, and cleanup.
-type ImageService interface {
-	Upload(cardID uint, fh *multipart.FileHeader) (string, error)
-	BoardImageDir(boardID uint) string
-	CleanupImages(markdown string)
-	CleanupOrphanedImages(oldMarkdown, newMarkdown string)
-	ReconcileBoardImages(cardID uint)
-}
-
 type imageService struct {
 	cardRepo   repository.CardRepository
 	columnRepo repository.ColumnRepository
 	basePath   string
 }
 
-// NewImageService creates an ImageService backed by file storage.
-func NewImageService(
+func newImageService(
 	cardRepo repository.CardRepository,
 	columnRepo repository.ColumnRepository,
 	basePath string,
@@ -67,7 +57,6 @@ func (s *imageService) BoardImageDir(boardID uint) string {
 	return filepath.Join(s.basePath, "boards", fmt.Sprintf("board-%d", boardID), "images")
 }
 
-// Upload validates and stores an uploaded image, returning its URL path.
 func (s *imageService) Upload(cardID uint, fh *multipart.FileHeader) (string, error) {
 	if fh.Size > maxImageSize {
 		return "", errors.New("image must be less than 5 MB")
@@ -79,7 +68,6 @@ func (s *imageService) Upload(cardID uint, fh *multipart.FileHeader) (string, er
 	}
 	defer f.Close()
 
-	// Read up to 512 bytes for content type detection.
 	buf := make([]byte, 512)
 	n, err := f.Read(buf)
 	if err != nil {
@@ -95,7 +83,6 @@ func (s *imageService) Upload(cardID uint, fh *multipart.FileHeader) (string, er
 		return "", fmt.Errorf("unsupported image type: %s", contentType)
 	}
 
-	// Determine board ID from card.
 	card, err := s.cardRepo.FindByID(cardID)
 	if err != nil {
 		return "", fmt.Errorf("card not found: %w", err)
@@ -115,7 +102,6 @@ func (s *imageService) Upload(cardID uint, fh *multipart.FileHeader) (string, er
 	id := uuid.New().String()
 
 	if isSVG {
-		// Read remaining bytes.
 		var remaining bytes.Buffer
 		remaining.Write(buf)
 		if _, err := remaining.ReadFrom(f); err != nil {
@@ -128,7 +114,6 @@ func (s *imageService) Upload(cardID uint, fh *multipart.FileHeader) (string, er
 		return fmt.Sprintf("/api/v1/boards/%d/images/%s.svg", boardID, id), nil
 	}
 
-	// Decode and re-encode as WebP.
 	// Rebuild full reader from already-read buffer + remainder.
 	var full bytes.Buffer
 	full.Write(buf)
@@ -154,7 +139,6 @@ func (s *imageService) Upload(cardID uint, fh *multipart.FileHeader) (string, er
 	return fmt.Sprintf("/api/v1/boards/%d/images/%s.webp", boardID, id), nil
 }
 
-// extractImagePaths returns the set of local image file paths referenced in the given markdown.
 func (s *imageService) extractImagePaths(markdown string) map[string]struct{} {
 	paths := make(map[string]struct{})
 	for _, m := range localImageRegexp.FindAllStringSubmatch(markdown, -1) {
@@ -166,7 +150,6 @@ func (s *imageService) extractImagePaths(markdown string) map[string]struct{} {
 	return paths
 }
 
-// CleanupImages scans markdown for local image references and deletes their files.
 func (s *imageService) CleanupImages(markdown string) {
 	for p := range s.extractImagePaths(markdown) {
 		if err := os.Remove(p); err != nil && !os.IsNotExist(err) {
@@ -175,7 +158,6 @@ func (s *imageService) CleanupImages(markdown string) {
 	}
 }
 
-// CleanupOrphanedImages deletes image files that were in oldMarkdown but are no longer in newMarkdown.
 func (s *imageService) CleanupOrphanedImages(oldMarkdown, newMarkdown string) {
 	oldPaths := s.extractImagePaths(oldMarkdown)
 	newPaths := s.extractImagePaths(newMarkdown)
@@ -188,8 +170,6 @@ func (s *imageService) CleanupOrphanedImages(oldMarkdown, newMarkdown string) {
 	}
 }
 
-// ReconcileBoardImages scans the board's images directory and deletes any files
-// not referenced by any card description or comment in the board.
 func (s *imageService) ReconcileBoardImages(cardID uint) {
 	card, err := s.cardRepo.FindByID(cardID)
 	if err != nil {

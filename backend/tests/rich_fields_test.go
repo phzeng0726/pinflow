@@ -16,9 +16,9 @@ func strPtr(s string) *string { return &s }
 
 func TestTagRepository_CreateOrGet(t *testing.T) {
 	fs := setupTestStore(t)
-	repo := repository.NewFileTagRepository(fs)
+	repos := repository.NewRepositories(fs)
 
-	tag, err := repo.CreateOrGet("urgent", "")
+	tag, err := repos.Tag.CreateOrGet("urgent", "")
 	if err != nil {
 		t.Fatalf("CreateOrGet error: %v", err)
 	}
@@ -27,7 +27,7 @@ func TestTagRepository_CreateOrGet(t *testing.T) {
 	}
 
 	// Getting same name returns existing tag
-	tag2, err := repo.CreateOrGet("urgent", "")
+	tag2, err := repos.Tag.CreateOrGet("urgent", "")
 	if err != nil {
 		t.Fatalf("CreateOrGet (duplicate) error: %v", err)
 	}
@@ -38,10 +38,10 @@ func TestTagRepository_CreateOrGet(t *testing.T) {
 
 func TestTagRepository_CreateOrGet_CaseInsensitive(t *testing.T) {
 	fs := setupTestStore(t)
-	repo := repository.NewFileTagRepository(fs)
+	repos := repository.NewRepositories(fs)
 
-	tag1, _ := repo.CreateOrGet("Bug", "")
-	tag2, _ := repo.CreateOrGet("bug", "")
+	tag1, _ := repos.Tag.CreateOrGet("Bug", "")
+	tag2, _ := repos.Tag.CreateOrGet("bug", "")
 	if tag1.ID != tag2.ID {
 		t.Errorf("expected case-insensitive match: got IDs %d and %d", tag1.ID, tag2.ID)
 	}
@@ -49,27 +49,24 @@ func TestTagRepository_CreateOrGet_CaseInsensitive(t *testing.T) {
 
 func TestTagRepository_AttachDetach(t *testing.T) {
 	fs := setupTestStore(t)
-	tagRepo := repository.NewFileTagRepository(fs)
-	cardRepo := repository.NewFileCardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	boardRepo := repository.NewFileBoardRepository(fs)
+	repos := repository.NewRepositories(fs)
 
 	// Setup: board -> column -> card
 	board := &model.Board{Name: "B"}
-	_ = boardRepo.Create(board)
+	_ = repos.Board.Create(board)
 	col := &model.Column{BoardID: board.ID, Name: "C", Position: 1}
-	_ = colRepo.Create(col)
+	_ = repos.Column.Create(col)
 	card := &model.Card{ColumnID: col.ID, Title: "Card", Position: 1}
-	_ = cardRepo.Create(card)
+	_ = repos.Card.Create(card)
 
-	tag, _ := tagRepo.CreateOrGet("feature", "")
+	tag, _ := repos.Tag.CreateOrGet("feature", "")
 
 	// Attach
-	if err := tagRepo.AttachToCard(card.ID, tag.ID); err != nil {
+	if err := repos.Tag.AttachToCard(card.ID, tag.ID); err != nil {
 		t.Fatalf("AttachToCard error: %v", err)
 	}
 
-	tags, err := tagRepo.ListByCard(card.ID)
+	tags, err := repos.Tag.ListByCard(card.ID)
 	if err != nil {
 		t.Fatalf("ListByCard error: %v", err)
 	}
@@ -78,10 +75,10 @@ func TestTagRepository_AttachDetach(t *testing.T) {
 	}
 
 	// Detach
-	if err := tagRepo.DetachFromCard(card.ID, tag.ID); err != nil {
+	if err := repos.Tag.DetachFromCard(card.ID, tag.ID); err != nil {
 		t.Fatalf("DetachFromCard error: %v", err)
 	}
-	tags, _ = tagRepo.ListByCard(card.ID)
+	tags, _ = repos.Tag.ListByCard(card.ID)
 	if len(tags) != 0 {
 		t.Errorf("expected 0 tags after detach, got %d", len(tags))
 	}
@@ -91,22 +88,20 @@ func TestTagRepository_AttachDetach(t *testing.T) {
 
 func TestCardService_UpdateCard_ScheduleValidation(t *testing.T) {
 	fs := setupTestStore(t)
-	cardRepo := repository.NewFileCardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	boardRepo := repository.NewFileBoardRepository(fs)
-	svc := service.NewCardService(cardRepo, colRepo, boardRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs), nil, nil)
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
 	board := &model.Board{Name: "B"}
-	_ = boardRepo.Create(board)
+	_ = repos.Board.Create(board)
 	col := &model.Column{BoardID: board.ID, Name: "C", Position: 1}
-	_ = colRepo.Create(col)
+	_ = repos.Column.Create(col)
 	card := &model.Card{ColumnID: col.ID, Title: "Card", Position: 1}
-	_ = cardRepo.Create(card)
+	_ = repos.Card.Create(card)
 
 	start := time.Now()
 	end := start.Add(-1 * time.Hour) // end before start
 
-	_, err := svc.UpdateCard(card.ID, strPtr("Card"), strPtr(""), nil, nil, &start, &end)
+	_, err := services.Card.UpdateCard(card.ID, strPtr("Card"), strPtr(""), nil, nil, &start, &end)
 	if err == nil {
 		t.Fatal("expected error when endTime < startTime")
 	}
@@ -114,22 +109,20 @@ func TestCardService_UpdateCard_ScheduleValidation(t *testing.T) {
 
 func TestCardService_UpdateCard_ScheduleSet(t *testing.T) {
 	fs := setupTestStore(t)
-	cardRepo := repository.NewFileCardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	boardRepo := repository.NewFileBoardRepository(fs)
-	svc := service.NewCardService(cardRepo, colRepo, boardRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs), nil, nil)
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
 	board := &model.Board{Name: "B"}
-	_ = boardRepo.Create(board)
+	_ = repos.Board.Create(board)
 	col := &model.Column{BoardID: board.ID, Name: "C", Position: 1}
-	_ = colRepo.Create(col)
+	_ = repos.Column.Create(col)
 	card := &model.Card{ColumnID: col.ID, Title: "Card", Position: 1}
-	_ = cardRepo.Create(card)
+	_ = repos.Card.Create(card)
 
 	start := time.Now()
 	end := start.Add(2 * time.Hour)
 
-	updated, err := svc.UpdateCard(card.ID, strPtr("Card"), strPtr(""), nil, nil, &start, &end)
+	updated, err := services.Card.UpdateCard(card.ID, strPtr("Card"), strPtr(""), nil, nil, &start, &end)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -142,21 +135,17 @@ func TestCardService_UpdateCard_ScheduleSet(t *testing.T) {
 
 func TestChecklistService_CreateAndList(t *testing.T) {
 	fs := setupTestStore(t)
-	cardRepo := repository.NewFileCardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	boardRepo := repository.NewFileBoardRepository(fs)
-	clRepo := repository.NewFileChecklistRepository(fs)
-	itemRepo := repository.NewFileChecklistItemRepository(fs)
-	svc := service.NewChecklistService(clRepo, itemRepo, cardRepo)
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
 	board := &model.Board{Name: "B"}
-	_ = boardRepo.Create(board)
+	_ = repos.Board.Create(board)
 	col := &model.Column{BoardID: board.ID, Name: "C", Position: 1}
-	_ = colRepo.Create(col)
+	_ = repos.Column.Create(col)
 	card := &model.Card{ColumnID: col.ID, Title: "Card", Position: 1}
-	_ = cardRepo.Create(card)
+	_ = repos.Card.Create(card)
 
-	cl, err := svc.CreateChecklist(card.ID, "My Checklist")
+	cl, err := services.Checklist.CreateChecklist(card.ID, "My Checklist")
 	if err != nil {
 		t.Fatalf("CreateChecklist error: %v", err)
 	}
@@ -164,7 +153,7 @@ func TestChecklistService_CreateAndList(t *testing.T) {
 		t.Errorf("unexpected checklist: %+v", cl)
 	}
 
-	cls, err := svc.ListByCard(card.ID)
+	cls, err := services.Checklist.ListByCard(card.ID)
 	if err != nil {
 		t.Fatalf("ListByCard error: %v", err)
 	}
@@ -175,22 +164,18 @@ func TestChecklistService_CreateAndList(t *testing.T) {
 
 func TestChecklistService_Item_CreateToggleDelete(t *testing.T) {
 	fs := setupTestStore(t)
-	cardRepo := repository.NewFileCardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	boardRepo := repository.NewFileBoardRepository(fs)
-	clRepo := repository.NewFileChecklistRepository(fs)
-	itemRepo := repository.NewFileChecklistItemRepository(fs)
-	svc := service.NewChecklistService(clRepo, itemRepo, cardRepo)
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
 	board := &model.Board{Name: "B"}
-	_ = boardRepo.Create(board)
+	_ = repos.Board.Create(board)
 	col := &model.Column{BoardID: board.ID, Name: "C", Position: 1}
-	_ = colRepo.Create(col)
+	_ = repos.Column.Create(col)
 	card := &model.Card{ColumnID: col.ID, Title: "Card", Position: 1}
-	_ = cardRepo.Create(card)
-	cl, _ := svc.CreateChecklist(card.ID, "CL")
+	_ = repos.Card.Create(card)
+	cl, _ := services.Checklist.CreateChecklist(card.ID, "CL")
 
-	item, err := svc.CreateItem(cl.ID, "Do something", 0)
+	item, err := services.Checklist.CreateItem(cl.ID, "Do something", 0)
 	if err != nil {
 		t.Fatalf("CreateItem error: %v", err)
 	}
@@ -199,7 +184,7 @@ func TestChecklistService_Item_CreateToggleDelete(t *testing.T) {
 	}
 
 	completed := true
-	updated, err := svc.UpdateItem(item.ID, dto.UpdateChecklistItemRequest{Completed: &completed})
+	updated, err := services.Checklist.UpdateItem(item.ID, dto.UpdateChecklistItemRequest{Completed: &completed})
 	if err != nil {
 		t.Fatalf("UpdateItem error: %v", err)
 	}
@@ -207,7 +192,7 @@ func TestChecklistService_Item_CreateToggleDelete(t *testing.T) {
 		t.Error("item should be completed after update")
 	}
 
-	if err := svc.DeleteItem(item.ID); err != nil {
+	if err := services.Checklist.DeleteItem(item.ID); err != nil {
 		t.Fatalf("DeleteItem error: %v", err)
 	}
 }
@@ -216,21 +201,19 @@ func TestChecklistService_Item_CreateToggleDelete(t *testing.T) {
 
 func TestCardService_UpdateCard_StoryPoint(t *testing.T) {
 	fs := setupTestStore(t)
-	cardRepo := repository.NewFileCardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	boardRepo := repository.NewFileBoardRepository(fs)
-	svc := service.NewCardService(cardRepo, colRepo, boardRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs), nil, nil)
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
 	board := &model.Board{Name: "B"}
-	_ = boardRepo.Create(board)
+	_ = repos.Board.Create(board)
 	col := &model.Column{BoardID: board.ID, Name: "C", Position: 1}
-	_ = colRepo.Create(col)
+	_ = repos.Column.Create(col)
 	card := &model.Card{ColumnID: col.ID, Title: "Card", Position: 1}
-	_ = cardRepo.Create(card)
+	_ = repos.Card.Create(card)
 
 	// Set story point
 	sp := 5
-	updated, err := svc.UpdateCard(card.ID, strPtr("Card"), strPtr(""), &sp, nil, nil, nil)
+	updated, err := services.Card.UpdateCard(card.ID, strPtr("Card"), strPtr(""), &sp, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -240,7 +223,7 @@ func TestCardService_UpdateCard_StoryPoint(t *testing.T) {
 
 	// Clear story point (send 0 as clear signal)
 	zero := 0
-	updated, err = svc.UpdateCard(card.ID, strPtr("Card"), strPtr(""), &zero, nil, nil, nil)
+	updated, err = services.Card.UpdateCard(card.ID, strPtr("Card"), strPtr(""), &zero, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -251,20 +234,18 @@ func TestCardService_UpdateCard_StoryPoint(t *testing.T) {
 
 func TestCardService_UpdateCard_StoryPointNegative(t *testing.T) {
 	fs := setupTestStore(t)
-	cardRepo := repository.NewFileCardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	boardRepo := repository.NewFileBoardRepository(fs)
-	svc := service.NewCardService(cardRepo, colRepo, boardRepo, repository.NewFileTagRepository(fs), repository.NewFileChecklistRepository(fs), repository.NewFileChecklistItemRepository(fs), nil, nil)
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
 	board := &model.Board{Name: "B"}
-	_ = boardRepo.Create(board)
+	_ = repos.Board.Create(board)
 	col := &model.Column{BoardID: board.ID, Name: "C", Position: 1}
-	_ = colRepo.Create(col)
+	_ = repos.Column.Create(col)
 	card := &model.Card{ColumnID: col.ID, Title: "Card", Position: 1}
-	_ = cardRepo.Create(card)
+	_ = repos.Card.Create(card)
 
 	sp := -1
-	_, err := svc.UpdateCard(card.ID, strPtr("Card"), strPtr(""), &sp, nil, nil, nil)
+	_, err := services.Card.UpdateCard(card.ID, strPtr("Card"), strPtr(""), &sp, nil, nil, nil)
 	if err == nil {
 		t.Fatal("expected error for negative story point")
 	}
@@ -274,9 +255,9 @@ func TestCardService_UpdateCard_StoryPointNegative(t *testing.T) {
 
 func TestTagRepository_CreateOrGet_WithColor(t *testing.T) {
 	fs := setupTestStore(t)
-	repo := repository.NewFileTagRepository(fs)
+	repos := repository.NewRepositories(fs)
 
-	tag, err := repo.CreateOrGet("urgent", "red")
+	tag, err := repos.Tag.CreateOrGet("urgent", "red")
 	if err != nil {
 		t.Fatalf("CreateOrGet error: %v", err)
 	}
@@ -287,15 +268,14 @@ func TestTagRepository_CreateOrGet_WithColor(t *testing.T) {
 
 func TestTagService_UpdateTag(t *testing.T) {
 	fs := setupTestStore(t)
-	tagRepo := repository.NewFileTagRepository(fs)
-	cardRepo := repository.NewFileCardRepository(fs)
-	svc := service.NewTagService(tagRepo, cardRepo)
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
-	tag, _ := svc.CreateOrGet("feature", "blue")
+	tag, _ := services.Tag.CreateOrGet("feature", "blue")
 
 	newName := "enhancement"
 	newColor := "green"
-	updated, err := svc.UpdateTag(tag.ID, dto.UpdateTagRequest{Name: &newName, Color: &newColor})
+	updated, err := services.Tag.UpdateTag(tag.ID, dto.UpdateTagRequest{Name: &newName, Color: &newColor})
 	if err != nil {
 		t.Fatalf("UpdateTag error: %v", err)
 	}
@@ -306,15 +286,14 @@ func TestTagService_UpdateTag(t *testing.T) {
 
 func TestTagService_UpdateTag_DuplicateName(t *testing.T) {
 	fs := setupTestStore(t)
-	tagRepo := repository.NewFileTagRepository(fs)
-	cardRepo := repository.NewFileCardRepository(fs)
-	svc := service.NewTagService(tagRepo, cardRepo)
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
-	svc.CreateOrGet("bug", "red")
-	tag2, _ := svc.CreateOrGet("feature", "blue")
+	services.Tag.CreateOrGet("bug", "red")
+	tag2, _ := services.Tag.CreateOrGet("feature", "blue")
 
 	dupName := "bug"
-	_, err := svc.UpdateTag(tag2.ID, dto.UpdateTagRequest{Name: &dupName})
+	_, err := services.Tag.UpdateTag(tag2.ID, dto.UpdateTagRequest{Name: &dupName})
 	if err == nil {
 		t.Fatal("expected error for duplicate tag name")
 	}
@@ -322,28 +301,25 @@ func TestTagService_UpdateTag_DuplicateName(t *testing.T) {
 
 func TestTagService_DeleteTag(t *testing.T) {
 	fs := setupTestStore(t)
-	tagRepo := repository.NewFileTagRepository(fs)
-	cardRepo := repository.NewFileCardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	boardRepo := repository.NewFileBoardRepository(fs)
-	svc := service.NewTagService(tagRepo, cardRepo)
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
 	board := &model.Board{Name: "B"}
-	_ = boardRepo.Create(board)
+	_ = repos.Board.Create(board)
 	col := &model.Column{BoardID: board.ID, Name: "C", Position: 1}
-	_ = colRepo.Create(col)
+	_ = repos.Column.Create(col)
 	card := &model.Card{ColumnID: col.ID, Title: "Card", Position: 1}
-	_ = cardRepo.Create(card)
+	_ = repos.Card.Create(card)
 
-	tag, _ := svc.CreateOrGet("toDelete", "")
-	_ = svc.AttachToCard(card.ID, tag.ID)
+	tag, _ := services.Tag.CreateOrGet("toDelete", "")
+	_ = services.Tag.AttachToCard(card.ID, tag.ID)
 
-	if err := svc.DeleteTag(tag.ID); err != nil {
+	if err := services.Tag.DeleteTag(tag.ID); err != nil {
 		t.Fatalf("DeleteTag error: %v", err)
 	}
 
 	// Verify tag is gone
-	tags, _ := svc.ListAll()
+	tags, _ := services.Tag.ListAll()
 	for _, tt := range tags {
 		if tt.ID == tag.ID {
 			t.Error("tag should be deleted")
@@ -351,7 +327,7 @@ func TestTagService_DeleteTag(t *testing.T) {
 	}
 
 	// Verify association is gone
-	cardTags, _ := svc.ListByCard(card.ID)
+	cardTags, _ := services.Tag.ListByCard(card.ID)
 	if len(cardTags) != 0 {
 		t.Errorf("expected 0 tags on card after delete, got %d", len(cardTags))
 	}
@@ -361,21 +337,17 @@ func TestTagService_DeleteTag(t *testing.T) {
 
 func TestChecklistService_UpdateChecklist(t *testing.T) {
 	fs := setupTestStore(t)
-	cardRepo := repository.NewFileCardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	boardRepo := repository.NewFileBoardRepository(fs)
-	clRepo := repository.NewFileChecklistRepository(fs)
-	itemRepo := repository.NewFileChecklistItemRepository(fs)
-	svc := service.NewChecklistService(clRepo, itemRepo, cardRepo)
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
 	board := &model.Board{Name: "B"}
-	_ = boardRepo.Create(board)
+	_ = repos.Board.Create(board)
 	col := &model.Column{BoardID: board.ID, Name: "C", Position: 1}
-	_ = colRepo.Create(col)
+	_ = repos.Column.Create(col)
 	card := &model.Card{ColumnID: col.ID, Title: "Card", Position: 1}
-	_ = cardRepo.Create(card)
+	_ = repos.Card.Create(card)
 
-	cl, _ := svc.CreateChecklist(card.ID, "Original Title")
+	cl, _ := services.Checklist.CreateChecklist(card.ID, "Original Title")
 
 	// Verify auto-assigned position
 	if cl.Position != 1.0 {
@@ -383,14 +355,14 @@ func TestChecklistService_UpdateChecklist(t *testing.T) {
 	}
 
 	// Create second checklist and verify position increments
-	cl2, _ := svc.CreateChecklist(card.ID, "Second")
+	cl2, _ := services.Checklist.CreateChecklist(card.ID, "Second")
 	if cl2.Position != 2.0 {
 		t.Errorf("expected position=2.0, got %f", cl2.Position)
 	}
 
 	// Update title only
 	newTitle := "Updated Title"
-	updated, err := svc.UpdateChecklist(cl.ID, dto.UpdateChecklistRequest{Title: &newTitle})
+	updated, err := services.Checklist.UpdateChecklist(cl.ID, dto.UpdateChecklistRequest{Title: &newTitle})
 	if err != nil {
 		t.Fatalf("UpdateChecklist error: %v", err)
 	}
@@ -403,7 +375,7 @@ func TestChecklistService_UpdateChecklist(t *testing.T) {
 
 	// Update position only
 	newPos := 5.5
-	updated2, err := svc.UpdateChecklist(cl.ID, dto.UpdateChecklistRequest{Position: &newPos})
+	updated2, err := services.Checklist.UpdateChecklist(cl.ID, dto.UpdateChecklistRequest{Position: &newPos})
 	if err != nil {
 		t.Fatalf("UpdateChecklist position error: %v", err)
 	}
@@ -417,32 +389,28 @@ func TestChecklistService_UpdateChecklist(t *testing.T) {
 
 func TestChecklistService_ListByCard_OrderedByPosition(t *testing.T) {
 	fs := setupTestStore(t)
-	cardRepo := repository.NewFileCardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	boardRepo := repository.NewFileBoardRepository(fs)
-	clRepo := repository.NewFileChecklistRepository(fs)
-	itemRepo := repository.NewFileChecklistItemRepository(fs)
-	svc := service.NewChecklistService(clRepo, itemRepo, cardRepo)
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
 	board := &model.Board{Name: "B"}
-	_ = boardRepo.Create(board)
+	_ = repos.Board.Create(board)
 	col := &model.Column{BoardID: board.ID, Name: "C", Position: 1}
-	_ = colRepo.Create(col)
+	_ = repos.Column.Create(col)
 	card := &model.Card{ColumnID: col.ID, Title: "Card", Position: 1}
-	_ = cardRepo.Create(card)
+	_ = repos.Card.Create(card)
 
-	svc.CreateChecklist(card.ID, "Third")  // position 1.0
-	svc.CreateChecklist(card.ID, "First")  // position 2.0
-	svc.CreateChecklist(card.ID, "Second") // position 3.0
+	services.Checklist.CreateChecklist(card.ID, "Third")  // position 1.0
+	services.Checklist.CreateChecklist(card.ID, "First")  // position 2.0
+	services.Checklist.CreateChecklist(card.ID, "Second") // position 3.0
 
 	// Reorder: move "First" to position 0.5
-	cls, _ := svc.ListByCard(card.ID)
+	cls, _ := services.Checklist.ListByCard(card.ID)
 	firstCl := cls[1] // "First" at position 2.0
 	newPos := 0.5
-	svc.UpdateChecklist(firstCl.ID, dto.UpdateChecklistRequest{Position: &newPos})
+	services.Checklist.UpdateChecklist(firstCl.ID, dto.UpdateChecklistRequest{Position: &newPos})
 
 	// Verify order
-	ordered, err := svc.ListByCard(card.ID)
+	ordered, err := services.Checklist.ListByCard(card.ID)
 	if err != nil {
 		t.Fatalf("ListByCard error: %v", err)
 	}

@@ -5,10 +5,10 @@ import "time"
 type DependencyType string
 
 const (
-	DependencyTypeBlocks    DependencyType = "blocks"
-	DependencyTypeParentOf  DependencyType = "parent_of"
+	DependencyTypeBlocks     DependencyType = "blocks"
+	DependencyTypeParentOf   DependencyType = "parent_of"
 	DependencyTypeDuplicates DependencyType = "duplicates"
-	DependencyTypeRelatedTo DependencyType = "related_to"
+	DependencyTypeRelatedTo  DependencyType = "related_to"
 )
 
 type Dependency struct {

@@ -8,15 +8,15 @@ import (
 	"pinflow/store"
 )
 
-type fileBoardRepository struct {
+type boardRepository struct {
 	s *store.FileStore
 }
 
-func NewFileBoardRepository(s *store.FileStore) BoardRepository {
-	return &fileBoardRepository{s: s}
+func newBoardRepository(s *store.FileStore) BoardRepository {
+	return &boardRepository{s: s}
 }
 
-func (r *fileBoardRepository) Create(board *model.Board) error {
+func (r *boardRepository) Create(board *model.Board) error {
 	board.ID = r.s.NextID("board")
 	now := time.Now()
 	board.CreatedAt = now
@@ -24,17 +24,16 @@ func (r *fileBoardRepository) Create(board *model.Board) error {
 	return r.s.CreateBoard(board)
 }
 
-func (r *fileBoardRepository) FindAll() ([]model.Board, error) {
+func (r *boardRepository) FindAll() ([]model.Board, error) {
 	return r.s.GetAllBoards(), nil
 }
 
-func (r *fileBoardRepository) FindByID(id uint) (*model.Board, error) {
+func (r *boardRepository) FindByID(id uint) (*model.Board, error) {
 	board, err := r.s.GetBoard(id)
 	if err != nil {
 		return nil, err
 	}
 
-	// Assemble full nested structure: Board → Columns → Cards → Tags + Checklists
 	cols := r.s.GetColumnsByBoard(id)
 	sort.Slice(cols, func(i, j int) bool { return cols[i].Position < cols[j].Position })
 
@@ -55,16 +54,15 @@ func (r *fileBoardRepository) FindByID(id uint) (*model.Board, error) {
 	return board, nil
 }
 
-func (r *fileBoardRepository) Update(board *model.Board) error {
+func (r *boardRepository) Update(board *model.Board) error {
 	board.UpdatedAt = time.Now()
 	return r.s.UpdateBoard(board)
 }
 
-func (r *fileBoardRepository) Delete(id uint) error {
+func (r *boardRepository) Delete(id uint) error {
 	return r.s.DeleteBoard(id)
 }
 
-// cardFileToModel converts a store.CardFile to a model.Card, resolving tag IDs to Tag objects.
 func cardFileToModel(cf *store.CardFile, s *store.FileStore) model.Card {
 	tags := make([]model.Tag, 0, len(cf.TagIDs))
 	for _, tagID := range cf.TagIDs {
@@ -107,7 +105,6 @@ func cardFileToModel(cf *store.CardFile, s *store.FileStore) model.Card {
 	}
 }
 
-// modelToCardFile converts a model.Card to a store.CardFile, extracting tag IDs.
 func modelToCardFile(card *model.Card) *store.CardFile {
 	tagIDs := make([]uint, len(card.Tags))
 	for i, t := range card.Tags {

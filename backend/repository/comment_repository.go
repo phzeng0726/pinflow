@@ -5,15 +5,15 @@ import (
 	"pinflow/store"
 )
 
-type fileCommentRepository struct {
+type commentRepository struct {
 	s *store.FileStore
 }
 
-func NewFileCommentRepository(s *store.FileStore) CommentRepository {
-	return &fileCommentRepository{s: s}
+func newCommentRepository(s *store.FileStore) CommentRepository {
+	return &commentRepository{s: s}
 }
 
-func (r *fileCommentRepository) Create(comment *model.Comment) error {
+func (r *commentRepository) Create(comment *model.Comment) error {
 	comment.ID = r.s.NextID("comment")
 	card, err := r.s.GetCard(comment.CardID)
 	if err != nil {
@@ -23,7 +23,7 @@ func (r *fileCommentRepository) Create(comment *model.Comment) error {
 	return r.s.UpdateCard(card)
 }
 
-func (r *fileCommentRepository) FindByID(id uint) (*model.Comment, error) {
+func (r *commentRepository) FindByID(id uint) (*model.Comment, error) {
 	cardID, ok := r.s.CardIDForComment(id)
 	if !ok {
 		return nil, store.ErrNotFound
@@ -41,7 +41,7 @@ func (r *fileCommentRepository) FindByID(id uint) (*model.Comment, error) {
 	return nil, store.ErrNotFound
 }
 
-func (r *fileCommentRepository) ListByCard(cardID uint) ([]model.Comment, error) {
+func (r *commentRepository) ListByCard(cardID uint) ([]model.Comment, error) {
 	card, err := r.s.GetCard(cardID)
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func (r *fileCommentRepository) ListByCard(cardID uint) ([]model.Comment, error)
 	return result, nil
 }
 
-func (r *fileCommentRepository) Update(comment *model.Comment) error {
+func (r *commentRepository) Update(comment *model.Comment) error {
 	cardID, ok := r.s.CardIDForComment(comment.ID)
 	if !ok {
 		return store.ErrNotFound
@@ -72,7 +72,7 @@ func (r *fileCommentRepository) Update(comment *model.Comment) error {
 	return store.ErrNotFound
 }
 
-func (r *fileCommentRepository) Delete(id uint) error {
+func (r *commentRepository) Delete(id uint) error {
 	cardID, ok := r.s.CardIDForComment(id)
 	if !ok {
 		return store.ErrNotFound

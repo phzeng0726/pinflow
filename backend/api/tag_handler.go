@@ -9,11 +9,7 @@ import (
 )
 
 type TagHandler struct {
-	svc service.TagService
-}
-
-func NewTagHandler(svc service.TagService) *TagHandler {
-	return &TagHandler{svc: svc}
+	services *service.Services
 }
 
 // CreateTag godoc
@@ -31,7 +27,7 @@ func (h *TagHandler) CreateTag(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	tag, err := h.svc.CreateOrGet(req.Name, req.Color)
+	tag, err := h.services.Tag.CreateOrGet(req.Name, req.Color)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -46,7 +42,7 @@ func (h *TagHandler) CreateTag(c *gin.Context) {
 // @Success     200 {array} dto.TagResponse
 // @Router      /tags [get]
 func (h *TagHandler) ListTags(c *gin.Context) {
-	tags, err := h.svc.ListAll()
+	tags, err := h.services.Tag.ListAll()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -76,7 +72,7 @@ func (h *TagHandler) UpdateTag(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	tag, err := h.svc.UpdateTag(id, req)
+	tag, err := h.services.Tag.UpdateTag(id, req)
 	if err != nil {
 		if err.Error() == "tag name already exists" {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
@@ -100,7 +96,7 @@ func (h *TagHandler) DeleteTag(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	if err := h.svc.DeleteTag(id); err != nil {
+	if err := h.services.Tag.DeleteTag(id); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
@@ -127,11 +123,11 @@ func (h *TagHandler) AttachTag(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	if err := h.svc.AttachToCard(cardID, req.TagID); err != nil {
+	if err := h.services.Tag.AttachToCard(cardID, req.TagID); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-	tags, err := h.svc.ListByCard(cardID)
+	tags, err := h.services.Tag.ListByCard(cardID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -156,7 +152,7 @@ func (h *TagHandler) DetachTag(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	if err := h.svc.DetachFromCard(cardID, tagID); err != nil {
+	if err := h.services.Tag.DetachFromCard(cardID, tagID); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}

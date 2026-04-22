@@ -11,40 +11,21 @@ import (
 	_ "pinflow/docs"
 	"pinflow/repository"
 	"pinflow/service"
+
+	"github.com/gin-gonic/gin"
 )
 
-func setupRouter(t *testing.T) *api.RouterDeps {
+func setupRouter(t *testing.T) *gin.Engine {
 	t.Helper()
 	fs := setupTestStore(t)
-	boardRepo := repository.NewFileBoardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	cardRepo := repository.NewFileCardRepository(fs)
-	tagRepo := repository.NewFileTagRepository(fs)
-	clRepo := repository.NewFileChecklistRepository(fs)
-	itemRepo := repository.NewFileChecklistItemRepository(fs)
-	depRepo := repository.NewFileDependencyRepository(fs)
-	commentRepo := repository.NewFileCommentRepository(fs)
-	boardSvc := service.NewBoardService(boardRepo)
-	colSvc := service.NewColumnService(boardRepo, colRepo)
-	cardSvc := service.NewCardService(cardRepo, colRepo, boardRepo, tagRepo, clRepo, itemRepo, depRepo, nil)
-	tagSvc := service.NewTagService(tagRepo, cardRepo)
-	clSvc := service.NewChecklistService(clRepo, itemRepo, cardRepo)
-	depSvc := service.NewDependencyService(depRepo, cardRepo, colRepo, boardRepo)
-	commentSvc := service.NewCommentService(commentRepo, cardRepo, fs, nil)
-	boardH := api.NewBoardHandler(boardSvc)
-	colH := api.NewColumnHandler(colSvc)
-	cardH := api.NewCardHandler(cardSvc)
-	tagH := api.NewTagHandler(tagSvc)
-	clH := api.NewChecklistHandler(clSvc)
-	clItemH := api.NewChecklistItemHandler(clSvc)
-	depH := api.NewDependencyHandler(depSvc)
-	commentH := api.NewCommentHandler(commentSvc)
-	return &api.RouterDeps{BoardH: boardH, ColumnH: colH, CardH: cardH, TagH: tagH, ChecklistH: clH, ChecklistItemH: clItemH, DependencyH: depH, CommentH: commentH}
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
+	handlers := api.NewHandlers(services)
+	return api.NewRouter(handlers)
 }
 
 func TestHandler_CreateBoard(t *testing.T) {
-	deps := setupRouter(t)
-	r := api.NewRouter(deps.BoardH, deps.ColumnH, deps.CardH, deps.TagH, deps.ChecklistH, deps.ChecklistItemH, deps.DependencyH, deps.CommentH, deps.ImageH)
+	r := setupRouter(t)
 
 	body := `{"name":"Test Board"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/boards", bytes.NewBufferString(body))
@@ -63,8 +44,7 @@ func TestHandler_CreateBoard(t *testing.T) {
 }
 
 func TestHandler_CreateBoard_InvalidName(t *testing.T) {
-	deps := setupRouter(t)
-	r := api.NewRouter(deps.BoardH, deps.ColumnH, deps.CardH, deps.TagH, deps.ChecklistH, deps.ChecklistItemH, deps.DependencyH, deps.CommentH, deps.ImageH)
+	r := setupRouter(t)
 
 	body := `{"name":""}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/boards", bytes.NewBufferString(body))
@@ -78,8 +58,7 @@ func TestHandler_CreateBoard_InvalidName(t *testing.T) {
 }
 
 func TestHandler_GetBoards_Empty(t *testing.T) {
-	deps := setupRouter(t)
-	r := api.NewRouter(deps.BoardH, deps.ColumnH, deps.CardH, deps.TagH, deps.ChecklistH, deps.ChecklistItemH, deps.DependencyH, deps.CommentH, deps.ImageH)
+	r := setupRouter(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/boards", nil)
 	w := httptest.NewRecorder()
@@ -96,8 +75,7 @@ func TestHandler_GetBoards_Empty(t *testing.T) {
 }
 
 func TestHandler_BoardNotFound(t *testing.T) {
-	deps := setupRouter(t)
-	r := api.NewRouter(deps.BoardH, deps.ColumnH, deps.CardH, deps.TagH, deps.ChecklistH, deps.ChecklistItemH, deps.DependencyH, deps.CommentH, deps.ImageH)
+	r := setupRouter(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/boards/999", nil)
 	w := httptest.NewRecorder()
@@ -109,8 +87,7 @@ func TestHandler_BoardNotFound(t *testing.T) {
 }
 
 func TestHandler_CreateColumnAndCard(t *testing.T) {
-	deps := setupRouter(t)
-	r := api.NewRouter(deps.BoardH, deps.ColumnH, deps.CardH, deps.TagH, deps.ChecklistH, deps.ChecklistItemH, deps.DependencyH, deps.CommentH, deps.ImageH)
+	r := setupRouter(t)
 
 	// Create board
 	body := `{"name":"Board"}`
@@ -148,8 +125,7 @@ func TestHandler_CreateColumnAndCard(t *testing.T) {
 }
 
 func TestHandler_GetPinnedCards(t *testing.T) {
-	deps := setupRouter(t)
-	r := api.NewRouter(deps.BoardH, deps.ColumnH, deps.CardH, deps.TagH, deps.ChecklistH, deps.ChecklistItemH, deps.DependencyH, deps.CommentH, deps.ImageH)
+	r := setupRouter(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/cards/pinned", nil)
 	w := httptest.NewRecorder()
@@ -161,8 +137,7 @@ func TestHandler_GetPinnedCards(t *testing.T) {
 }
 
 func TestHandler_HealthCheck(t *testing.T) {
-	deps := setupRouter(t)
-	r := api.NewRouter(deps.BoardH, deps.ColumnH, deps.CardH, deps.TagH, deps.ChecklistH, deps.ChecklistItemH, deps.DependencyH, deps.CommentH, deps.ImageH)
+	r := setupRouter(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/health", nil)
 	w := httptest.NewRecorder()

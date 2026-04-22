@@ -7,15 +7,15 @@ import (
 	"pinflow/store"
 )
 
-type fileCardRepository struct {
+type cardRepository struct {
 	s *store.FileStore
 }
 
-func NewFileCardRepository(s *store.FileStore) CardRepository {
-	return &fileCardRepository{s: s}
+func newCardRepository(s *store.FileStore) CardRepository {
+	return &cardRepository{s: s}
 }
 
-func (r *fileCardRepository) Create(card *model.Card) error {
+func (r *cardRepository) Create(card *model.Card) error {
 	card.ID = r.s.NextID("card")
 	now := time.Now()
 	card.CreatedAt = now
@@ -25,7 +25,7 @@ func (r *fileCardRepository) Create(card *model.Card) error {
 	return r.s.CreateCard(cf)
 }
 
-func (r *fileCardRepository) FindByID(id uint) (*model.Card, error) {
+func (r *cardRepository) FindByID(id uint) (*model.Card, error) {
 	cf, err := r.s.GetCard(id)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (r *fileCardRepository) FindByID(id uint) (*model.Card, error) {
 	return card, nil
 }
 
-func (r *fileCardRepository) FindDetail(id uint) (*model.Card, error) {
+func (r *cardRepository) FindDetail(id uint) (*model.Card, error) {
 	cf, err := r.s.GetCard(id)
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func (r *fileCardRepository) FindDetail(id uint) (*model.Card, error) {
 	return &card, nil
 }
 
-func (r *fileCardRepository) FindByColumnID(columnID uint) ([]model.Card, error) {
+func (r *cardRepository) FindByColumnID(columnID uint) ([]model.Card, error) {
 	cfs := r.s.GetCardsByColumn(columnID)
 	cards := make([]model.Card, 0, len(cfs))
 	for _, cf := range cfs {
@@ -79,7 +79,7 @@ func (r *fileCardRepository) FindByColumnID(columnID uint) ([]model.Card, error)
 	return cards, nil
 }
 
-func (r *fileCardRepository) MaxPositionByColumn(columnID uint) (float64, error) {
+func (r *cardRepository) MaxPositionByColumn(columnID uint) (float64, error) {
 	cfs := r.s.GetCardsByColumn(columnID)
 	var max float64
 	for _, cf := range cfs {
@@ -90,7 +90,7 @@ func (r *fileCardRepository) MaxPositionByColumn(columnID uint) (float64, error)
 	return max, nil
 }
 
-func (r *fileCardRepository) Update(card *model.Card) error {
+func (r *cardRepository) Update(card *model.Card) error {
 	card.UpdatedAt = time.Now()
 
 	// Preserve existing tag_ids and checklists from the stored card
@@ -119,7 +119,7 @@ func (r *fileCardRepository) Update(card *model.Card) error {
 	return r.s.UpdateCard(cf)
 }
 
-func (r *fileCardRepository) UpdateColumnAndPosition(id uint, columnID uint, position float64, isPinned bool) error {
+func (r *cardRepository) UpdateColumnAndPosition(id uint, columnID uint, position float64, isPinned bool) error {
 	cf, err := r.s.GetCard(id)
 	if err != nil {
 		return err
@@ -131,7 +131,7 @@ func (r *fileCardRepository) UpdateColumnAndPosition(id uint, columnID uint, pos
 	return r.s.UpdateCard(cf)
 }
 
-func (r *fileCardRepository) UpdatePinned(id uint, isPinned bool) error {
+func (r *cardRepository) UpdatePinned(id uint, isPinned bool) error {
 	cf, err := r.s.GetCard(id)
 	if err != nil {
 		return err
@@ -141,7 +141,7 @@ func (r *fileCardRepository) UpdatePinned(id uint, isPinned bool) error {
 	return r.s.UpdateCard(cf)
 }
 
-func (r *fileCardRepository) FindPinned() ([]model.Card, error) {
+func (r *cardRepository) FindPinned() ([]model.Card, error) {
 	cfs := r.s.GetPinnedCards()
 	cards := make([]model.Card, 0, len(cfs))
 	for _, cf := range cfs {
@@ -163,7 +163,7 @@ func (r *fileCardRepository) FindPinned() ([]model.Card, error) {
 	return cards, nil
 }
 
-func (r *fileCardRepository) Search(query string, limit int) ([]model.Card, error) {
+func (r *cardRepository) Search(query string, limit int) ([]model.Card, error) {
 	cfs := r.s.SearchCards(query, limit)
 	cards := make([]model.Card, 0, len(cfs))
 	for _, cf := range cfs {
@@ -185,6 +185,6 @@ func (r *fileCardRepository) Search(query string, limit int) ([]model.Card, erro
 	return cards, nil
 }
 
-func (r *fileCardRepository) Delete(id uint) error {
+func (r *cardRepository) Delete(id uint) error {
 	return r.s.DeleteCard(id)
 }

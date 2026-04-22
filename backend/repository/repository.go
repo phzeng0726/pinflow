@@ -1,6 +1,9 @@
 package repository
 
-import "pinflow/model"
+import (
+	"pinflow/model"
+	"pinflow/store"
+)
 
 type BoardRepository interface {
 	Create(board *model.Board) error
@@ -76,4 +79,28 @@ type CommentRepository interface {
 	ListByCard(cardID uint) ([]model.Comment, error)
 	Update(comment *model.Comment) error
 	Delete(id uint) error
+}
+
+type Repositories struct {
+	Board         BoardRepository
+	Column        ColumnRepository
+	Card          CardRepository
+	Tag           TagRepository
+	Checklist     ChecklistRepository
+	ChecklistItem ChecklistItemRepository
+	Dependency    DependencyRepository
+	Comment       CommentRepository
+}
+
+func NewRepositories(fs *store.FileStore) *Repositories {
+	return &Repositories{
+		Board:         newBoardRepository(fs),
+		Column:        newColumnRepository(fs),
+		Card:          newCardRepository(fs),
+		Tag:           newTagRepository(fs),
+		Checklist:     newChecklistRepository(fs),
+		ChecklistItem: newChecklistItemRepository(fs),
+		Dependency:    newDependencyRepository(fs),
+		Comment:       newCommentRepository(fs),
+	}
 }

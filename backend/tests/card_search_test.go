@@ -1,12 +1,11 @@
 package tests
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"encoding/json"
 
-	"pinflow/api"
 	"pinflow/model"
 	"pinflow/repository"
 	"pinflow/service"
@@ -14,24 +13,19 @@ import (
 
 func TestCardSearch_Service(t *testing.T) {
 	fs := setupTestStore(t)
-	boardRepo := repository.NewFileBoardRepository(fs)
-	colRepo := repository.NewFileColumnRepository(fs)
-	cardRepo := repository.NewFileCardRepository(fs)
-	depRepo := repository.NewFileDependencyRepository(fs)
-	clRepo := repository.NewFileChecklistRepository(fs)
-	itemRepo := repository.NewFileChecklistItemRepository(fs)
-	cardSvc := service.NewCardService(cardRepo, colRepo, boardRepo, nil, clRepo, itemRepo, depRepo, nil)
+	repos := repository.NewRepositories(fs)
+	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
 	board := &model.Board{Name: "My Board"}
-	_ = boardRepo.Create(board)
+	_ = repos.Board.Create(board)
 	col := &model.Column{BoardID: board.ID, Name: "Todo", Position: 1}
-	_ = colRepo.Create(col)
+	_ = repos.Column.Create(col)
 
-	_ = cardRepo.Create(&model.Card{ColumnID: col.ID, Title: "Fix authentication bug"})
-	_ = cardRepo.Create(&model.Card{ColumnID: col.ID, Title: "Add login page"})
-	_ = cardRepo.Create(&model.Card{ColumnID: col.ID, Title: "Deploy to production"})
+	_ = repos.Card.Create(&model.Card{ColumnID: col.ID, Title: "Fix authentication bug"})
+	_ = repos.Card.Create(&model.Card{ColumnID: col.ID, Title: "Add login page"})
+	_ = repos.Card.Create(&model.Card{ColumnID: col.ID, Title: "Deploy to production"})
 
-	results, err := cardSvc.Search("auth", 10)
+	results, err := services.Card.Search("auth", 10)
 	if err != nil {
 		t.Fatalf("Search error: %v", err)
 	}
@@ -44,8 +38,7 @@ func TestCardSearch_Service(t *testing.T) {
 }
 
 func TestCardSearch_Handler(t *testing.T) {
-	deps := setupRouter(t)
-	r := api.NewRouter(deps.BoardH, deps.ColumnH, deps.CardH, deps.TagH, deps.ChecklistH, deps.ChecklistItemH, deps.DependencyH, deps.CommentH, deps.ImageH)
+	r := setupRouter(t)
 
 	createBoardAndColumn(t, r)
 	createCardInColumn(t, r, 1)

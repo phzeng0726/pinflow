@@ -14,14 +14,8 @@ import (
 
 var filenamePattern = regexp.MustCompile(`^[a-f0-9-]+\.(webp|svg)$`)
 
-// ImageHandler handles image upload and serving.
 type ImageHandler struct {
-	svc service.ImageService
-}
-
-// NewImageHandler creates a new ImageHandler.
-func NewImageHandler(svc service.ImageService) *ImageHandler {
-	return &ImageHandler{svc: svc}
+	services *service.Services
 }
 
 // UploadImage godoc
@@ -49,7 +43,7 @@ func (h *ImageHandler) UploadImage(c *gin.Context) {
 		return
 	}
 
-	url, err := h.svc.Upload(uint(id), fh)
+	url, err := h.services.Image.Upload(uint(id), fh)
 	if err != nil {
 		msg := err.Error()
 		status := http.StatusInternalServerError
@@ -90,7 +84,7 @@ func (h *ImageHandler) ServeImage(c *gin.Context) {
 		return
 	}
 
-	imageDir := h.svc.BoardImageDir(uint(id))
+	imageDir := h.services.Image.BoardImageDir(uint(id))
 	filePath := filepath.Join(imageDir, filename)
 	c.File(filePath)
 }

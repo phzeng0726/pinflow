@@ -10,11 +10,7 @@ import (
 )
 
 type BoardHandler struct {
-	svc service.BoardService
-}
-
-func NewBoardHandler(svc service.BoardService) *BoardHandler {
-	return &BoardHandler{svc: svc}
+	services *service.Services
 }
 
 // CreateBoard godoc
@@ -32,7 +28,7 @@ func (h *BoardHandler) CreateBoard(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	board, err := h.svc.CreateBoard(req.Name)
+	board, err := h.services.Board.CreateBoard(req.Name)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
@@ -47,7 +43,7 @@ func (h *BoardHandler) CreateBoard(c *gin.Context) {
 // @Success     200 {array} model.Board
 // @Router      /boards [get]
 func (h *BoardHandler) GetBoards(c *gin.Context) {
-	boards, err := h.svc.GetAllBoards()
+	boards, err := h.services.Board.GetAllBoards()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -68,7 +64,7 @@ func (h *BoardHandler) GetBoard(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	board, err := h.svc.GetBoardByID(id)
+	board, err := h.services.Board.GetBoardByID(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "board not found"})
 		return
@@ -97,7 +93,7 @@ func (h *BoardHandler) UpdateBoard(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	board, err := h.svc.UpdateBoard(id, req.Name)
+	board, err := h.services.Board.UpdateBoard(id, req.Name)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -117,7 +113,7 @@ func (h *BoardHandler) DeleteBoard(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	if err := h.svc.DeleteBoard(id); err != nil {
+	if err := h.services.Board.DeleteBoard(id); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "board not found"})
 		return
 	}

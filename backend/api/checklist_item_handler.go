@@ -9,11 +9,7 @@ import (
 )
 
 type ChecklistItemHandler struct {
-	svc service.ChecklistService
-}
-
-func NewChecklistItemHandler(svc service.ChecklistService) *ChecklistItemHandler {
-	return &ChecklistItemHandler{svc: svc}
+	services *service.Services
 }
 
 // CreateChecklistItem godoc
@@ -36,7 +32,7 @@ func (h *ChecklistItemHandler) CreateItem(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	item, err := h.svc.CreateItem(checklistID, req.Text, req.Position)
+	item, err := h.services.Checklist.CreateItem(checklistID, req.Text, req.Position)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -64,7 +60,7 @@ func (h *ChecklistItemHandler) UpdateItem(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	item, err := h.svc.UpdateItem(id, req)
+	item, err := h.services.Checklist.UpdateItem(id, req)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -93,7 +89,7 @@ func (h *ChecklistItemHandler) SyncItems(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-	cl, err := h.svc.SyncItems(checklistID, req.Items)
+	cl, err := h.services.Checklist.SyncItems(checklistID, req.Items)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -113,7 +109,7 @@ func (h *ChecklistItemHandler) DeleteItem(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	if err := h.svc.DeleteItem(id); err != nil {
+	if err := h.services.Checklist.DeleteItem(id); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}

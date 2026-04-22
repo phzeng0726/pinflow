@@ -10,6 +10,7 @@ export const queryKeys = {
   },
   dependencies: {
     byCard: (cardId: number) => ['dependencies', cardId] as const,
+    byBoard: (boardId: number) => ['dependencies', 'board', boardId] as const,
   },
   tags: {
     all: () => ['tags'] as const,

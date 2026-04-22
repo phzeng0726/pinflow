@@ -21,3 +21,8 @@ export const createDependency = async (
 export const deleteDependency = async (dependencyId: number) => {
   await client.delete(`/dependencies/${dependencyId}`)
 }
+
+export const listBoardDependencies = async (boardId: number) => {
+  const res = await client.get<Dependency[]>(`/boards/${boardId}/dependencies`)
+  return res.data
+}

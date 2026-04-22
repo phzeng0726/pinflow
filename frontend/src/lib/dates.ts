@@ -1,4 +1,26 @@
 import { format, formatDistanceToNow, parseISO } from 'date-fns'
+
+export type CardUrgency = 'overdue' | 'due-soon' | 'due-inprog' | null
+
+/**
+ * 依卡片的 startTime / endTime 計算緊急狀態。
+ * 優先順序：overdue > due-soon > due-inprog > null
+ * due-soon 門檻為 5 天（與 getScheduleUrgencyClass 一致）。
+ */
+export function getCardUrgency(card: {
+  endTime?: string | null
+  startTime?: string | null
+}): CardUrgency {
+  if (!card.endTime && !card.startTime) return null
+  const now = Date.now()
+  if (card.endTime) {
+    const diffDays = (new Date(card.endTime).getTime() - now) / (1000 * 60 * 60 * 24)
+    if (diffDays < 0) return 'overdue'
+    if (diffDays <= 5) return 'due-soon'
+  }
+  if (card.startTime && new Date(card.startTime).getTime() <= now) return 'due-inprog'
+  return null
+}
 import { enUS, zhTW } from 'date-fns/locale'
 import type { Locale } from 'date-fns/locale'
 
@@ -52,7 +74,7 @@ export function getScheduleUrgencyClass(
     const diff =
       (parseISO(referenceIso).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
     if (diff < 0) return 'text-red-500'
-    if (diff <= 3) return 'text-orange-500'
+    if (diff <= 5) return 'text-orange-500'
     return 'text-gray-400'
   } catch {
     return 'text-gray-400'

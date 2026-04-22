@@ -99,6 +99,26 @@ func (s *dependencyService) ListByCard(cardID uint) ([]dto.DependencyResponse, e
 	return result, nil
 }
 
+func (s *dependencyService) ListByBoard(boardID uint) ([]dto.DependencyResponse, error) {
+	// Validate board exists
+	if _, err := s.boardRepo.FindByID(boardID); err != nil {
+		return nil, fmt.Errorf("board %d not found", boardID)
+	}
+	deps, err := s.depRepo.ListByBoard(boardID)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]dto.DependencyResponse, 0, len(deps))
+	for _, dep := range deps {
+		resp, err := s.buildResponse(dep)
+		if err != nil {
+			continue // skip orphaned deps
+		}
+		result = append(result, *resp)
+	}
+	return result, nil
+}
+
 func (s *dependencyService) Delete(id uint) error {
 	return s.depRepo.Delete(id)
 }

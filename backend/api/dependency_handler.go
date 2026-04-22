@@ -72,6 +72,27 @@ func (h *DependencyHandler) ListDependencies(c *gin.Context) {
 	c.JSON(http.StatusOK, deps)
 }
 
+// ListBoardDependencies godoc
+// @Summary     List all dependencies for a board
+// @Tags        dependencies
+// @Produce     json
+// @Param       id path int true "Board ID"
+// @Success     200 {array} dto.DependencyResponse
+// @Failure     404 {object} map[string]string
+// @Router      /boards/{id}/dependencies [get]
+func (h *DependencyHandler) ListBoardDependencies(c *gin.Context) {
+	boardID, err := parseUintParam(c, "id")
+	if err != nil {
+		return
+	}
+	deps, err := h.services.Dependency.ListByBoard(boardID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, deps)
+}
+
 // DeleteDependency godoc
 // @Summary     Delete a dependency
 // @Tags        dependencies

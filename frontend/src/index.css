@@ -63,6 +63,24 @@
   }
 }
 
+/* ── React Flow Controls dark mode ── */
+.dark .react-flow__controls {
+  background-color: #1f2937; /* gray-800 */
+  border-color: #374151;     /* gray-700 */
+}
+.dark .react-flow__controls-button {
+  background-color: #1f2937;
+  border-color: #374151;
+  color: #d1d5db; /* gray-300 */
+  fill: #d1d5db;
+}
+.dark .react-flow__controls-button:hover {
+  background-color: #374151; /* gray-700 */
+}
+.dark .react-flow__controls-button svg {
+  fill: #d1d5db;
+}
+
 /* ── 自訂捲軸（WebKit） ── */
 ::-webkit-scrollbar {
   width: 6px;

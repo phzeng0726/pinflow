@@ -262,5 +262,34 @@
       "attachError": "新增標籤失敗",
       "detachError": "移除標籤失敗"
     }
+  },
+  "graphView": {
+    "boardView": "看板",
+    "graphView": "關聯圖",
+    "sidebarTitle": "總覽",
+    "searchPlaceholder": "搜尋卡片...",
+    "hierarchy": "層級",
+    "cluster": "分組",
+    "filter": "篩選",
+    "unlinkedCards": "未關聯卡片",
+    "needsAttention": "需要注意",
+    "noUnlinked": "沒有未關聯的卡片",
+    "noNeedsAttention": "所有卡片進度正常",
+    "exitFocus": "退出聚焦",
+    "focusingOn": "聚焦：",
+    "columns": "欄位",
+    "relationTypes": "關係類型",
+    "dateRange": "日期範圍",
+    "tags": "標籤",
+    "clearFilters": "清除篩選",
+    "overdue": "已逾期",
+    "dueSoon": "即將到期",
+    "inProgress": "進行中",
+    "relationType": {
+      "blocks": "阻擋",
+      "parent_of": "父任務",
+      "related_to": "相關",
+      "duplicates": "重複"
+    }
   }
 }

@@ -702,6 +702,32 @@ paths:
       summary: Create a column in a board
       tags:
       - columns
+  /boards/{id}/dependencies:
+    get:
+      parameters:
+      - description: Board ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.DependencyResponse'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List all dependencies for a board
+      tags:
+      - dependencies
   /boards/{id}/images/{filename}:
     get:
       parameters:

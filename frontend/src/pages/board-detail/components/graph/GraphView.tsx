@@ -4,9 +4,9 @@ import {
   useGraphData,
   type GraphCardNodeData,
 } from '@/hooks/dependency/useGraphData'
+import { URGENCY_HEX_COLORS } from '@/lib/styleConfig'
 import { useGraphViewStore } from '@/stores/graphViewStore'
 import { useThemeStore } from '@/stores/themeStore'
-import { URGENCY_HEX_COLORS } from '@/lib/styleConfig'
 import {
   Background,
   BackgroundVariant,
@@ -108,7 +108,11 @@ export function GraphView({ boardId }: GraphViewProps) {
       const lastClick = lastClickRef.current
 
       // Check for double-click (within 300ms)
-      if (lastClick && lastClick.cardId === cardId && now - lastClick.time < 300) {
+      if (
+        lastClick &&
+        lastClick.cardId === cardId &&
+        now - lastClick.time < 300
+      ) {
         setOpenedCardId(cardId)
         lastClickRef.current = null
         return
@@ -147,6 +151,10 @@ export function GraphView({ boardId }: GraphViewProps) {
           onNodeClick={handleNodeClick}
           onPaneClick={handlePaneClick}
           fitView
+          fitViewOptions={{
+            minZoom: 0.9,
+            maxZoom: 0.9,
+          }}
         >
           <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
           <Controls />
@@ -156,7 +164,8 @@ export function GraphView({ boardId }: GraphViewProps) {
               width: 144,
               borderRadius: 8,
               overflow: 'hidden',
-              border: theme === 'dark' ? '1px solid #374151' : '1px solid #e2e8f0',
+              border:
+                theme === 'dark' ? '1px solid #374151' : '1px solid #e2e8f0',
               backgroundColor: theme === 'dark' ? '#111827' : '#f1f5f9',
             }}
             nodeColor={minimapNodeColor}

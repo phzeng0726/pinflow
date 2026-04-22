@@ -35,7 +35,7 @@
 
 ## 5. Frontend — 圖形元件
 
-- [x] 5.1 `frontend/src/pages/board-detail/components/graph/GraphCardNode.tsx`：自訂 React Flow 節點，220px 寬，含 column badge、標題（max 2 行）、meta row（tags dots、priority、SP）、日期、#id、urgency 邊框（overdue/soon/inprog）、dimmed 狀態
+- [x] 5.1 `frontend/src/pages/board-detail/components/graph/GraphCardNode.tsx`：自訂 React Flow 節點，220px 寬，含 column badge、標題（max 2 行）、meta row（tags dots、priority、SP）、日期、#id、urgency 邊框（overdue/soon/in-progress）、dimmed 狀態
 - [x] 5.2 `frontend/src/pages/board-detail/components/graph/GraphDependencyEdge.tsx`：自訂 React Flow 邊，依 type 套用 4 種線條樣式（顏色 + strokeDasharray + 箭頭）
 - [x] 5.3 `frontend/src/pages/board-detail/components/graph/GraphView.tsx`：主容器，組合 ReactFlow + nodeTypes + edgeTypes（模組層級常數）+ MiniMap + Controls，引入 `@xyflow/react/dist/style.css`
 - [x] 5.4 `frontend/src/pages/board-detail/components/graph/index.ts`：barrel export `GraphView`

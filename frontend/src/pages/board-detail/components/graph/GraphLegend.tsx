@@ -31,7 +31,7 @@ const URGENCY_LEGEND_ITEMS: {
 }[] = [
   { labelKey: 'graphView.overdue', colorKey: 'overdue' },
   { labelKey: 'graphView.dueSoon', colorKey: 'due-soon' },
-  { labelKey: 'graphView.inProgress', colorKey: 'due-inprog' },
+  { labelKey: 'graphView.inProgress', colorKey: 'due-in-progress' },
 ]
 
 export function GraphLegend() {

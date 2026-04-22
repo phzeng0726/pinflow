@@ -7,6 +7,7 @@ PinFlow 的卡片依賴資料已存在（`dependencies.json`），以 `fromCardI
 ## Goals / Non-Goals
 
 **Goals:**
+
 - 以節點圖形化呈現整個看板的卡片關聯，一次 API 取得所有依賴
 - 支援 Hierarchy（dagre 排版）和 Cluster（依欄位分組）兩種佈局
 - 支援搜尋（標題）、篩選（關係類型/欄位/日期/標籤）、節點聚焦高亮
@@ -14,6 +15,7 @@ PinFlow 的卡片依賴資料已存在（`dependencies.json`），以 `fromCardI
 - 全站統一橘色到期門檻為 5 天
 
 **Non-Goals:**
+
 - Graph View 中不支援編輯卡片（無 dialog、無 context menu）
 - 不支援在 graph 中直接建立或刪除依賴
 - 不支援跨看板的關聯圖
@@ -26,12 +28,14 @@ PinFlow 的卡片依賴資料已存在（`dependencies.json`），以 `fromCardI
 **選擇：** `@xyflow/react` + `@dagrejs/dagre`
 
 **理由：**
+
 - 自訂節點是純 React 元件，可直接使用 Tailwind + 現有 utility（`getPriorityConfig`、`getTagColorClasses` 等），無需另建樣式系統
 - 內建 `MiniMap`、`Controls`（zoom/fit）、`Background`，省去自行實作 pan/zoom/minimap
 - 自訂邊支援完整 SVG path 控制，四種線條樣式直接設定 `strokeDasharray` 和 `stroke` 顏色
 - TypeScript 原生支援，v12 穩定 MIT 授權
 
 **排除：**
+
 - Cytoscape.js：Canvas-based，React wrapper 薄弱，HTML 節點難以用 Tailwind 樣式化
 - 手刻 SVG：pan/zoom/minimap 建置成本等同整個功能的工作量
 
@@ -44,6 +48,7 @@ PinFlow 的卡片依賴資料已存在（`dependencies.json`），以 `fromCardI
 **選擇：** 新增 `GET /api/v1/boards/:id/dependencies`
 
 **理由：**
+
 - 不修改現有 `GET /boards/:id` response，零破壞性變更
 - Store 已有 `columnsByBoard` 和 `cardsByColumn` reverse index，可快速建立 cardSet，再 O(n) 掃描 dependencies map
 - 回傳格式複用現有 `DependencyResponse` DTO，無需新 DTO
@@ -57,6 +62,7 @@ PinFlow 的卡片依賴資料已存在（`dependencies.json`），以 `fromCardI
 **選擇：** 新建 `graphViewStore.ts`，不加 `persist` middleware
 
 **理由：**
+
 - 搜尋、篩選、聚焦、佈局模式等狀態在深層元件（節點、toolbar、sidebar）間共用，Zustand 避免 prop drilling
 - 不持久化：Graph View 是「探索工具」，每次進入看板應回到乾淨狀態；`GraphView` unmount 時呼叫 `reset()`
 - Board/Graph 切換狀態（`viewMode`）透過 URL search param（`?view=board|graph`）管理，由 TanStack Router 的 `validateSearch` 在 `routes/boards.$boardId.tsx` 定義；不使用 local state 或 store，以確保 URL 可書籤、重新整理不遺失模式
@@ -68,11 +74,13 @@ PinFlow 的卡片依賴資料已存在（`dependencies.json`），以 `fromCardI
 **選擇：** 獨立 hook `frontend/src/hooks/dependency/useGraphData.ts`，純資料轉換，不含 UI
 
 **理由：**
+
 - board data 和 dependencies 各自有 TanStack Query cache，hook 以 `useMemo` 組合兩者
 - 將 filtering、search dimming、focus dimming、layout 計算全部集中，`GraphView.tsx` 只負責組合
 - 可獨立測試（mock board + dependencies → 驗證 nodes/edges 輸出）
 
 **流程：**
+
 ```
 board (useBoardDetail) + dependencies (useBoardDependencies)
   → 建立 cardMap (cardId → { card, column })
@@ -102,9 +110,9 @@ board (useBoardDetail) + dependencies (useBoardDependencies)
 
 ### D7：卡片節點「進行中」的定義
 
-**規則：** `startTime` 已過（或等於今天）且 `endTime` 不存在，或 `endTime` 尚未逾期 → `due-inprog`（藍色邊框）
+**規則：** `startTime` 已過（或等於今天）且 `endTime` 不存在，或 `endTime` 尚未逾期 → `due-in-progress`（藍色邊框）
 
-優先順序：`due-overdue` > `due-soon` > `due-inprog` > 無樣式（`getScheduleUrgencyClass` 已處理前兩者，進行中需額外判斷）
+優先順序：`due-overdue` > `due-soon` > `due-in-progress` > 無樣式（`getScheduleUrgencyClass` 已處理前兩者，進行中需額外判斷）
 
 ---
 
@@ -116,12 +124,12 @@ board (useBoardDetail) + dependencies (useBoardDependencies)
 
 ## Risks / Trade-offs
 
-| 風險 | 緩解 |
-|------|------|
-| 大量卡片（100+）時 dagre 排版慢 | React Flow viewport culling 只渲染可視節點；dagre 計算在 useMemo 內，依賴 nodes/edges 變化才重算 |
-| React Flow CSS 與 Tailwind reset 衝突 | 若發生，將 `@xyflow/react/dist/style.css` 移至 `index.css` 並用 `.react-flow` scope 隔離 |
-| `getScheduleUrgencyClass()` 改為 5 天影響現有 UI | 可接受：原 3 天只是初始值，5 天更符合實際需求。CardItem 的橘色警告時間拉長是有意為之 |
-| 跨看板依賴（fromCard 屬於別的 board） | `ListDependenciesByBoard` 使用 OR 條件，跨看板依賴也會被包含。前端 `useGraphData` 中對 board 外的卡片，以 `DependencyCardRef.title` 顯示為簡化節點，標示為 `external: true` |
+| 風險                                             | 緩解                                                                                                                                                                        |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 大量卡片（100+）時 dagre 排版慢                  | React Flow viewport culling 只渲染可視節點；dagre 計算在 useMemo 內，依賴 nodes/edges 變化才重算                                                                            |
+| React Flow CSS 與 Tailwind reset 衝突            | 若發生，將 `@xyflow/react/dist/style.css` 移至 `index.css` 並用 `.react-flow` scope 隔離                                                                                    |
+| `getScheduleUrgencyClass()` 改為 5 天影響現有 UI | 可接受：原 3 天只是初始值，5 天更符合實際需求。CardItem 的橘色警告時間拉長是有意為之                                                                                        |
+| 跨看板依賴（fromCard 屬於別的 board）            | `ListDependenciesByBoard` 使用 OR 條件，跨看板依賴也會被包含。前端 `useGraphData` 中對 board 外的卡片，以 `DependencyCardRef.title` 顯示為簡化節點，標示為 `external: true` |
 
 ## Migration Plan
 

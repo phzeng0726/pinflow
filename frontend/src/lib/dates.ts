@@ -1,10 +1,12 @@
 import { format, formatDistanceToNow, parseISO } from 'date-fns'
+import type { Locale } from 'date-fns/locale'
+import { enUS, zhTW } from 'date-fns/locale'
 
-export type CardUrgency = 'overdue' | 'due-soon' | 'due-inprog' | null
+export type CardUrgency = 'overdue' | 'due-soon' | 'due-in-progress' | null
 
 /**
  * 依卡片的 startTime / endTime 計算緊急狀態。
- * 優先順序：overdue > due-soon > due-inprog > null
+ * 優先順序：overdue > due-soon > due-in-progress > null
  * due-soon 門檻為 5 天（與 getScheduleUrgencyClass 一致）。
  */
 export function getCardUrgency(card: {
@@ -14,15 +16,15 @@ export function getCardUrgency(card: {
   if (!card.endTime && !card.startTime) return null
   const now = Date.now()
   if (card.endTime) {
-    const diffDays = (new Date(card.endTime).getTime() - now) / (1000 * 60 * 60 * 24)
+    const diffDays =
+      (new Date(card.endTime).getTime() - now) / (1000 * 60 * 60 * 24)
     if (diffDays < 0) return 'overdue'
     if (diffDays <= 5) return 'due-soon'
   }
-  if (card.startTime && new Date(card.startTime).getTime() <= now) return 'due-inprog'
+  if (card.startTime && new Date(card.startTime).getTime() <= now)
+    return 'due-in-progress'
   return null
 }
-import { enUS, zhTW } from 'date-fns/locale'
-import type { Locale } from 'date-fns/locale'
 
 type AppLocale = 'en-US' | 'zh-TW'
 

@@ -6,6 +6,7 @@ import { LexicalComposer } from '@lexical/react/LexicalComposer'
 import { ContentEditable } from '@lexical/react/LexicalContentEditable'
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary'
 import { CheckListPlugin } from '@lexical/react/LexicalCheckListPlugin'
+import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin'
 import { HorizontalRuleNode } from '@lexical/extension'
 import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin'
 import { ListPlugin } from '@lexical/react/LexicalListPlugin'
@@ -238,6 +239,7 @@ export function MarkdownEditor({
               </div>
             </div>
           </div>
+          <HistoryPlugin />
           <SourcePlugin onChange={onChange} setLineCount={setLineCount} />
           <OnBlurPlugin onBlur={onBlur} onSwitchToView={handleSwitchToView} suppressBlurRef={suppressBlurRef} />
           <AutoFocusPlugin />
@@ -267,6 +269,7 @@ export function MarkdownEditor({
               />
             </div>
           </div>
+          <HistoryPlugin />
           <OnChangePlugin onChange={onChange} lastExportRef={lastExportRef} />
           <OnBlurPlugin onBlur={onBlur} onSwitchToView={handleSwitchToView} suppressBlurRef={suppressBlurRef} />
           <InitialValuePlugin value={value} lastExportRef={lastExportRef} />

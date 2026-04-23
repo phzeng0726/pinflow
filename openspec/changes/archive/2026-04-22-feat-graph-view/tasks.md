@@ -56,7 +56,7 @@
 
 ## 8. Frontend — i18n
 
-- [x] 8.1 `frontend/src/locales/en-US.json`：新增 `graphView` 鍵（boardView、graphView、searchPlaceholder、hierarchy、cluster、filter、unlinkedCards、needsAttention、exitFocus、focusingOn、columns、relationTypes、dateRange、tags、clearFilters、overdue、dueSoon、inProgress，及 4 種 relation type 標籤）
+- [x] 8.1 `frontend/src/locales/en-US.json`：新增 `graphView` 鍵（boardView、graphView、searchPlaceholder、hierarchy、cluster、filter、unlinked、attention、exitFocus、focusingOn、columns、relationTypes、dateRange、tags、clearFilters、overdue、dueSoon、inProgress，及 4 種 relation type 標籤）
 - [x] 8.2 `frontend/src/locales/zh-TW.json`：新增對應中文翻譯
 
 ## 9. 驗證

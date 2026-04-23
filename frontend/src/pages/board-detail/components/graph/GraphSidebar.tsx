@@ -1,9 +1,10 @@
-import { ChevronLeft, ChevronRight, AlertTriangle, Unlink } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
-import { useGraphViewStore } from '@/stores/graphViewStore'
-import { getColumnColor } from '@/lib/styleConfig'
 import { getCardUrgency } from '@/lib/dates'
+import { getColumnColor } from '@/lib/styleConfig'
+import { cn } from '@/lib/utils'
+import { useGraphViewStore } from '@/stores/graphViewStore'
 import type { Board, Card } from '@/types'
+import { AlertTriangle, ChevronLeft, ChevronRight, Unlink } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface GraphSidebarProps {
   board: Board | undefined
@@ -17,9 +18,11 @@ export function GraphSidebar({ board }: GraphSidebarProps) {
   const setFocusedCardId = useGraphViewStore((s) => s.setFocusedCardId)
   const setOpenedCardId = useGraphViewStore((s) => s.setOpenedCardId)
 
-  const allCards: Card[] = (board?.columns ?? []).flatMap((col) => col.cards ?? [])
+  const allCards: Card[] = (board?.columns ?? []).flatMap(
+    (col) => col.cards ?? [],
+  )
 
-  const unlinkedCards = allCards.filter((c) => c.dependencyCount === 0)
+  const unlinked = allCards.filter((c) => c.dependencyCount === 0)
   const needsAttentionCards = allCards.filter((c) => {
     const u = getCardUrgency(c)
     return u === 'overdue' || u === 'due-soon'
@@ -51,12 +54,13 @@ export function GraphSidebar({ board }: GraphSidebarProps) {
             </span>
           )}
         </div>
+
         {/* Unlinked badge */}
-        <div className="relative" title={t('graphView.unlinkedCards')}>
+        <div className="relative" title={t('graphView.unlinked')}>
           <Unlink className="h-4 w-4 text-gray-400" />
-          {unlinkedCards.length > 0 && (
+          {unlinked.length > 0 && (
             <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-gray-400 text-[9px] text-white">
-              {unlinkedCards.length}
+              {unlinked.length}
             </span>
           )}
         </div>
@@ -77,8 +81,9 @@ export function GraphSidebar({ board }: GraphSidebarProps) {
       <div className="flex-1 overflow-y-auto">
         {/* Needs Attention */}
         <section className="px-3 pb-3">
-          <div className="mb-1.5 flex items-center gap-1.5">
-            <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+          {/* Needs Attention Header */}
+          <div className="mb-2 flex items-center gap-1.5">
+            <AlertTriangle className="h-3.5 w-3.5 text-gray-500" />
             <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
               {t('graphView.needsAttention')}
             </span>
@@ -86,26 +91,64 @@ export function GraphSidebar({ board }: GraphSidebarProps) {
               {needsAttentionCards.length}
             </span>
           </div>
+
+          {/* Needs Attention Cards List */}
           {needsAttentionCards.length === 0 ? (
-            <p className="text-[11px] text-gray-400">{t('graphView.noNeedsAttention')}</p>
+            <p className="text-[11px] text-gray-400">
+              {t('graphView.noNeedsAttention')}
+            </p>
           ) : (
             <ul className="space-y-1">
               {needsAttentionCards.map((card) => {
-                const urgency = getCardUrgency(card)
                 const isActive = focusedCardId === card.id
+                const col = board?.columns.find((c) => c.id === card.columnId)
+                const colColor = col ? getColumnColor(col.id) : null
+                const dueBadge = getDueBadge(card)
+
                 return (
                   <li
                     key={card.id}
-                    onClick={() => setFocusedCardId(focusedCardId === card.id ? null : card.id)}
+                    onClick={() =>
+                      setFocusedCardId(
+                        focusedCardId === card.id ? null : card.id,
+                      )
+                    }
                     onDoubleClick={() => setOpenedCardId(card.id)}
-                    className={`flex cursor-pointer items-center gap-1.5 rounded-md px-1.5 py-1 transition-colors ${isActive ? 'bg-blue-100 dark:bg-blue-900' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                    className={cn(
+                      'flex cursor-pointer flex-col rounded-md px-2.5 py-2 transition-colors',
+                      isActive
+                        ? 'bg-blue-100 dark:bg-blue-900'
+                        : 'hover:bg-gray-50 dark:hover:bg-gray-700',
+                    )}
                   >
-                    <span
-                      className={`h-2 w-2 shrink-0 rounded-full ${urgency === 'overdue' ? 'bg-red-500' : 'bg-amber-500'}`}
-                    />
                     <span className="line-clamp-1 text-xs text-gray-700 dark:text-gray-300">
                       {card.title}
                     </span>
+                    <div className="mt-0.5 flex items-center gap-1">
+                      {colColor && (
+                        <span
+                          className={cn(
+                            'h-1.5 w-1.5 shrink-0 rounded-full',
+                            colColor.bg,
+                          )}
+                        />
+                      )}
+                      <span className="line-clamp-1 flex-1 text-[10px] text-gray-400 dark:text-gray-500">
+                        {col?.name} #{card.id}
+                      </span>
+                      {dueBadge && (
+                        <span
+                          className={cn(
+                            'shrink-0 text-[10px] font-medium',
+                            dueBadge.isOverdue
+                              ? 'text-red-500'
+                              : 'text-amber-500',
+                          )}
+                        >
+                          {dueBadge.label}
+                        </span>
+                      )}
+                    </div>
                   </li>
                 )
               })}
@@ -117,36 +160,61 @@ export function GraphSidebar({ board }: GraphSidebarProps) {
 
         {/* Unlinked Cards */}
         <section className="px-3 pt-3">
-          <div className="mb-1.5 flex items-center gap-1.5">
+          {/* Unlinked Cards Header */}
+          <div className="mb-2 flex items-center gap-1.5">
             <Unlink className="h-3.5 w-3.5 text-gray-400" />
             <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-              {t('graphView.unlinkedCards')}
+              {t('graphView.unlinked')}
             </span>
             <span className="ml-auto rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500 dark:bg-gray-700 dark:text-gray-400">
-              {unlinkedCards.length}
+              {unlinked.length}
             </span>
           </div>
-          {unlinkedCards.length === 0 ? (
-            <p className="text-[11px] text-gray-400">{t('graphView.noUnlinked')}</p>
+
+          {/* Unlinked Cards List */}
+          {unlinked.length === 0 ? (
+            <p className="text-[11px] text-gray-400">
+              {t('graphView.noUnlinked')}
+            </p>
           ) : (
             <ul className="space-y-1">
-              {unlinkedCards.map((card) => {
+              {unlinked.map((card) => {
                 const col = board?.columns.find((c) => c.id === card.columnId)
                 const colColor = col ? getColumnColor(col.id) : null
                 const isActive = focusedCardId === card.id
+
                 return (
                   <li
                     key={card.id}
-                    onClick={() => setFocusedCardId(focusedCardId === card.id ? null : card.id)}
+                    onClick={() =>
+                      setFocusedCardId(
+                        focusedCardId === card.id ? null : card.id,
+                      )
+                    }
                     onDoubleClick={() => setOpenedCardId(card.id)}
-                    className={`flex cursor-pointer items-center gap-1.5 rounded-md px-1.5 py-1 transition-colors ${isActive ? 'bg-blue-100 dark:bg-blue-900' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                  >
-                    {colColor && (
-                      <span className={`h-2 w-2 shrink-0 rounded-full ${colColor.bg}`} />
+                    className={cn(
+                      'flex cursor-pointer flex-col rounded-md px-2.5 py-2 transition-colors',
+                      isActive
+                        ? 'bg-blue-100 dark:bg-blue-900'
+                        : 'hover:bg-gray-50 dark:hover:bg-gray-700',
                     )}
+                  >
                     <span className="line-clamp-1 text-xs text-gray-700 dark:text-gray-300">
                       {card.title}
                     </span>
+                    <div className="mt-0.5 flex items-center gap-1">
+                      {colColor && (
+                        <span
+                          className={cn(
+                            'h-1.5 w-1.5 shrink-0 rounded-full',
+                            colColor.bg,
+                          )}
+                        />
+                      )}
+                      <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                        {col?.name} #{card.id}
+                      </span>
+                    </div>
                   </li>
                 )
               })}
@@ -156,4 +224,27 @@ export function GraphSidebar({ board }: GraphSidebarProps) {
       </div>
     </div>
   )
+}
+
+function getDueBadge(card: Card): { label: string; isOverdue: boolean } | null {
+  const urgency = getCardUrgency(card)
+  if (!card.endTime || (urgency !== 'overdue' && urgency !== 'due-soon')) {
+    return null
+  }
+
+  const diffDays =
+    (new Date(card.endTime).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+
+  if (urgency === 'overdue') {
+    return {
+      label: `${Math.ceil(Math.abs(diffDays))}d overdue`,
+      isOverdue: true,
+    }
+  }
+
+  if (diffDays < 1) {
+    return { label: 'due today', isOverdue: false }
+  }
+
+  return { label: `due in ${Math.ceil(diffDays)}d`, isOverdue: false }
 }

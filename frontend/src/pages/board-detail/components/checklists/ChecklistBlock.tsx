@@ -7,13 +7,13 @@ import {
 } from '@/components/ui/popover'
 import { Progress } from '@/components/ui/progress'
 import { useChecklistMutations } from '@/hooks/checklist/mutations/useChecklistMutations'
-import { useChecklistItemDnd } from '@/hooks/checklist/useChecklistItemDnd'
+import { DND_TYPE } from '@/hooks/dnd/dndUtils'
 import {
   createChecklistItemSchema,
   type ChecklistItemFormData,
 } from '@/lib/schemas'
 import type { Checklist } from '@/types'
-import { DndContext, closestCenter } from '@dnd-kit/core'
+import { useDroppable } from '@dnd-kit/core'
 import {
   SortableContext,
   useSortable,
@@ -56,7 +56,7 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
     isDragging,
   } = useSortable({
     id: `checklist-${checklist.id}`,
-    data: { type: 'checklist', checklist },
+    data: { type: DND_TYPE.CHECKLIST, checklist },
   })
 
   const style = {
@@ -72,16 +72,22 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
     updateChecklistItem: updateItem,
     deleteChecklistItem: deleteItem,
     syncChecklistItems,
-    moveChecklistItem,
   } = useChecklistMutations(boardId, cardId)
 
-  const { sensors, handleDragStart, handleDragEnd } =
-    useChecklistItemDnd({
-      boardId,
-      cardId,
-      checklist,
-      moveMutate: moveChecklistItem.mutate,
-    })
+  const {
+    setNodeRef: setPlaceholderRef,
+    isOver,
+    active,
+  } = useDroppable({
+    id: `checklist-item-placeholder-${checklist.id}`,
+    data: {
+      type: DND_TYPE.CHECKLIST_ITEM_PLACEHOLDER,
+      checklistId: checklist.id,
+    },
+  })
+
+  const isPlaceholderOver =
+    isOver && active?.data.current?.type === DND_TYPE.CHECKLIST_ITEM
 
   const sortedItems = useMemo(() => {
     return [...checklist.items].sort((a, b) => a.position - b.position)
@@ -269,17 +275,22 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
         />
       ) : (
         <>
-          <DndContext
-            id={`checklist-items-dnd-${checklist.id}`}
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
+          <SortableContext
+            items={sortedItems.map((item) => `checklist-item-${item.id}`)}
+            strategy={verticalListSortingStrategy}
           >
-            <SortableContext
-              items={sortedItems.map((item) => `checklist-item-${item.id}`)}
-              strategy={verticalListSortingStrategy}
-            >
+            {sortedItems.length === 0 ? (
+              <div
+                ref={setPlaceholderRef}
+                className={`rounded border-2 border-dashed px-2 py-3 text-center text-xs text-gray-400 transition-colors ${
+                  isPlaceholderOver
+                    ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-gray-200 dark:border-gray-600'
+                }`}
+              >
+                {t('checklist.dropHere')}
+              </div>
+            ) : (
               <div className="space-y-1.5">
                 {sortedItems.map((item) => {
                   const handleEditStart = () => {
@@ -314,8 +325,8 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
                   )
                 })}
               </div>
-            </SortableContext>
-          </DndContext>
+            )}
+          </SortableContext>
           {showItemForm ? (
             <form
               onSubmit={newItemForm.handleSubmit(handleAddItem)}

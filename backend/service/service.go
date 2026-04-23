@@ -54,6 +54,7 @@ type ChecklistService interface {
 	DeleteChecklist(id uint) error
 	CreateItem(checklistID uint, text string, position float64) (*model.ChecklistItem, error)
 	UpdateItem(id uint, req dto.UpdateChecklistItemRequest) (*model.ChecklistItem, error)
+	MoveItem(id uint, req dto.MoveChecklistItemRequest) (*model.ChecklistItem, error)
 	DeleteItem(id uint) error
 	SyncItems(checklistID uint, items []dto.SyncChecklistItemEntry) (*model.Checklist, error)
 }

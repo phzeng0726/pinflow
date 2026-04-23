@@ -1,5 +1,6 @@
 import { queryKeys } from '@/hooks/queryKeys'
 import * as api from '@/lib/api'
+import type { Card, ChecklistItem } from '@/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -111,14 +112,59 @@ export function useChecklistMutations(boardId: number, cardId: number) {
   })
 
   const moveChecklistItem = useMutation({
-    mutationFn: ({ id, position }: { id: number; position: number }) =>
-      api.updateChecklistItem(id, { position }),
-    onSuccess: async () => {
-      await invalidateCardDetail()
+    mutationFn: ({
+      id,
+      checklistId,
+      position,
+    }: {
+      id: number
+      checklistId: number
+      position: number
+    }) => api.moveChecklistItem(id, { checklistId, position }),
+    onMutate: async ({ id, checklistId, position }) => {
+      const cardKey = queryKeys.cards.detail(cardId)
+      await qc.cancelQueries({ queryKey: cardKey })
+      const snapshot = qc.getQueryData(cardKey)
+      qc.setQueryData<Card>(cardKey, (prev) => {
+        if (!prev) return prev
+        let movedItem: ChecklistItem | undefined
+        const checklists = prev.checklists.map((cl) => ({
+          ...cl,
+          items: cl.items.filter((item) => {
+            if (item.id === id) {
+              movedItem = { ...item, checklistId, position }
+              return false
+            }
+            return true
+          }),
+        }))
+        if (movedItem) {
+          return {
+            ...prev,
+            checklists: checklists.map((cl) =>
+              cl.id === checklistId
+                ? {
+                    ...cl,
+                    items: [...cl.items, movedItem!].sort(
+                      (a, b) => a.position - b.position,
+                    ),
+                  }
+                : cl,
+            ),
+          }
+        }
+        return prev
+      })
+      return { snapshot }
     },
-    onError: async () => {
-      await invalidateCardDetail()
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.snapshot) {
+        qc.setQueryData(queryKeys.cards.detail(cardId), ctx.snapshot)
+      }
       toast.error(t('toast.checklist.itemUpdateError'))
+    },
+    onSettled: () => {
+      setTimeout(() => invalidateCardDetail(), 300)
     },
   })
 

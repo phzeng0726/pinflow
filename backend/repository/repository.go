@@ -70,6 +70,7 @@ type ChecklistItemRepository interface {
 	FindByID(id uint) (*model.ChecklistItem, error)
 	MaxPositionByChecklist(checklistID uint) (float64, error)
 	Update(item *model.ChecklistItem) error
+	MoveItem(itemID uint, targetChecklistID uint, position float64) error
 	Delete(id uint) error
 	SyncItems(checklistID uint, items []model.ChecklistItem) ([]model.ChecklistItem, error)
 }

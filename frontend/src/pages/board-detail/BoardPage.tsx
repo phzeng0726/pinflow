@@ -16,10 +16,11 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useBoardDetail } from '@/hooks/board/queries/useBoardDetail'
-import { useBoardDnd } from '@/hooks/board/useBoardDnd'
+import { useBoardDnd } from '@/hooks/dnd/useBoardDnd'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { usePinnedCards } from '@/hooks/card/queries/usePinnedCards'
 import { useColumnMutations } from '@/hooks/column/mutations/useColumnMutations'
+import { cn } from '@/lib/utils'
 import { AddColumnForm } from '@/pages/board-detail/components/columns/AddColumnForm'
 import { ColumnView } from '@/pages/board-detail/components/columns/ColumnView'
 import { GraphView } from '@/pages/board-detail/components/graph'
@@ -31,7 +32,15 @@ import {
   horizontalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
-import { ArrowLeft, GitBranch, LayoutGrid, Moon, Pin, Plus, Sun } from 'lucide-react'
+import {
+  ArrowLeft,
+  GitBranch,
+  LayoutGrid,
+  Moon,
+  Pin,
+  Plus,
+  Sun,
+} from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -279,7 +288,12 @@ export function BoardPage() {
       ) : null}
 
       {/* Columns */}
-      <div className={`flex-1 overflow-x-auto p-4 ${viewMode === 'graph' ? 'hidden' : ''}`}>
+      <div
+        className={cn(
+          'flex-1 overflow-x-auto p-4',
+          viewMode === 'graph' && 'hidden',
+        )}
+      >
         <DndContext
           sensors={sensors}
           onDragStart={handleDragStart}

@@ -141,7 +141,8 @@
     "addItemPlaceholder": "新增項目...",
     "addItem": "新增項目",
     "markdownMode": "切換至 Markdown 模式",
-    "uiMode": "切換至 UI 模式"
+    "uiMode": "切換至 UI 模式",
+    "dropHere": "拖曳項目至此"
   },
   "comment": {
     "title": "留言",

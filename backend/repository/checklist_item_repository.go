@@ -75,6 +75,63 @@ func (r *checklistItemRepository) MaxPositionByChecklist(checklistID uint) (floa
 	return 0, store.ErrNotFound
 }
 
+func (r *checklistItemRepository) MoveItem(itemID uint, targetChecklistID uint, position float64) error {
+	cardID, ok := r.s.CardIDForChecklistItem(itemID)
+	if !ok {
+		return store.ErrNotFound
+	}
+	card, err := r.s.GetCard(cardID)
+	if err != nil {
+		return err
+	}
+
+	// Verify target checklist belongs to the same card
+	targetFound := false
+	for _, cl := range card.Checklists {
+		if cl.ID == targetChecklistID {
+			targetFound = true
+			break
+		}
+	}
+	if !targetFound {
+		return store.ErrNotFound
+	}
+
+	// Find and remove item from source checklist
+	var item *model.ChecklistItem
+	for ci, cl := range card.Checklists {
+		for ii, it := range cl.Items {
+			if it.ID == itemID {
+				item = &model.ChecklistItem{
+					ID:          it.ID,
+					ChecklistID: targetChecklistID,
+					Text:        it.Text,
+					Completed:   it.Completed,
+					Position:    position,
+				}
+				card.Checklists[ci].Items = append(cl.Items[:ii], cl.Items[ii+1:]...)
+				break
+			}
+		}
+		if item != nil {
+			break
+		}
+	}
+	if item == nil {
+		return store.ErrNotFound
+	}
+
+	// Add item to target checklist
+	for ci, cl := range card.Checklists {
+		if cl.ID == targetChecklistID {
+			card.Checklists[ci].Items = append(card.Checklists[ci].Items, *item)
+			break
+		}
+	}
+
+	return r.s.UpdateCard(card)
+}
+
 func (r *checklistItemRepository) Update(item *model.ChecklistItem) error {
 	cardID, ok := r.s.CardIDForChecklistItem(item.ID)
 	if !ok {

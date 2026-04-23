@@ -3,49 +3,74 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useCardDetail } from '@/hooks/card/queries/useCardDetail'
 import { useChecklistMutations } from '@/hooks/checklist/mutations/useChecklistMutations'
-import { useChecklistBlockDnd } from '@/hooks/checklist/useChecklistBlockDnd'
+import { useChecklistDnd } from '@/hooks/dnd/useChecklistDnd'
 import { createChecklistSchema, type ChecklistFormData } from '@/lib/schemas'
-import type { Modifier } from '@dnd-kit/core'
-import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core'
+import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  type Modifier,
+} from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { CheckSquare, Plus } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { ChecklistBlock } from './ChecklistBlock'
-
-const shiftLeft: Modifier = ({ transform }) => ({
-  ...transform,
-  x: transform.x - 280,
-})
 
 interface ChecklistSectionProps {
   boardId: number
   cardId: number
 }
 
-export function ChecklistSection(props: ChecklistSectionProps) {
-  const { boardId, cardId } = props
+export function ChecklistSection({ boardId, cardId }: ChecklistSectionProps) {
   const { data: card } = useCardDetail(cardId)
   if (!card) return null
+
   const { t } = useTranslation()
   const checklistSchema = useMemo(() => createChecklistSchema(t), [t])
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const dialogOffsetModifier = useCallback<Modifier>(({ transform }) => {
+    const dialog = containerRef.current?.closest('[role="dialog"]')
+    if (!dialog) return transform
+    const rect = dialog.getBoundingClientRect()
+    return {
+      ...transform,
+      x: transform.x - rect.left,
+      y: transform.y - rect.top,
+    }
+  }, [])
+
+  const overlayModifiers = useMemo(
+    () => [dialogOffsetModifier],
+    [dialogOffsetModifier],
+  )
 
   const [showNewForm, setShowNewForm] = useState(false)
-  const { createChecklist, moveChecklist } = useChecklistMutations(
-    boardId,
-    card.id,
-  )
-  const { sensors, activeChecklist, handleDragStart, handleDragEnd } =
-    useChecklistBlockDnd({
-      card,
-      moveMutate: moveChecklist.mutate,
-    })
+  const { createChecklist, moveChecklist, moveChecklistItem } =
+    useChecklistMutations(boardId, card.id)
 
-  const sortedChecklists = [...card.checklists].sort(
-    (a, b) => a.position - b.position,
+  const sortedChecklists = useMemo(
+    () => [...card.checklists].sort((a, b) => a.position - b.position),
+    [card.checklists],
   )
+
+  const {
+    sensors,
+    activeChecklist,
+    activeItem,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    handleDragCancel,
+  } = useChecklistDnd({
+    card,
+    sortedChecklists,
+    moveChecklistMutate: moveChecklist.mutate,
+    moveItemMutate: moveChecklistItem.mutate,
+  })
 
   const { register, handleSubmit, reset } = useForm<ChecklistFormData>({
     resolver: zodResolver(checklistSchema),
@@ -67,25 +92,20 @@ export function ChecklistSection(props: ChecklistSectionProps) {
     }
   }
 
-  const handleCancel = () => {
-    reset()
-    setShowNewForm(false)
-  }
-
-  const handleShowForm = () => setShowNewForm(true)
-
   return (
-    <div>
+    <div ref={containerRef}>
       <Label className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
         <CheckSquare className="h-4 w-4" /> {t('checklist.title')}
       </Label>
 
       <DndContext
-        id={`checklist-section-dnd-${card.id}`}
+        id={`checklist-dnd-${card.id}`}
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
       >
         <SortableContext
           items={sortedChecklists.map((cl) => `checklist-${cl.id}`)}
@@ -103,12 +123,25 @@ export function ChecklistSection(props: ChecklistSectionProps) {
           </div>
         </SortableContext>
 
-        <DragOverlay dropAnimation={null} modifiers={[shiftLeft]}>
+        <DragOverlay dropAnimation={null} modifiers={overlayModifiers}>
           {activeChecklist && (
             <div className="cursor-grabbing rounded-lg border bg-white p-3 opacity-95 shadow-2xl dark:border-gray-600 dark:bg-gray-700">
               <p className="select-none text-sm font-medium text-gray-900 dark:text-gray-100">
                 {activeChecklist.title}
               </p>
+            </div>
+          )}
+          {activeItem && (
+            <div className="flex cursor-grabbing items-center gap-2 rounded border bg-white px-2 py-1 opacity-95 shadow-lg dark:border-gray-600 dark:bg-gray-700">
+              <input
+                type="checkbox"
+                checked={activeItem.completed}
+                readOnly
+                className="h-3.5 w-3.5 shrink-0"
+              />
+              <span className="select-none text-sm text-gray-800 dark:text-gray-200">
+                {activeItem.text}
+              </span>
             </div>
           )}
         </DragOverlay>
@@ -129,7 +162,10 @@ export function ChecklistSection(props: ChecklistSectionProps) {
           <Button
             type="button"
             variant="ghost"
-            onClick={handleCancel}
+            onClick={() => {
+              reset()
+              setShowNewForm(false)
+            }}
             className="h-8 text-xs"
           >
             {t('checklist.cancel')}
@@ -138,7 +174,7 @@ export function ChecklistSection(props: ChecklistSectionProps) {
       ) : (
         <Button
           variant="ghost"
-          onClick={handleShowForm}
+          onClick={() => setShowNewForm(true)}
           className="mt-3 h-8 text-xs text-gray-500"
         >
           <Plus className="mr-1 h-3.5 w-3.5" /> {t('checklist.addChecklist')}

@@ -91,6 +91,7 @@ func NewRouter(h *Handlers) *gin.Engine {
 
 		checklistItems := v1.Group("/checklist-items")
 		{
+			checklistItems.PATCH("/:id/move", h.ChecklistItem.MoveItem)
 			checklistItems.PATCH("/:id", h.ChecklistItem.UpdateItem)
 			checklistItems.DELETE("/:id", h.ChecklistItem.DeleteItem)
 		}

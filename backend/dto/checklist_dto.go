@@ -20,6 +20,11 @@ type UpdateChecklistItemRequest struct {
 	Position  *float64 `json:"position"`
 }
 
+type MoveChecklistItemRequest struct {
+	ChecklistID uint    `json:"checklistId" binding:"required"`
+	Position    float64 `json:"position" binding:"required"`
+}
+
 type SyncChecklistItemEntry struct {
 	Text      string `json:"text" binding:"required,min=1,max=500"`
 	Completed bool   `json:"completed"`

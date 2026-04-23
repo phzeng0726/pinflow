@@ -141,7 +141,8 @@
     "addItemPlaceholder": "Add item...",
     "addItem": "Add Item",
     "markdownMode": "Switch to Markdown mode",
-    "uiMode": "Switch to UI mode"
+    "uiMode": "Switch to UI mode",
+    "dropHere": "Drop item here"
   },
   "comment": {
     "title": "Comments",

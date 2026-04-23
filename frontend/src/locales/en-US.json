@@ -271,7 +271,7 @@
     "hierarchy": "Hierarchy",
     "cluster": "Cluster",
     "filter": "Filter",
-    "unlinkedCards": "Unlinked Cards",
+    "unlinked": "Unlinked",
     "needsAttention": "Needs Attention",
     "noUnlinked": "No unlinked cards",
     "noNeedsAttention": "All cards are on track",

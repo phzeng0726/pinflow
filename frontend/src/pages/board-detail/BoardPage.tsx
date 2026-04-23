@@ -22,6 +22,7 @@ import { usePinnedCards } from '@/hooks/card/queries/usePinnedCards'
 import { useColumnMutations } from '@/hooks/column/mutations/useColumnMutations'
 import { AddColumnForm } from '@/pages/board-detail/components/columns/AddColumnForm'
 import { ColumnView } from '@/pages/board-detail/components/columns/ColumnView'
+import { GraphView } from '@/pages/board-detail/components/graph'
 import { useThemeStore } from '@/stores/themeStore'
 import type { Card } from '@/types'
 import { DndContext, DragOverlay } from '@dnd-kit/core'
@@ -29,13 +30,13 @@ import {
   SortableContext,
   horizontalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { useNavigate, useParams } from '@tanstack/react-router'
-import { ArrowLeft, Moon, Pin, Plus, Sun } from 'lucide-react'
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
+import { ArrowLeft, GitBranch, LayoutGrid, Moon, Pin, Plus, Sun } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 export function BoardPage() {
-  const navigate = useNavigate()
+  const navigate = useNavigate({ from: '/boards/$boardId' })
   const { boardId } = useParams({ from: '/boards/$boardId' })
   const id = Number(boardId)
   const { t } = useTranslation()
@@ -45,6 +46,7 @@ export function BoardPage() {
   const theme = useThemeStore((s) => s.theme)
   const toggleTheme = useThemeStore((s) => s.toggle)
 
+  const { view: viewMode } = useSearch({ from: '/boards/$boardId' })
   const [addingColumn, setAddingColumn] = useState(false)
   const [pinPopoverOpen, setPinPopoverOpen] = useState(false)
   const [pendingUnpinCard, setPendingUnpinCard] = useState<Card | null>(null)
@@ -173,6 +175,41 @@ export function BoardPage() {
               {theme === 'dark' ? t('theme.toLight') : t('theme.toDark')}
             </TooltipContent>
           </Tooltip>
+          {/* Board / Graph segmented toggle */}
+          <div className="flex items-center rounded-lg border bg-gray-100 p-0.5 dark:border-gray-600 dark:bg-gray-700">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => navigate({ search: { view: 'board' } })}
+                  className={[
+                    'rounded-md p-1.5 transition-colors',
+                    viewMode === 'board'
+                      ? 'bg-white shadow-sm dark:bg-gray-600'
+                      : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200',
+                  ].join(' ')}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{t('graphView.boardView')}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => navigate({ search: { view: 'graph' } })}
+                  className={[
+                    'rounded-md p-1.5 transition-colors',
+                    viewMode === 'graph'
+                      ? 'bg-white shadow-sm dark:bg-gray-600'
+                      : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200',
+                  ].join(' ')}
+                >
+                  <GitBranch className="h-4 w-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{t('graphView.graphView')}</TooltipContent>
+            </Tooltip>
+          </div>
           <div className="relative" ref={pinPopoverRef}>
             <Button
               variant="outline"
@@ -234,8 +271,15 @@ export function BoardPage() {
         </div>
       </div>
 
+      {/* Main area: Board or Graph view */}
+      {viewMode === 'graph' ? (
+        <div className="flex-1 overflow-hidden">
+          <GraphView boardId={id} />
+        </div>
+      ) : null}
+
       {/* Columns */}
-      <div className="flex-1 overflow-x-auto p-4">
+      <div className={`flex-1 overflow-x-auto p-4 ${viewMode === 'graph' ? 'hidden' : ''}`}>
         <DndContext
           sensors={sensors}
           onDragStart={handleDragStart}

@@ -36,6 +36,7 @@ func NewRouter(h *Handlers) *gin.Engine {
 			boards.PUT("/:id", h.Board.UpdateBoard)
 			boards.DELETE("/:id", h.Board.DeleteBoard)
 			boards.POST("/:id/columns", h.Column.CreateColumn)
+			boards.GET("/:id/dependencies", h.Dependency.ListBoardDependencies)
 			boards.GET("/:id/images/:filename", h.Image.ServeImage)
 		}
 

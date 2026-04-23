@@ -61,6 +61,7 @@ type ChecklistService interface {
 type DependencyService interface {
 	CreateForCard(fromCardID uint, req dto.CreateDependencyRequest) (*dto.DependencyResponse, error)
 	ListByCard(cardID uint) ([]dto.DependencyResponse, error)
+	ListByBoard(boardID uint) ([]dto.DependencyResponse, error)
 	Delete(id uint) error
 }
 

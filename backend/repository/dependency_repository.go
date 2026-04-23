@@ -27,6 +27,10 @@ func (r *dependencyRepository) ListByCard(cardID uint) ([]model.Dependency, erro
 	return r.s.ListDependenciesByCard(cardID), nil
 }
 
+func (r *dependencyRepository) ListByBoard(boardID uint) ([]model.Dependency, error) {
+	return r.s.ListDependenciesByBoard(boardID), nil
+}
+
 func (r *dependencyRepository) CountByCard(cardID uint) (int, error) {
 	return r.s.CountDependenciesByCard(cardID), nil
 }

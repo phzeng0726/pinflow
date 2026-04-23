@@ -1,5 +1,6 @@
 // ── Dependency Relations ──────────────────────────────────────────────────────
 
+import type { CardUrgency } from '@/lib/dates'
 import type { Dependency, DependencyType } from '@/types'
 
 export type DependencyRelationKey =
@@ -173,3 +174,55 @@ export function getColumnColor(columnId: number) {
 // ── Story Points ──────────────────────────────────────────────────────────────
 
 export const STORY_POINTS = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
+
+// ── Graph: Dependency Edge Styles ─────────────────────────────────────────────
+
+export interface DependencyEdgeStyle {
+  stroke: string
+  strokeDasharray?: string
+  /** React Flow markerEnd reference, defined only for directed edges */
+  markerEnd?: string
+}
+
+export const DEPENDENCY_EDGE_STYLES: Record<
+  DependencyType,
+  DependencyEdgeStyle
+> = {
+  blocks: { stroke: '#ef4444', markerEnd: 'url(#arrow-blocks)' },
+  parent_of: { stroke: '#3b82f6', markerEnd: 'url(#arrow-parent)' },
+  related_to: { stroke: '#22c55e', strokeDasharray: '12 6' },
+  duplicates: { stroke: '#9ca3af', strokeDasharray: '4 4' },
+}
+
+export function getDependencyEdgeStyle(
+  type: DependencyType,
+): DependencyEdgeStyle {
+  return DEPENDENCY_EDGE_STYLES[type]
+}
+
+// ── Graph: Urgency Visual Config ──────────────────────────────────────────────
+
+/** Hex fill colors for urgency states — for SVG / inline styles (MiniMap, Legend). */
+export const URGENCY_HEX_COLORS: Record<
+  NonNullable<CardUrgency> | 'none',
+  string
+> = {
+  overdue: '#ef4444',
+  'due-soon': '#f59e0b',
+  'due-in-progress': '#3b82f6',
+  none: '#d1d5db',
+}
+
+/** Tailwind border classes for graph card node urgency states. */
+export function getUrgencyBorderClass(urgency: CardUrgency): string {
+  switch (urgency) {
+    case 'overdue':
+      return 'border-red-500 shadow-[0_0_0_1px_rgba(239,68,68,0.4)]'
+    case 'due-soon':
+      return 'border-amber-500'
+    case 'due-in-progress':
+      return 'border-blue-500'
+    default:
+      return 'border-gray-200 dark:border-gray-600'
+  }
+}

@@ -262,5 +262,34 @@
       "attachError": "Failed to add tag",
       "detachError": "Failed to remove tag"
     }
+  },
+  "graphView": {
+    "boardView": "Board",
+    "graphView": "Graph",
+    "sidebarTitle": "Overview",
+    "searchPlaceholder": "Search cards...",
+    "hierarchy": "Hierarchy",
+    "cluster": "Cluster",
+    "filter": "Filter",
+    "unlinkedCards": "Unlinked Cards",
+    "needsAttention": "Needs Attention",
+    "noUnlinked": "No unlinked cards",
+    "noNeedsAttention": "All cards are on track",
+    "exitFocus": "Exit Focus",
+    "focusingOn": "Focusing on:",
+    "columns": "Columns",
+    "relationTypes": "Relation Types",
+    "dateRange": "Date Range",
+    "tags": "Tags",
+    "clearFilters": "Clear Filters",
+    "overdue": "Overdue",
+    "dueSoon": "Due Soon",
+    "inProgress": "In Progress",
+    "relationType": {
+      "blocks": "Blocks",
+      "parent_of": "Parent of",
+      "related_to": "Related to",
+      "duplicates": "Duplicates"
+    }
   }
 }

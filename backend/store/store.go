@@ -624,6 +624,29 @@ func (s *FileStore) CountDependenciesByCard(cardID uint) int {
 	return count
 }
 
+func (s *FileStore) ListDependenciesByBoard(boardID uint) []model.Dependency {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	// Build cardSet for all cards belonging to this board
+	cardSet := make(map[uint]struct{})
+	for _, colID := range s.columnsByBoard[boardID] {
+		for _, cardID := range s.cardsByColumn[colID] {
+			cardSet[cardID] = struct{}{}
+		}
+	}
+
+	var result []model.Dependency
+	for _, d := range s.dependencies {
+		_, fromOk := cardSet[d.FromCardID]
+		_, toOk := cardSet[d.ToCardID]
+		if fromOk || toOk {
+			result = append(result, *d)
+		}
+	}
+	return result
+}
+
 func (s *FileStore) cleanDependenciesByCard(cardID uint) {
 	for id, d := range s.dependencies {
 		if d.FromCardID == cardID || d.ToCardID == cardID {

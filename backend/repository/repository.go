@@ -61,6 +61,7 @@ type DependencyRepository interface {
 	Create(dep *model.Dependency) error
 	Delete(id uint) error
 	ListByCard(cardID uint) ([]model.Dependency, error)
+	ListByBoard(boardID uint) ([]model.Dependency, error)
 	CountByCard(cardID uint) (int, error)
 }
 

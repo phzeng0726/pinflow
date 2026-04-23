@@ -159,6 +159,7 @@ export function BoardListPage() {
               navigate({
                 to: '/boards/$boardId',
                 params: { boardId: String(board.id) },
+                search: { view: 'board' },
               })
             const handleRequestDeleteBoard = (e: React.MouseEvent) => {
               e.stopPropagation()

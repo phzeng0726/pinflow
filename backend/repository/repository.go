@@ -92,6 +92,7 @@ type Repositories struct {
 	ChecklistItem ChecklistItemRepository
 	Dependency    DependencyRepository
 	Comment       CommentRepository
+	Settings      SettingsRepository
 }
 
 func NewRepositories(fs *store.FileStore) *Repositories {
@@ -104,5 +105,6 @@ func NewRepositories(fs *store.FileStore) *Repositories {
 		ChecklistItem: newChecklistItemRepository(fs),
 		Dependency:    newDependencyRepository(fs),
 		Comment:       newCommentRepository(fs),
+		Settings:      newSettingsRepository(fs),
 	}
 }

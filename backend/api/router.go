@@ -101,6 +101,12 @@ func NewRouter(h *Handlers) *gin.Engine {
 			comments.PATCH("/:id", h.Comment.UpdateComment)
 			comments.DELETE("/:id", h.Comment.DeleteComment)
 		}
+
+		settings := v1.Group("/settings")
+		{
+			settings.GET("", h.Settings.GetSettings)
+			settings.PUT("", h.Settings.UpdateSettings)
+		}
 	}
 
 	return r

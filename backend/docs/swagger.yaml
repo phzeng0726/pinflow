@@ -258,6 +258,16 @@ definitions:
     - columnId
     - position
     type: object
+  dto.MoveChecklistItemRequest:
+    properties:
+      checklistId:
+        type: integer
+      position:
+        type: number
+    required:
+    - checklistId
+    - position
+    type: object
   dto.PinnedCardResponse:
     properties:
       boardId:
@@ -287,6 +297,13 @@ definitions:
           $ref: '#/definitions/dto.TagResponse'
         type: array
       title:
+        type: string
+    type: object
+  dto.SettingsResponse:
+    properties:
+      locale:
+        type: string
+      theme:
         type: string
     type: object
   dto.SyncChecklistItemEntry:
@@ -384,6 +401,13 @@ definitions:
       endTime:
         type: string
       startTime:
+        type: string
+    type: object
+  dto.UpdateSettingsRequest:
+    properties:
+      locale:
+        type: string
+      theme:
         type: string
     type: object
   dto.UpdateTagRequest:
@@ -1343,6 +1367,50 @@ paths:
       summary: Update a checklist item
       tags:
       - checklist-items
+  /checklist-items/{id}/move:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Item ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Move data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MoveChecklistItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ChecklistItemResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Move a checklist item to a target checklist and position
+      tags:
+      - checklist-items
   /checklists/{id}:
     delete:
       parameters:
@@ -1647,6 +1715,44 @@ paths:
       summary: Delete a dependency
       tags:
       - dependencies
+  /settings:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SettingsResponse'
+      summary: Get application settings
+      tags:
+      - settings
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Settings to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateSettingsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SettingsResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update application settings
+      tags:
+      - settings
   /tags:
     get:
       produces:

@@ -12,9 +12,9 @@
 
 系統 SHALL 支援繁體中文（zh-TW）與美式英文（en-US）兩種顯示語系，預設語系為 en-US。
 
-#### Scenario: 預設語系為英文
+#### Scenario: 預設語系為英文（首次使用）
 
-- **WHEN** 使用者首次開啟應用程式（無 localStorage 記錄）
+- **WHEN** 使用者首次開啟應用程式（workspace 中無 `settings.json` 記錄）
 - **THEN** 所有 UI 文字以美式英文顯示
 
 #### Scenario: 切換至繁體中文
@@ -31,7 +31,7 @@
 
 ### Requirement: 語系持久化
 
-系統 SHALL 將使用者選擇的語系持久化至 localStorage，key 為 `pinflow-locale`。
+系統 SHALL 將使用者選擇的語系透過後端 `PUT /api/v1/settings` API 持久化，不再依賴 localStorage。
 
 #### Scenario: 重新整理後語系保持
 

@@ -18,4 +18,7 @@ export const queryKeys = {
   checklists: {
     byCard: (cardId: number) => ['checklists', cardId] as const,
   },
+  settings: {
+    all: () => ['settings'] as const,
+  },
 }

@@ -1,7 +1,10 @@
+import type { GraphDependencyEdgeData } from '@/hooks/dependency/useGraphData'
+import {
+  DEPENDENCY_EDGE_STYLES,
+  getDependencyEdgeStyle,
+} from '@/lib/styleConfig'
 import type { Edge, EdgeProps } from '@xyflow/react'
 import { BaseEdge, getSmoothStepPath } from '@xyflow/react'
-import type { GraphDependencyEdgeData } from '@/hooks/dependency/useGraphData'
-import { getDependencyEdgeStyle, DEPENDENCY_EDGE_STYLES } from '@/lib/styleConfig'
 
 export function GraphDependencyEdge({
   id,
@@ -39,7 +42,10 @@ export function GraphDependencyEdge({
           markerHeight="6"
           orient="auto-start-reverse"
         >
-          <path d="M 0 0 L 10 5 L 0 10 z" fill={DEPENDENCY_EDGE_STYLES.blocks.stroke} />
+          <path
+            d="M 0 0 L 10 5 L 0 10 z"
+            fill={DEPENDENCY_EDGE_STYLES.blocks.stroke}
+          />
         </marker>
         <marker
           id="arrow-parent"
@@ -50,7 +56,10 @@ export function GraphDependencyEdge({
           markerHeight="6"
           orient="auto-start-reverse"
         >
-          <path d="M 0 0 L 10 5 L 0 10 z" fill={DEPENDENCY_EDGE_STYLES.parent_of.stroke} />
+          <path
+            d="M 0 0 L 10 5 L 0 10 z"
+            fill={DEPENDENCY_EDGE_STYLES.parent_of.stroke}
+          />
         </marker>
       </defs>
       <BaseEdge

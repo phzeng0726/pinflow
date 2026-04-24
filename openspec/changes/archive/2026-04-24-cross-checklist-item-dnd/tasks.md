@@ -49,8 +49,8 @@
 ## 8. 驗證
 
 - [x] 8.1 執行 `cd backend && go build ./...` 確認後端編譯通過
-- [ ] 8.2 啟動 dev server，手動測試同群組 item 拖拉排序正常
-- [ ] 8.3 手動測試跨群組拖拉：item 移至目標 checklist 正確位置
-- [ ] 8.4 手動測試拖拉 item 至空 checklist：item 正確出現在目標 checklist
-- [ ] 8.5 重新整理頁面，確認資料已持久化
-- [ ] 8.6 測試拖拉失敗時 UI 正確 revert（樂觀更新 rollback）
+- [x] 8.2 啟動 dev server，手動測試同群組 item 拖拉排序正常
+- [x] 8.3 手動測試跨群組拖拉：item 移至目標 checklist 正確位置
+- [x] 8.4 手動測試拖拉 item 至空 checklist：item 正確出現在目標 checklist
+- [x] 8.5 重新整理頁面，確認資料已持久化
+- [x] 8.6 測試拖拉失敗時 UI 正確 revert（樂觀更新 rollback）

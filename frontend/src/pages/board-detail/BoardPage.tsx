@@ -16,10 +16,10 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useBoardDetail } from '@/hooks/board/queries/useBoardDetail'
-import { useBoardDnd } from '@/hooks/dnd/useBoardDnd'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { usePinnedCards } from '@/hooks/card/queries/usePinnedCards'
 import { useColumnMutations } from '@/hooks/column/mutations/useColumnMutations'
+import { useBoardDnd } from '@/hooks/dnd/useBoardDnd'
 import { cn } from '@/lib/utils'
 import { AddColumnForm } from '@/pages/board-detail/components/columns/AddColumnForm'
 import { ColumnView } from '@/pages/board-detail/components/columns/ColumnView'
@@ -332,7 +332,7 @@ export function BoardPage() {
           {/* 拖拉當下抓著的那個項目長怎樣 */}
           <DragOverlay dropAnimation={null}>
             {activeCard && (
-              <div className="w-60 rotate-2 cursor-grabbing rounded-lg border bg-white p-3 opacity-95 shadow-2xl dark:border-gray-600 dark:bg-gray-700">
+              <div className="w-60 cursor-grabbing rounded-lg border bg-white p-3 opacity-95 shadow-2xl dark:border-gray-600 dark:bg-gray-700">
                 <p className="select-none text-sm font-medium text-gray-900 dark:text-gray-100">
                   {activeCard.title}
                 </p>

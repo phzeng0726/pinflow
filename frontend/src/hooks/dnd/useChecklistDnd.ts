@@ -135,10 +135,10 @@ export function useChecklistDnd(params: UseChecklistDndParams) {
     let targetItems: ChecklistItem[]
     let overItemId: number | null = null
 
-    if (parsedOver.type === DND_PATTERN_TYPE.CHECKLIST_ITEM_PLACEHOLDER) {
+    if (parsedOver.type === DND_PATTERN_TYPE.CHECKLIST_ITEM_PLACEHOLDER || parsedOver.type === DND_PATTERN_TYPE.CHECKLIST) {
       targetChecklist = sortedChecklists.find((cl) => cl.id === parsedOver.id)
       if (!targetChecklist) return
-      targetItems = []
+      targetItems = targetChecklist.items.filter((i) => i.id !== draggedItem.id)
     } else if (parsedOver.type === DND_PATTERN_TYPE.CHECKLIST_ITEM) {
       overItemId = parsedOver.id
       targetChecklist = sortedChecklists.find((cl) =>

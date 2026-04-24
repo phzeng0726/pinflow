@@ -13,7 +13,6 @@ import {
   type ChecklistItemFormData,
 } from '@/lib/schemas'
 import type { Checklist } from '@/types'
-import { useDroppable } from '@dnd-kit/core'
 import {
   SortableContext,
   useSortable,
@@ -73,21 +72,6 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
     deleteChecklistItem: deleteItem,
     syncChecklistItems,
   } = useChecklistMutations(boardId, cardId)
-
-  const {
-    setNodeRef: setPlaceholderRef,
-    isOver,
-    active,
-  } = useDroppable({
-    id: `checklist-item-placeholder-${checklist.id}`,
-    data: {
-      type: DND_TYPE.CHECKLIST_ITEM_PLACEHOLDER,
-      checklistId: checklist.id,
-    },
-  })
-
-  const isPlaceholderOver =
-    isOver && active?.data.current?.type === DND_TYPE.CHECKLIST_ITEM
 
   const sortedItems = useMemo(() => {
     return [...checklist.items].sort((a, b) => a.position - b.position)
@@ -279,53 +263,40 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
             items={sortedItems.map((item) => `checklist-item-${item.id}`)}
             strategy={verticalListSortingStrategy}
           >
-            {sortedItems.length === 0 ? (
-              <div
-                ref={setPlaceholderRef}
-                className={`rounded border-2 border-dashed px-2 py-3 text-center text-xs text-gray-400 transition-colors ${
-                  isPlaceholderOver
-                    ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-gray-200 dark:border-gray-600'
-                }`}
-              >
-                {t('checklist.dropHere')}
-              </div>
-            ) : (
-              <div className="space-y-1.5">
-                {sortedItems.map((item) => {
-                  const handleEditStart = () => {
-                    setEditingItemId(item.id)
-                    setEditItemValue(item.text)
-                  }
-                  const handleEditSave = () =>
-                    handleItemTextSave(item.id, item.text)
-                  const handleEditCancel = () => {
-                    setEditItemValue(item.text)
-                    setEditingItemId(null)
-                  }
-                  const handleToggle = (checked: boolean) =>
-                    updateItem.mutate({
-                      id: item.id,
-                      data: { completed: checked },
-                    })
-                  const handleDelete = () => deleteItem.mutate(item.id)
-                  return (
-                    <SortableChecklistItem
-                      key={item.id}
-                      item={item}
-                      isEditing={editingItemId === item.id}
-                      editItemValue={editItemValue}
-                      onEditStart={handleEditStart}
-                      onEditChange={setEditItemValue}
-                      onEditSave={handleEditSave}
-                      onEditCancel={handleEditCancel}
-                      onToggle={handleToggle}
-                      onDelete={handleDelete}
-                    />
-                  )
-                })}
-              </div>
-            )}
+            <div className="space-y-1.5">
+              {sortedItems.map((item) => {
+                const handleEditStart = () => {
+                  setEditingItemId(item.id)
+                  setEditItemValue(item.text)
+                }
+                const handleEditSave = () =>
+                  handleItemTextSave(item.id, item.text)
+                const handleEditCancel = () => {
+                  setEditItemValue(item.text)
+                  setEditingItemId(null)
+                }
+                const handleToggle = (checked: boolean) =>
+                  updateItem.mutate({
+                    id: item.id,
+                    data: { completed: checked },
+                  })
+                const handleDelete = () => deleteItem.mutate(item.id)
+                return (
+                  <SortableChecklistItem
+                    key={item.id}
+                    item={item}
+                    isEditing={editingItemId === item.id}
+                    editItemValue={editItemValue}
+                    onEditStart={handleEditStart}
+                    onEditChange={setEditItemValue}
+                    onEditSave={handleEditSave}
+                    onEditCancel={handleEditCancel}
+                    onToggle={handleToggle}
+                    onDelete={handleDelete}
+                  />
+                )
+              })}
+            </div>
           </SortableContext>
           {showItemForm ? (
             <form

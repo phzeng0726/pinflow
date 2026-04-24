@@ -73,6 +73,11 @@ type CommentService interface {
 	DeleteComment(id uint) error
 }
 
+type SettingsService interface {
+	GetSettings() (*model.Settings, error)
+	UpdateSettings(theme, locale *string) (*model.Settings, error)
+}
+
 type ImageService interface {
 	Upload(cardID uint, fh *multipart.FileHeader) (string, error)
 	BoardImageDir(boardID uint) string
@@ -95,6 +100,7 @@ type Services struct {
 	Dependency DependencyService
 	Comment    CommentService
 	Image      ImageService
+	Settings   SettingsService
 }
 
 func NewServices(deps Deps) *Services {
@@ -109,5 +115,6 @@ func NewServices(deps Deps) *Services {
 		Dependency: newDependencyService(repos.Dependency, repos.Card, repos.Column, repos.Board),
 		Comment:    newCommentService(repos.Comment, repos.Card, deps.Store, imageSvc),
 		Image:      imageSvc,
+		Settings:   newSettingsService(repos.Settings),
 	}
 }

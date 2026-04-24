@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { updateSettings } from '@/lib/api'
 
 type Theme = 'light' | 'dark'
 
@@ -9,23 +9,16 @@ interface ThemeState {
   apply: () => void
 }
 
-export const useThemeStore = create<ThemeState>()(
-  persist(
-    (set, get) => ({
-      theme: 'light',
-      toggle: () => {
-        const next = get().theme === 'light' ? 'dark' : 'light'
-        set({ theme: next })
-        document.documentElement.classList.toggle('dark', next === 'dark')
-        window.electronAPI?.broadcastSettings?.({ theme: next })
-      },
-      apply: () => {
-        document.documentElement.classList.toggle(
-          'dark',
-          get().theme === 'dark',
-        )
-      },
-    }),
-    { name: 'pinflow-theme' },
-  ),
-)
+export const useThemeStore = create<ThemeState>()((set, get) => ({
+  theme: 'light',
+  toggle: () => {
+    const next = get().theme === 'light' ? 'dark' : 'light'
+    set({ theme: next })
+    document.documentElement.classList.toggle('dark', next === 'dark')
+    updateSettings({ theme: next }).catch(() => {})
+    window.electronAPI?.broadcastSettings?.({ theme: next })
+  },
+  apply: () => {
+    document.documentElement.classList.toggle('dark', get().theme === 'dark')
+  },
+}))

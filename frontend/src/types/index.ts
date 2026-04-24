@@ -109,6 +109,11 @@ export interface DuplicateCardRequest {
   pin: boolean
 }
 
+export interface Settings {
+  theme: string
+  locale: string
+}
+
 export interface PinnedCard {
   id: number
   title: string

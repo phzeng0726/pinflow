@@ -1236,6 +1236,73 @@ const docTemplate = `{
                 }
             }
         },
+        "/checklist-items/{id}/move": {
+            "patch": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "checklist-items"
+                ],
+                "summary": "Move a checklist item to a target checklist and position",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Item ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Move data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.MoveChecklistItemRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ChecklistItemResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/checklists/{id}": {
             "delete": {
                 "tags": [
@@ -1690,6 +1757,65 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/settings": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "settings"
+                ],
+                "summary": "Get application settings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SettingsResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "settings"
+                ],
+                "summary": "Update application settings",
+                "parameters": [
+                    {
+                        "description": "Settings to update",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateSettingsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SettingsResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -2244,6 +2370,21 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.MoveChecklistItemRequest": {
+            "type": "object",
+            "required": [
+                "checklistId",
+                "position"
+            ],
+            "properties": {
+                "checklistId": {
+                    "type": "integer"
+                },
+                "position": {
+                    "type": "number"
+                }
+            }
+        },
         "dto.PinnedCardResponse": {
             "type": "object",
             "properties": {
@@ -2287,6 +2428,17 @@ const docTemplate = `{
                     }
                 },
                 "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SettingsResponse": {
+            "type": "object",
+            "properties": {
+                "locale": {
+                    "type": "string"
+                },
+                "theme": {
                     "type": "string"
                 }
             }
@@ -2433,6 +2585,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "startTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateSettingsRequest": {
+            "type": "object",
+            "properties": {
+                "locale": {
+                    "type": "string"
+                },
+                "theme": {
                     "type": "string"
                 }
             }

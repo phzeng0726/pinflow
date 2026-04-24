@@ -56,6 +56,7 @@ type FileStore struct {
 	cards        map[uint]*CardFile
 	tags         map[uint]*model.Tag
 	dependencies map[uint]*model.Dependency
+	settings     *model.Settings
 
 	// Reverse indexes for O(1) lookups
 	columnsByBoard  map[uint][]uint // boardID → []columnID
@@ -131,6 +132,21 @@ func (s *FileStore) load() error {
 	if s.manifest.WorkspaceID == "" {
 		s.manifest.WorkspaceID = uuid.New().String()
 		if err := s.saveManifest(); err != nil {
+			return err
+		}
+	}
+
+	// Settings
+	sp := filepath.Join(s.basePath, "settings.json")
+	if fileExists(sp) {
+		var settings model.Settings
+		if err := readJSON(sp, &settings); err != nil {
+			return fmt.Errorf("settings: %w", err)
+		}
+		s.settings = &settings
+	} else {
+		s.settings = &model.Settings{Theme: "light", Locale: "en-US"}
+		if err := s.persistSettings(); err != nil {
 			return err
 		}
 	}
@@ -889,6 +905,31 @@ func (s *FileStore) persistColumns(boardID uint) error {
 	}
 	sort.Slice(cols, func(i, j int) bool { return cols[i].Position < cols[j].Position })
 	return writeJSON(filepath.Join(s.boardDir(boardID), "columns.json"), cols)
+}
+
+func (s *FileStore) GetSettings() *model.Settings {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	cp := *s.settings
+	return &cp
+}
+
+func (s *FileStore) UpdateSettings(theme, locale *string) *model.Settings {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if theme != nil {
+		s.settings.Theme = *theme
+	}
+	if locale != nil {
+		s.settings.Locale = *locale
+	}
+	_ = s.persistSettings()
+	cp := *s.settings
+	return &cp
+}
+
+func (s *FileStore) persistSettings() error {
+	return writeJSON(filepath.Join(s.basePath, "settings.json"), s.settings)
 }
 
 func (s *FileStore) persistTags() error {

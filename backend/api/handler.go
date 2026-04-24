@@ -12,6 +12,7 @@ type Handlers struct {
 	Dependency    *DependencyHandler
 	Comment       *CommentHandler
 	Image         *ImageHandler
+	Settings      *SettingsHandler
 }
 
 func NewHandlers(services *service.Services) *Handlers {
@@ -25,5 +26,6 @@ func NewHandlers(services *service.Services) *Handlers {
 		Dependency:    &DependencyHandler{services: services},
 		Comment:       &CommentHandler{services: services},
 		Image:         &ImageHandler{services: services},
+		Settings:      &SettingsHandler{services: services},
 	}
 }

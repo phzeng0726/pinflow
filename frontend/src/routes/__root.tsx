@@ -3,12 +3,25 @@ import { useEffect } from 'react'
 import { Toaster } from 'sonner'
 import { useLocaleStore } from '@/stores/localeStore'
 import { useThemeStore } from '@/stores/themeStore'
+import { getSettings } from '@/lib/api'
 
 function Root() {
   const apply = useThemeStore((s) => s.apply)
   const theme = useThemeStore((s) => s.theme)
   const applyLocale = useLocaleStore((s) => s.apply)
   const locale = useLocaleStore((s) => s.locale)
+
+  useEffect(() => {
+    getSettings()
+      .then((settings) => {
+        useThemeStore.setState({ theme: settings.theme as 'light' | 'dark' })
+        useLocaleStore.setState({ locale: settings.locale as 'en-US' | 'zh-TW' })
+        useThemeStore.getState().apply()
+        useLocaleStore.getState().apply()
+      })
+      .catch(() => {})
+  }, [])
+
   useEffect(() => {
     apply()
   }, [apply, theme])

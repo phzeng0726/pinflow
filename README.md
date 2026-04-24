@@ -89,41 +89,41 @@ make electron  # pnpm electron:dev
 
 ### 三、打包桌面安裝檔
 
-#### 1. 編譯 Go backend 執行檔
-
-**Windows（在 Git Bash / WSL）：**
+一鍵完成 Go backend 編譯、前端建置、Electron 打包：
 
 ```bash
-bash scripts/build-backend.sh
+make package
 ```
 
-**Windows（命令提示字元 / PowerShell）：**
+或直接呼叫 PowerShell 腳本：
 
 ```bat
-scripts\build-backend.bat
-```
-
-編譯後的執行檔會放在 `electron/resources/pinflow-backend.exe`。
-
-#### 2. 打包 Electron 安裝程式
-
-```bash
-pnpm electron:package
+scripts\build.bat
 ```
 
 打包完成後安裝程式會在 `dist-electron/` 目錄下：
 
 | 平台    | 產出檔案                                   |
 | ------- | ------------------------------------------ |
-| Windows | `Pinflow Setup 0.1.0.exe`（NSIS 安裝程式） |
-| macOS   | `Pinflow-0.1.0.dmg`                        |
-| Linux   | `Pinflow-0.1.0.AppImage`                   |
+| Windows | `PinFlow Setup 0.1.0.exe`（NSIS 安裝程式） |
 
-#### 3. 安裝與執行（Windows）
+### 四、安裝與資料儲存
 
-執行 `dist-electron/Pinflow Setup 0.1.0.exe`，依照安裝精靈完成安裝。安裝後從桌面捷徑或開始功能表啟動「Pinflow」。
+執行 `dist-electron/PinFlow Setup 0.1.0.exe`，依照安裝精靈完成安裝。安裝後從桌面捷徑或開始功能表啟動「PinFlow」。
 
-> **提示：** 關閉主視窗後程式會縮小至系統列（System Tray），右鍵點擊托盤圖示可選擇「Open Pinflow」重新開啟或「Quit」完全關閉。
+**資料儲存位置：**
+
+安裝版的 workspace 位於使用者的 AppData 目錄下：
+
+```
+C:\Users\<使用者>\AppData\Roaming\PinFlow\workspace\
+```
+
+該目錄包含所有看板、卡片、標籤等資料（JSON 格式），結構同上方「資料儲存」段落。
+
+> **提示：**
+> - 關閉主視窗後程式會縮小至系統列（System Tray），右鍵點擊托盤圖示可選擇重新開啟或完全關閉。
+> - 備份資料只需複製整個 workspace 目錄。
 
 ---
 
@@ -241,8 +241,8 @@ pinflow/
 │   ├── specs/        # 功能規格（每個功能一個子目錄）
 │   └── changes/      # 變更記錄
 ├── scripts/          # 輔助建置腳本
-│   ├── build-backend.sh   # 編譯 Go binary（Unix）
-│   └── build-backend.bat  # 編譯 Go binary（Windows）
+│   ├── build.bat           # 一鍵打包腳本（Windows Batch）
+│   └── patch-rcedit.js    # postinstall hook：修補 electron-builder rcedit 問題
 ├── Makefile          # 快捷指令（make dev / backend / frontend / electron）
 ├── package.json      # 根層 Electron 設定 + electron-builder
 └── docker-compose.yml

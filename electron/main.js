@@ -8,6 +8,7 @@ const {
   screen,
 } = require("electron");
 const path = require("path");
+const { pathToFileURL } = require("url");
 const { spawn } = require("child_process");
 const http = require("http");
 
@@ -29,7 +30,11 @@ function startBackend() {
   }
 
   const exe = path.join(process.resourcesPath, "pinflow-backend.exe");
-  backendProcess = spawn(exe, [], { stdio: "ignore", detached: false });
+  const workspacePath = path.join(app.getPath("userData"), "workspace");
+  backendProcess = spawn(exe, ["--workspace", workspacePath], {
+    stdio: "ignore",
+    detached: false,
+  });
   backendProcess.on("error", (err) => console.error("[backend]", err));
 }
 
@@ -71,7 +76,7 @@ function getIndexUrl(route = "") {
     "dist",
     "index.html",
   );
-  return `file://${indexPath}${route ? "#" + route : ""}`;
+  return pathToFileURL(indexPath).href + (route ? "#" + route : "");
 }
 
 function createMainWindow() {
@@ -128,7 +133,7 @@ function createPinWindow() {
       "dist",
       "index.html",
     );
-    pinWindow.loadURL(`file://${indexPath}#/pin`);
+    pinWindow.loadURL(pathToFileURL(indexPath).href + "#/pin");
   }
 
   pinWindow.setAlwaysOnTop(true, "screen-saver");
@@ -220,7 +225,7 @@ ipcMain.on("open-card-detail", (_event, { boardId, cardId }) => {
       "dist",
       "index.html",
     );
-    win.loadURL(`file://${indexPath}#${route}`);
+    win.loadURL(pathToFileURL(indexPath).href + `#${route}`);
   }
 });
 

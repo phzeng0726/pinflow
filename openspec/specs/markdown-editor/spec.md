@@ -173,7 +173,7 @@ The editor SHALL support inserting a horizontal rule via toolbar button and `---
 
 ### Requirement: MarkdownEditor provides Source and Rich edit modes
 
-The editor SHALL provide two edit sub-modes accessible via a toggle in the top-right corner of the editor container. The default mode SHALL be **Source** (plain-text Markdown with line numbers). Switching to **Rich** mode SHALL display a Lexical WYSIWYG editor with the fixed toolbar. The mode toggle SHALL use `onMouseDown` + `preventDefault()` to prevent triggering the editor blur / view-mode switch.
+The editor SHALL provide two edit sub-modes accessible via a toggle in the top-right corner of the editor container. The default mode SHALL be **Source** (plain-text Markdown with line numbers). Switching to **Rich** mode SHALL display a Lexical WYSIWYG editor with the fixed toolbar. The mode toggle SHALL use `onMouseDown` + `preventDefault()` to prevent triggering the editor blur / view-mode switch. In Source mode, long lines SHALL wrap to the next visual line rather than extending the editor horizontally.
 
 #### Scenario: Default mode is Source
 
@@ -194,6 +194,16 @@ The editor SHALL provide two edit sub-modes accessible via a toggle in the top-r
 
 - **WHEN** the user clicks the mode toggle button while editing
 - **THEN** the editor remains in edit state and no `onBlur` / save is triggered
+
+#### Scenario: Source mode wraps long lines
+
+- **WHEN** the user types a line longer than the editor container width in Source mode
+- **THEN** the text SHALL wrap to the next visual line; no horizontal scrollbar SHALL appear on the editor
+
+#### Scenario: Source mode preserves leading whitespace
+
+- **WHEN** the user inputs text with leading spaces or tabs (e.g., code fence indentation) in Source mode
+- **THEN** the leading whitespace SHALL be preserved and displayed correctly after line wrapping
 
 ### Requirement: MarkdownEditor exports Markdown on change and blur
 

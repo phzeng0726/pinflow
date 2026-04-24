@@ -25,7 +25,13 @@ func (r *boardRepository) Create(board *model.Board) error {
 }
 
 func (r *boardRepository) FindAll() ([]model.Board, error) {
-	return r.s.GetAllBoards(), nil
+	boards := r.s.GetAllBoards()
+	for i := range boards {
+		cols := r.s.GetColumnsByBoard(boards[i].ID)
+		sort.Slice(cols, func(a, b int) bool { return cols[a].Position < cols[b].Position })
+		boards[i].Columns = cols
+	}
+	return boards, nil
 }
 
 func (r *boardRepository) FindByID(id uint) (*model.Board, error) {

@@ -262,33 +262,48 @@ ipcMain.on("broadcast-query-invalidation", (event, queryKey) => {
 
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 
-app.whenReady().then(async () => {
-  startBackend();
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    if (!mainWindow) {
+      createMainWindow();
+      return;
+    }
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    if (!mainWindow.isVisible()) mainWindow.show();
+    mainWindow.focus();
+  });
 
-  try {
-    await waitForBackend();
-  } catch (e) {
-    console.warn(
-      "[main] Backend health check failed — continuing anyway:",
-      e.message,
-    );
-  }
+  app.whenReady().then(async () => {
+    startBackend();
 
-  createMainWindow();
-  createTray();
-});
+    try {
+      await waitForBackend();
+    } catch (e) {
+      console.warn(
+        "[main] Backend health check failed — continuing anyway:",
+        e.message,
+      );
+    }
 
-app.on("window-all-closed", () => {
-  // Keep running in tray on all platforms
-});
+    createMainWindow();
+    createTray();
+  });
 
-app.on("activate", () => {
-  if (!mainWindow) createMainWindow();
-});
+  app.on("window-all-closed", () => {
+    // Keep running in tray on all platforms
+  });
 
-app.on("will-quit", () => {
-  if (backendProcess) {
-    backendProcess.kill();
-    backendProcess = null;
-  }
-});
+  app.on("activate", () => {
+    if (!mainWindow) createMainWindow();
+  });
+
+  app.on("will-quit", () => {
+    if (backendProcess) {
+      backendProcess.kill();
+      backendProcess = null;
+    }
+  });
+}

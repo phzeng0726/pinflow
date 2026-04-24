@@ -221,7 +221,7 @@ export function MarkdownEditor({
               </div>
 
               {/* 編輯區（橫向可捲動） */}
-              <div className="relative min-w-0 flex-1 overflow-x-auto">
+              <div className="relative min-w-0 flex-1">
                 <PlainTextPlugin
                   contentEditable={
                     <ContentEditable

@@ -52,6 +52,17 @@ export const deleteChecklistItem = async (id: number) => {
   return res.data
 }
 
+export const moveChecklistItem = async (
+  id: number,
+  data: { checklistId: number; position: number },
+) => {
+  const res = await client.patch<ChecklistItem>(
+    `/checklist-items/${id}/move`,
+    data,
+  )
+  return res.data
+}
+
 export const syncChecklistItems = async (
   checklistId: number,
   items: { text: string; completed: boolean }[],

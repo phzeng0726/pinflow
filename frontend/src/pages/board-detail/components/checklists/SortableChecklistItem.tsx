@@ -2,22 +2,29 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { DND_TYPE } from '@/hooks/dnd/dndUtils'
 import { cn } from '@/lib/utils'
 import {
   defaultAnimateLayoutChanges,
   useSortable,
   type AnimateLayoutChanges,
 } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { GripVertical, X } from 'lucide-react'
 
 const animateLayoutChanges: AnimateLayoutChanges = (args) => {
   if (args.wasDragging) return false
   return defaultAnimateLayoutChanges(args)
 }
-import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, X } from 'lucide-react'
 
 export interface SortableChecklistItemProps {
-  item: { id: number; text: string; completed: boolean; position: number }
+  item: {
+    id: number
+    checklistId: number
+    text: string
+    completed: boolean
+    position: number
+  }
   isEditing: boolean
   editItemValue: string
   onEditStart: () => void
@@ -50,7 +57,7 @@ export function SortableChecklistItem(props: SortableChecklistItemProps) {
     isDragging,
   } = useSortable({
     id: `checklist-item-${item.id}`,
-    data: { type: 'checklist-item', item },
+    data: { type: DND_TYPE.CHECKLIST_ITEM, item },
     animateLayoutChanges,
   })
 

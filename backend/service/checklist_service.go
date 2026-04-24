@@ -107,6 +107,19 @@ func (s *checklistService) UpdateItem(id uint, req dto.UpdateChecklistItemReques
 	return item, nil
 }
 
+func (s *checklistService) MoveItem(id uint, req dto.MoveChecklistItemRequest) (*model.ChecklistItem, error) {
+	item, err := s.itemRepo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.itemRepo.MoveItem(id, req.ChecklistID, req.Position); err != nil {
+		return nil, err
+	}
+	item.ChecklistID = req.ChecklistID
+	item.Position = req.Position
+	return item, nil
+}
+
 func (s *checklistService) DeleteItem(id uint) error {
 	if _, err := s.itemRepo.FindByID(id); err != nil {
 		return err

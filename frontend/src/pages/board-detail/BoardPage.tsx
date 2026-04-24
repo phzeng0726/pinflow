@@ -16,10 +16,11 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useBoardDetail } from '@/hooks/board/queries/useBoardDetail'
-import { useBoardDnd } from '@/hooks/board/useBoardDnd'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { usePinnedCards } from '@/hooks/card/queries/usePinnedCards'
 import { useColumnMutations } from '@/hooks/column/mutations/useColumnMutations'
+import { useBoardDnd } from '@/hooks/dnd/useBoardDnd'
+import { cn } from '@/lib/utils'
 import { AddColumnForm } from '@/pages/board-detail/components/columns/AddColumnForm'
 import { ColumnView } from '@/pages/board-detail/components/columns/ColumnView'
 import { GraphView } from '@/pages/board-detail/components/graph'
@@ -31,7 +32,15 @@ import {
   horizontalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
-import { ArrowLeft, GitBranch, LayoutGrid, Moon, Pin, Plus, Sun } from 'lucide-react'
+import {
+  ArrowLeft,
+  GitBranch,
+  LayoutGrid,
+  Moon,
+  Pin,
+  Plus,
+  Sun,
+} from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -279,7 +288,12 @@ export function BoardPage() {
       ) : null}
 
       {/* Columns */}
-      <div className={`flex-1 overflow-x-auto p-4 ${viewMode === 'graph' ? 'hidden' : ''}`}>
+      <div
+        className={cn(
+          'flex-1 overflow-x-auto p-4',
+          viewMode === 'graph' && 'hidden',
+        )}
+      >
         <DndContext
           sensors={sensors}
           onDragStart={handleDragStart}
@@ -318,7 +332,7 @@ export function BoardPage() {
           {/* 拖拉當下抓著的那個項目長怎樣 */}
           <DragOverlay dropAnimation={null}>
             {activeCard && (
-              <div className="w-60 rotate-2 cursor-grabbing rounded-lg border bg-white p-3 opacity-95 shadow-2xl dark:border-gray-600 dark:bg-gray-700">
+              <div className="w-60 cursor-grabbing rounded-lg border bg-white p-3 opacity-95 shadow-2xl dark:border-gray-600 dark:bg-gray-700">
                 <p className="select-none text-sm font-medium text-gray-900 dark:text-gray-100">
                   {activeCard.title}
                 </p>

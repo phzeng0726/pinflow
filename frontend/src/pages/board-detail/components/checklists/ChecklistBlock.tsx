@@ -7,13 +7,12 @@ import {
 } from '@/components/ui/popover'
 import { Progress } from '@/components/ui/progress'
 import { useChecklistMutations } from '@/hooks/checklist/mutations/useChecklistMutations'
-import { useChecklistItemDnd } from '@/hooks/checklist/useChecklistItemDnd'
+import { DND_TYPE } from '@/hooks/dnd/dndUtils'
 import {
   createChecklistItemSchema,
   type ChecklistItemFormData,
 } from '@/lib/schemas'
 import type { Checklist } from '@/types'
-import { DndContext, closestCenter } from '@dnd-kit/core'
 import {
   SortableContext,
   useSortable,
@@ -56,7 +55,7 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
     isDragging,
   } = useSortable({
     id: `checklist-${checklist.id}`,
-    data: { type: 'checklist', checklist },
+    data: { type: DND_TYPE.CHECKLIST, checklist },
   })
 
   const style = {
@@ -72,16 +71,7 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
     updateChecklistItem: updateItem,
     deleteChecklistItem: deleteItem,
     syncChecklistItems,
-    moveChecklistItem,
   } = useChecklistMutations(boardId, cardId)
-
-  const { sensors, handleDragStart, handleDragEnd } =
-    useChecklistItemDnd({
-      boardId,
-      cardId,
-      checklist,
-      moveMutate: moveChecklistItem.mutate,
-    })
 
   const sortedItems = useMemo(() => {
     return [...checklist.items].sort((a, b) => a.position - b.position)
@@ -269,53 +259,45 @@ export function ChecklistBlock(props: ChecklistBlockProps) {
         />
       ) : (
         <>
-          <DndContext
-            id={`checklist-items-dnd-${checklist.id}`}
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
+          <SortableContext
+            items={sortedItems.map((item) => `checklist-item-${item.id}`)}
+            strategy={verticalListSortingStrategy}
           >
-            <SortableContext
-              items={sortedItems.map((item) => `checklist-item-${item.id}`)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="space-y-1.5">
-                {sortedItems.map((item) => {
-                  const handleEditStart = () => {
-                    setEditingItemId(item.id)
-                    setEditItemValue(item.text)
-                  }
-                  const handleEditSave = () =>
-                    handleItemTextSave(item.id, item.text)
-                  const handleEditCancel = () => {
-                    setEditItemValue(item.text)
-                    setEditingItemId(null)
-                  }
-                  const handleToggle = (checked: boolean) =>
-                    updateItem.mutate({
-                      id: item.id,
-                      data: { completed: checked },
-                    })
-                  const handleDelete = () => deleteItem.mutate(item.id)
-                  return (
-                    <SortableChecklistItem
-                      key={item.id}
-                      item={item}
-                      isEditing={editingItemId === item.id}
-                      editItemValue={editItemValue}
-                      onEditStart={handleEditStart}
-                      onEditChange={setEditItemValue}
-                      onEditSave={handleEditSave}
-                      onEditCancel={handleEditCancel}
-                      onToggle={handleToggle}
-                      onDelete={handleDelete}
-                    />
-                  )
-                })}
-              </div>
-            </SortableContext>
-          </DndContext>
+            <div className="space-y-1.5">
+              {sortedItems.map((item) => {
+                const handleEditStart = () => {
+                  setEditingItemId(item.id)
+                  setEditItemValue(item.text)
+                }
+                const handleEditSave = () =>
+                  handleItemTextSave(item.id, item.text)
+                const handleEditCancel = () => {
+                  setEditItemValue(item.text)
+                  setEditingItemId(null)
+                }
+                const handleToggle = (checked: boolean) =>
+                  updateItem.mutate({
+                    id: item.id,
+                    data: { completed: checked },
+                  })
+                const handleDelete = () => deleteItem.mutate(item.id)
+                return (
+                  <SortableChecklistItem
+                    key={item.id}
+                    item={item}
+                    isEditing={editingItemId === item.id}
+                    editItemValue={editItemValue}
+                    onEditStart={handleEditStart}
+                    onEditChange={setEditItemValue}
+                    onEditSave={handleEditSave}
+                    onEditCancel={handleEditCancel}
+                    onToggle={handleToggle}
+                    onDelete={handleDelete}
+                  />
+                )
+              })}
+            </div>
+          </SortableContext>
           {showItemForm ? (
             <form
               onSubmit={newItemForm.handleSubmit(handleAddItem)}

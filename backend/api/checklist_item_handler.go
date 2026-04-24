@@ -40,6 +40,36 @@ func (h *ChecklistItemHandler) CreateItem(c *gin.Context) {
 	c.JSON(http.StatusCreated, service.ToChecklistItemResponse(*item))
 }
 
+// MoveChecklistItem godoc
+// @Summary     Move a checklist item to a target checklist and position
+// @Tags        checklist-items
+// @Accept      json
+// @Produce     json
+// @Param       id path int true "Item ID"
+// @Param       body body dto.MoveChecklistItemRequest true "Move data"
+// @Success     200 {object} dto.ChecklistItemResponse
+// @Failure     400 {object} map[string]string
+// @Failure     404 {object} map[string]string
+// @Failure     422 {object} map[string]string
+// @Router      /checklist-items/{id}/move [patch]
+func (h *ChecklistItemHandler) MoveItem(c *gin.Context) {
+	id, err := parseUintParam(c, "id")
+	if err != nil {
+		return
+	}
+	var req dto.MoveChecklistItemRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+	item, err := h.services.Checklist.MoveItem(id, req)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, service.ToChecklistItemResponse(*item))
+}
+
 // UpdateChecklistItem godoc
 // @Summary     Update a checklist item
 // @Tags        checklist-items

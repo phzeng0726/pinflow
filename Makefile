@@ -1,7 +1,7 @@
 # 預設 shell（Windows 用 Git Bash / WSL 會比較穩）
 SHELL := /bin/bash
 
-.PHONY: backend frontend electron dev
+.PHONY: backend frontend electron dev package
 
 # --- Backend ---
 backend:
@@ -19,3 +19,7 @@ electron:
 dev:
 	@echo "Starting backend, frontend, electron..."
 	@$(MAKE) -j3 backend frontend electron
+
+# --- 打包 Windows 安裝檔 ---
+package:
+	pnpm electron:package

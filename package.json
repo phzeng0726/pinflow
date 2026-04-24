@@ -6,14 +6,16 @@
   "author": "PinFlow",
   "license": "MIT",
   "scripts": {
+    "postinstall": "node scripts/patch-rcedit.js",
     "electron:dev": "cross-env ELECTRON_DEV=1 electron .",
     "electron:build:frontend": "cross-env ELECTRON_BUILD=1 pnpm --filter frontend build",
-    "electron:package": "pnpm run electron:build:frontend && electron-builder"
+    "electron:package": "scripts\\build.bat"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
     "electron": "^36.0.0",
-    "electron-builder": "^25.1.8"
+    "electron-builder": "^26.8.1",
+    "rcedit": "^5.0.2"
   },
   "build": {
     "appId": "com.pinflow.app",
@@ -23,6 +25,7 @@
     },
     "files": [
       "electron/**/*",
+      "!electron/resources/**",
       "frontend/dist/**/*"
     ],
     "extraResources": [

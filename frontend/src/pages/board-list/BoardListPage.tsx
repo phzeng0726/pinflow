@@ -1,3 +1,4 @@
+import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { LocaleToggle } from '@/components/common/LocaleToggle'
 import {
   AlertDialog,
@@ -81,8 +82,8 @@ export function BoardListPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-50 text-gray-500 dark:bg-gray-900 dark:text-gray-400">
-        {t('common.loading')}
+      <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <LoadingSpinner variant="inline" className="h-8 w-8 animate-spin text-gray-400 dark:text-gray-500" />
       </div>
     )
   }

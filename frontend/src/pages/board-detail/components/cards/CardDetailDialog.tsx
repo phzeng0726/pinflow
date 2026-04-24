@@ -1,3 +1,4 @@
+import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { MarkdownEditor } from '@/components/common/markdown-editor'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -102,7 +103,11 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
   const handleTagBadgeClick = () => setTagsOpen(true)
 
   if (isLoading) {
-    return <div>{t('common.loading')}</div>
+    return (
+      <div className="flex items-center justify-center py-8">
+        <LoadingSpinner variant="inline" className="h-6 w-6 animate-spin text-gray-400" />
+      </div>
+    )
   }
   if (!card) {
     return <div>{t('cardDetail.dialogTitle')}</div>

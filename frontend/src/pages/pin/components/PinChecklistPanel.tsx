@@ -1,3 +1,4 @@
+import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import {
@@ -10,7 +11,6 @@ import {
 import { useCardDetail } from '@/hooks/card/queries/useCardDetail'
 import { usePinChecklistToggle } from '@/hooks/checklist/mutations/usePinChecklistToggle'
 import { cn } from '@/lib/utils'
-import { Loader2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -63,7 +63,7 @@ export function PinChecklistPanel({ cardId, boardId }: PinChecklistPanelProps) {
   if (isLoading) {
     return (
       <div className="mt-2 flex items-center justify-center py-3">
-        <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+        <LoadingSpinner variant="inline" />
       </div>
     )
   }

@@ -1,3 +1,4 @@
+import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { LocaleToggle } from '@/components/common/LocaleToggle'
 import {
   AlertDialog,
@@ -126,11 +127,7 @@ export function BoardPage() {
   }, [pinPopoverOpen])
 
   if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        {t('common.loading')}
-      </div>
-    )
+    return <LoadingSpinner />
   }
   if (!board) {
     return (

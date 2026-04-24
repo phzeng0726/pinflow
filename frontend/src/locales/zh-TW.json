@@ -1,6 +1,5 @@
 {
   "common": {
-    "loading": "載入中...",
     "cancel": "取消",
     "save": "儲存",
     "add": "新增",
@@ -73,7 +72,6 @@
   "dependency": {
     "title": "新增依賴關係",
     "searchPlaceholder": "搜尋卡片...",
-    "loading": "載入中...",
     "noCards": "找不到卡片",
     "confirm": "確認"
   },

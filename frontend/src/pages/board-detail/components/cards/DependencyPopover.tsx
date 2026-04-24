@@ -1,3 +1,4 @@
+import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -147,9 +148,9 @@ export function DependencyPopover(props: DependencyPopoverProps) {
 
             <div className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
               {isFetching && (
-                <p className="px-1 py-2 text-xs text-gray-400">
-                  {t('dependency.loading')}
-                </p>
+                <div className="flex items-center justify-center py-2">
+                  <LoadingSpinner variant="inline" />
+                </div>
               )}
               {!isFetching && filteredResults.length === 0 && (
                 <p className="px-1 py-2 text-xs text-gray-400">

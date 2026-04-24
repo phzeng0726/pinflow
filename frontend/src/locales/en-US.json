@@ -1,6 +1,5 @@
 {
   "common": {
-    "loading": "Loading...",
     "cancel": "Cancel",
     "save": "Save",
     "add": "Add",
@@ -73,7 +72,6 @@
   "dependency": {
     "title": "Add Dependency",
     "searchPlaceholder": "Search cards...",
-    "loading": "Loading...",
     "noCards": "No cards found",
     "confirm": "Confirm"
   },

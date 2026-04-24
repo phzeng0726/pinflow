@@ -1,24 +1,28 @@
 # Pinflow
 
-Trello 風格的看板任務管理系統，支援桌面懸浮釘選視窗。
+Trello 風格的看板任務管理桌面應用，支援卡片依賴關係圖、懸浮釘選視窗與豐富的卡片功能。
 
 ## 功能
 
 - **看板管理**：建立多個 Board，每個 Board 包含多個欄位（Column）
-- **卡片管理**：在欄位內新增卡片，支援拖曳排序與跨欄移動
-- **釘選模式**：手動將卡片釘選，懸浮顯示在桌面最上層
-- **自動釘選**：設定欄位為「自動釘選」，移入該欄位的卡片自動釘選
-- **檔案式儲存**：資料以 JSON 檔案儲存，可透過 Git 同步到不同裝置
+- **卡片管理**：新增卡片、拖曳排序、跨欄移動、複製卡片
+- **釘選模式**：手動釘選或設定「自動釘選」欄位，卡片懸浮顯示在桌面最上層
+- **卡片詳情**：富文字編輯（Lexical）、截止日期、留言、附件圖片
+- **Checklist**：支援多清單、拖曳排序與跨清單移動
+- **依賴關係圖**：視覺化呈現卡片間的前置/後置依賴（@xyflow/react + dagre）
+- **標籤管理**：全域 Tag，可附加至多張卡片並支援 CRUD
+- **卡片搜尋**：跨欄位搜尋卡片
+- **檔案式儲存**：資料以 JSON 儲存，可透過 Git 同步到不同裝置
 - **Swagger UI**：內建 API 文件
 
 ## 技術棧
 
-| 層級     | 技術                                                                                    |
-| -------- | --------------------------------------------------------------------------------------- |
-| Backend  | Go 1.25 · Gin · 檔案式 JSON 儲存 · Swagger                                              |
-| Frontend | React 19 · TypeScript · Vite · Tailwind v3 · TanStack Query/Router · Zustand · @dnd-kit |
-| Desktop  | Electron 40 (Windows)                                                                   |
-| 部署     | Docker Compose                                                                          |
+| 層級     | 技術                                                                                                                              |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Backend  | Go 1.25 · Gin · 檔案式 JSON 儲存 · Swagger                                                                                        |
+| Frontend | React 19 · TypeScript · Vite · Tailwind v3 · TanStack Query/Router · Zustand · @dnd-kit · Lexical · @xyflow/react · shadcn/ui |
+| Desktop  | Electron 40 (Windows)                                                                                                             |
+| 部署     | Docker Compose                                                                                                                    |
 
 ---
 
@@ -67,38 +71,21 @@ cd frontend && pnpm install && cd ..
 
 ### 二、啟動桌面版（開發模式）
 
-開發模式需要分別啟動三個程序：
-
-**終端機 1 — 啟動 Backend**
+推薦使用 `make` 指令一鍵啟動：
 
 ```bash
-cd backend
-go run . --workspace ../../pinflow-workspace
+make dev   # 同時啟動 backend、frontend、electron（-j3 並行）
 ```
 
-**終端機 2 — 啟動 Frontend 開發伺服器**
+或分別啟動：
 
 ```bash
-cd frontend
-pnpm dev
-```
-
-**終端機 3 — 啟動 Electron**
-
-```bash
-pnpm electron:dev
+make backend   # cd backend && go run . --workspace ../../pinflow-workspace
+make frontend  # cd frontend && pnpm dev
+make electron  # pnpm electron:dev
 ```
 
 > Electron 視窗會載入 `http://localhost:5173`（Vite dev server）。DevTools 會自動開啟。
-
-也可以使用 `make` 指令來啟動：
-
-```bash
-make backend # 啟動 backend
-make frontend # 啟動 frontend
-make electron # 啟動 electron
-make dev # 啟動 backend, frontend, electron
-```
 
 ### 三、打包桌面安裝檔
 
@@ -188,7 +175,10 @@ go test ./tests/... -v
 
 ```bash
 cd frontend
-pnpm test
+pnpm test          # vitest
+pnpm lint          # ESLint 檢查
+pnpm format        # Prettier 格式化
+pnpm format:check  # 確認格式符合規範
 ```
 
 ---
@@ -225,56 +215,71 @@ docker-compose down
 
 ```
 pinflow/
-├── backend/              # Go API server
-│   ├── api/              # Handlers 容器（handler.go）+ Gin handlers + router.go
-│   ├── service/          # Services 容器（service.go）+ 業務邏輯
-│   ├── repository/       # Repositories 容器（repository.go）+ 檔案式實作
-│   ├── store/            # FileStore（記憶體 + JSON 持久化）
-│   ├── model/            # 資料模型
-│   ├── dto/              # 請求/回應 DTO
-│   ├── docs/             # Swagger 自動生成文件
-│   └── tests/            # 單元 + 整合測試
-├── frontend/             # React SPA
-│   ├── src/
-│   │   ├── pages/        # board-list/ · board-detail/ · pin/ 頁面
-│   │   ├── hooks/        # TanStack Query hooks（依 domain 分組）
-│   │   ├── stores/       # Zustand 狀態（themeStore、pinStore）
-│   │   ├── lib/          # API client（依 domain 拆分）
-│   │   └── routes/       # TanStack Router 路由
-│   └── tests/
-├── electron/             # Electron 主程序
-│   ├── main.js           # 主程序（生命週期、視窗、系統列）
-│   ├── preload.js        # Context bridge（安全 IPC）
-│   ├── icons/            # 應用程式圖示
-│   └── resources/        # 打包用 Go backend 執行檔
-├── scripts/              # 輔助建置腳本
-│   ├── build-backend.sh  # 編譯 Go binary（Unix）
-│   └── build-backend.bat # 編譯 Go binary（Windows）
-├── package.json          # 根層 Electron 設定 + electron-builder
-├── docker-compose.yml
+├── backend/          # Go API server
+│   ├── api/          # Handlers 容器（handler.go）+ Gin handlers + router.go
+│   ├── service/      # Services 容器（service.go）+ 業務邏輯
+│   ├── repository/   # Repositories 容器（repository.go）+ 檔案式實作
+│   ├── store/        # FileStore（記憶體 + JSON 持久化）
+│   ├── model/        # 資料模型
+│   ├── dto/          # 請求/回應 DTO
+│   ├── docs/         # Swagger 自動生成文件
+│   └── tests/        # 單元 + 整合測試
+├── frontend/         # React SPA
+│   └── src/
+│       ├── pages/    # board-list/ · board-detail/ · pin/
+│       ├── hooks/    # TanStack Query hooks（board/ card/ checklist/ comment/ dependency/ tag/）
+│       ├── stores/   # Zustand（themeStore、pinStore）
+│       ├── lib/      # API client（boards · cards · columns · tags · checklists · comments · dependencies · images）
+│       └── routes/   # TanStack Router 路由
+├── electron/         # Electron 主程序
+│   ├── main.js       # 主程序（生命週期、視窗、系統列）
+│   ├── preload.js    # Context bridge（安全 IPC）
+│   ├── icons/        # 應用程式圖示
+│   └── resources/    # 打包用 Go backend 執行檔
+├── openspec/         # Spec-driven 開發規格
+│   ├── config.yaml   # openspec 設定
+│   ├── specs/        # 功能規格（每個功能一個子目錄）
+│   └── changes/      # 變更記錄
+├── scripts/          # 輔助建置腳本
+│   ├── build-backend.sh   # 編譯 Go binary（Unix）
+│   └── build-backend.bat  # 編譯 Go binary（Windows）
+├── Makefile          # 快捷指令（make dev / backend / frontend / electron）
+├── package.json      # 根層 Electron 設定 + electron-builder
+└── docker-compose.yml
 ```
 
 ## API 端點
 
-| 方法           | 路徑                           | 說明                  |
-| -------------- | ------------------------------ | --------------------- |
-| GET            | `/api/health`                  | 健康檢查              |
-| GET/POST       | `/api/v1/boards`               | 列出/建立看板         |
-| GET/PUT/DELETE | `/api/v1/boards/:id`           | 取得/更新/刪除看板    |
-| POST           | `/api/v1/boards/:id/columns`   | 新增欄位              |
-| PATCH/DELETE   | `/api/v1/columns/:id`          | 更新/刪除欄位         |
-| POST           | `/api/v1/columns/:id/cards`    | 新增卡片              |
-| GET            | `/api/v1/cards/pinned`         | 取得所有釘選卡片      |
-| PATCH          | `/api/v1/cards/:id`            | 更新卡片              |
-| PATCH          | `/api/v1/cards/:id/move`       | 移動卡片（換欄/排序） |
-| PATCH          | `/api/v1/cards/:id/pin`        | 切換釘選狀態          |
-| DELETE         | `/api/v1/cards/:id`            | 刪除卡片              |
-| POST/DELETE    | `/api/v1/cards/:id/tags`       | 新增/移除卡片標籤     |
-| POST           | `/api/v1/cards/:id/duplicate`  | 複製卡片              |
-| GET/POST       | `/api/v1/cards/:id/checklists` | 列出/新增檢查清單     |
-| GET/POST       | `/api/v1/tags`                 | 列出/建立標籤         |
-| DELETE         | `/api/v1/checklists/:id`       | 刪除檢查清單          |
-| POST           | `/api/v1/checklists/:id/items` | 新增檢查項目          |
-| PATCH/DELETE   | `/api/v1/checklist-items/:id`  | 更新/刪除檢查項目     |
+| 方法             | 路徑                                    | 說明                     |
+| ---------------- | --------------------------------------- | ------------------------ |
+| GET              | `/api/health`                           | 健康檢查                 |
+| GET/POST         | `/api/v1/boards`                        | 列出/建立看板            |
+| GET/PUT/DELETE   | `/api/v1/boards/:id`                    | 取得/更新/刪除看板       |
+| POST             | `/api/v1/boards/:id/columns`            | 新增欄位                 |
+| GET              | `/api/v1/boards/:id/dependencies`       | 看板所有依賴關係         |
+| GET              | `/api/v1/boards/:id/images/:filename`   | 讀取圖片                 |
+| PATCH/DELETE     | `/api/v1/columns/:id`                   | 更新/刪除欄位            |
+| POST             | `/api/v1/columns/:id/cards`             | 新增卡片                 |
+| GET              | `/api/v1/cards/pinned`                  | 取得所有釘選卡片         |
+| GET              | `/api/v1/cards/search`                  | 跨欄搜尋卡片             |
+| GET/PATCH/DELETE | `/api/v1/cards/:id`                     | 取得/更新/刪除卡片       |
+| PATCH            | `/api/v1/cards/:id/move`                | 移動卡片（換欄/排序）    |
+| PATCH            | `/api/v1/cards/:id/pin`                 | 切換釘選狀態             |
+| PATCH            | `/api/v1/cards/:id/schedule`            | 更新截止日期             |
+| POST             | `/api/v1/cards/:id/duplicate`           | 複製卡片                 |
+| POST/DELETE      | `/api/v1/cards/:id/tags`                | 附加/移除卡片標籤        |
+| GET/POST         | `/api/v1/cards/:id/checklists`          | 列出/新增 Checklist      |
+| GET/POST         | `/api/v1/cards/:id/dependencies`        | 列出/新增卡片依賴        |
+| POST             | `/api/v1/cards/:id/comments`            | 新增留言                 |
+| POST             | `/api/v1/cards/:id/images`              | 上傳圖片                 |
+| DELETE           | `/api/v1/dependencies/:id`              | 刪除依賴關係             |
+| GET/POST         | `/api/v1/tags`                          | 列出/建立標籤            |
+| PATCH/DELETE     | `/api/v1/tags/:id`                      | 更新/刪除標籤            |
+| PATCH/DELETE     | `/api/v1/checklists/:id`                | 更新/刪除 Checklist      |
+| POST             | `/api/v1/checklists/:id/items`          | 新增檢查項目             |
+| PUT              | `/api/v1/checklists/:id/items`          | 同步檢查項目             |
+| PATCH/DELETE     | `/api/v1/checklist-items/:id`           | 更新/刪除檢查項目        |
+| PATCH            | `/api/v1/checklist-items/:id/move`      | 移動檢查項目             |
+| PATCH/DELETE     | `/api/v1/comments/:id`                  | 更新/刪除留言            |
 
 完整 API 文件請見 Swagger UI：`http://localhost:34115/swagger/index.html`

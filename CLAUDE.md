@@ -22,6 +22,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Frontend | `frontend/` | React 19, Vite, Tailwind v3, TanStack Query+Router, Zustand, @dnd-kit |
 | Electron | `electron/` | Wraps frontend SPA + spawns Go backend, NSIS Windows target           |
 
+`openspec/` — spec-driven development files (specs/, changes/, config.yaml)
+
 ## Commands
 
 ### Backend (Go module root is `backend/`, NOT repo root)
@@ -40,13 +42,17 @@ cd backend && swag init                 # regenerate Swagger docs (run after han
 cd frontend && pnpm dev                 # dev server on :5173 (proxies /api → :34115)
 cd frontend && pnpm build               # production build → frontend/dist/
 cd frontend && pnpm test                # vitest
+cd frontend && pnpm lint                # ESLint
+cd frontend && pnpm format              # Prettier
 cd frontend && pnpm test -- --run src/pages/board-detail/components/cards/CardItem.test.tsx
 ```
 
-### Electron
+### Electron / Make
 
 ```bash
-cd electron && npm start                # runs Electron (requires built frontend + backend running)
+make dev                                # start backend + frontend + electron (-j3 parallel)
+make backend / make frontend / make electron   # individually
+cd electron && npm start                # runs Electron directly (requires built frontend)
 ```
 
 ## Architecture
@@ -75,7 +81,7 @@ pinflow-workspace/
 
 ```
 store/      → FileStore: in-memory data + JSON file persistence
-model/      → Data structs (Board, Column, Card, Tag, Checklist, ChecklistItem)
+model/      → Data structs (Board, Column, Card, Tag, Checklist, ChecklistItem, Comment, Dependency, Image)
 repository/ → Repositories container (repository.go) + file-based implementations
 service/    → Services container (service.go) + business logic; auto-pin logic lives here
 dto/        → Request/Response types for JSON binding
@@ -93,7 +99,13 @@ Import paths use module name `pinflow`. Gin v1.12.0 requires go 1.25+.
 src/
   pages/
     board-list/     → BoardListPage
-    board-detail/   → BoardPage + cards/columns/tags/checklists components
+    board-detail/   → BoardPage + components/
+      components/
+        cards/      → Card items, card detail dialog
+        columns/    → Column components
+        checklists/ → Checklist + cross-checklist DnD
+        comments/   → Card comments
+        graph/      → Dependency graph (@xyflow/react + dagre layout)
     pin/            → PinWindow + PinnedCardItem/PinOverlay
   hooks/
     queryKeys.ts    → All query keys (single source of truth)
@@ -105,6 +117,8 @@ src/
   routes/           → TanStack Router file-based; routeTree.gen.ts auto-generated
   types/            → TypeScript interfaces matching backend DTOs
 ```
+
+API domains: `boards` `cards` `columns` `tags` `checklists` `comments` `dependencies` `images`
 
 **Import convention:**
 
@@ -118,26 +132,38 @@ src/
 - DnD: `PointerSensor` with `activationConstraint: { distance: 5 }`
 - Electron: `window.electronAPI` injected by preload; API base → `http://localhost:34115/api/v1`
 - Pin window: web = `PinOverlay` div; Electron = `BrowserWindow` with `alwaysOnTop: true`
+- Graph view: @xyflow/react + dagre layout; lives in `board-detail/components/graph/`
 
 ### API Route Map
 
 ```
-GET /api/health
-/api/v1/boards              → CRUD
-/api/v1/boards/:id/columns  → POST
-/api/v1/columns/:id         → PATCH, DELETE
-/api/v1/columns/:id/cards   → POST
-/api/v1/cards/pinned        → GET (must be before /:id)
-/api/v1/cards/:id           → GET, PATCH, DELETE
-/api/v1/cards/:id/move      → PATCH
-/api/v1/cards/:id/pin       → PATCH
-/api/v1/cards/:id/tags      → POST, DELETE /:tagId
-/api/v1/cards/:id/duplicate → POST
-/api/v1/cards/:id/checklists → GET, POST
-/api/v1/tags                → GET, POST
-/api/v1/checklists/:id      → DELETE
-/api/v1/checklists/:id/items → POST
-/api/v1/checklist-items/:id → PATCH, DELETE
+GET  /api/health
+/api/v1/boards                          → CRUD
+/api/v1/boards/:id/columns              → POST
+/api/v1/boards/:id/dependencies         → GET
+/api/v1/boards/:id/images/:filename     → GET
+/api/v1/columns/:id                     → PATCH, DELETE
+/api/v1/columns/:id/cards               → POST
+/api/v1/cards/pinned                    → GET (must be before /:id)
+/api/v1/cards/search                    → GET
+/api/v1/cards/:id                       → GET, PATCH, DELETE
+/api/v1/cards/:id/move                  → PATCH
+/api/v1/cards/:id/pin                   → PATCH
+/api/v1/cards/:id/schedule              → PATCH
+/api/v1/cards/:id/tags                  → POST, DELETE /:tagId
+/api/v1/cards/:id/duplicate             → POST
+/api/v1/cards/:id/checklists            → GET, POST
+/api/v1/cards/:id/dependencies          → GET, POST
+/api/v1/cards/:id/comments              → POST
+/api/v1/cards/:id/images                → POST
+/api/v1/dependencies/:id                → DELETE
+/api/v1/tags                            → GET, POST
+/api/v1/tags/:id                        → PATCH, DELETE
+/api/v1/checklists/:id                  → PATCH, DELETE
+/api/v1/checklists/:id/items            → POST, PUT (sync)
+/api/v1/checklist-items/:id             → PATCH, DELETE
+/api/v1/checklist-items/:id/move        → PATCH
+/api/v1/comments/:id                    → PATCH, DELETE
 ```
 
 ### Adding a New Endpoint
@@ -151,6 +177,7 @@ GET /api/health
 ## Development Workflow
 
 ```bash
+# Quickstart: make dev  (backend + frontend + electron in parallel)
 # Terminal 1: cd backend && go run . --workspace ../../pinflow-workspace
 # Terminal 2: cd frontend && pnpm dev  →  http://localhost:5173
 ```

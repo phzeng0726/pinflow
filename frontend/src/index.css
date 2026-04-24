@@ -104,6 +104,13 @@
 }
 
 @layer components {
+  /* ── 全域：防止長連續字元撐爆容器 ── */
+  .markdown-editor-content,
+  .markdown-preview {
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
   /* ── 標題 ── */
   .markdown-editor-content h1 {
     @apply mb-2 mt-3 text-2xl font-bold;
@@ -152,10 +159,12 @@
     @apply rounded-none bg-transparent p-0 font-mono text-sm dark:bg-transparent;
   }
 
-  /* ── Markdown Source Editor：段落固定行高、不換行，以對齊左側行號 ── */
+  /* ── Markdown Source Editor：段落固定行高、自動換行，以對齊左側行號 ── */
   .markdown-source-editor p {
-    @apply m-0 whitespace-nowrap;
+    @apply m-0 break-words;
     line-height: 1.5rem; /* = leading-6，需與 .source-editor-line 一致 */
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
 
   /* 行號欄每一行，高度與 editor <p> 一致 */

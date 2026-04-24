@@ -18,6 +18,6 @@
 
 ## 5. 驗證
 
-- [ ] 5.1 執行 `make package`，確認 `dist-electron/PinFlow Setup *.exe` 產出
-- [ ] 5.2 安裝後開啟 PinFlow，確認 `%APPDATA%\PinFlow\workspace\` 目錄被建立並包含 `manifest.json`
-- [ ] 5.3 新增看板 → 關閉 → 重新開啟，確認資料持久化正常
+- [x] 5.1 執行 `make package`，確認 `dist-electron/PinFlow Setup *.exe` 產出
+- [x] 5.2 安裝後開啟 PinFlow，確認 `%APPDATA%\PinFlow\workspace\` 目錄被建立並包含 `manifest.json`
+- [x] 5.3 新增看板 → 關閉 → 重新開啟，確認資料持久化正常

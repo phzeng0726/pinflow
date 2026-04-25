@@ -21,4 +21,7 @@ export const queryKeys = {
   settings: {
     all: () => ['settings'] as const,
   },
+  snapshots: {
+    byBoard: (boardId: number) => ['snapshots', 'board', boardId] as const,
+  },
 }

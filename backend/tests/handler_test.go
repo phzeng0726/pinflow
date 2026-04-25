@@ -21,7 +21,7 @@ func setupRouter(t *testing.T) *gin.Engine {
 	repos := repository.NewRepositories(fs)
 	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 	handlers := api.NewHandlers(services)
-	return api.NewRouter(handlers)
+	return api.NewRouter(handlers, fs)
 }
 
 func TestHandler_CreateBoard(t *testing.T) {

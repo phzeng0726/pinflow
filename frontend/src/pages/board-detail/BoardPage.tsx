@@ -35,6 +35,7 @@ import {
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import {
   ArrowLeft,
+  Clock,
   GitBranch,
   LayoutGrid,
   Moon,
@@ -44,6 +45,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { SnapshotDialog } from '@/pages/board-detail/components/snapshots/SnapshotDialog'
 
 export function BoardPage() {
   const navigate = useNavigate({ from: '/boards/$boardId' })
@@ -60,6 +62,7 @@ export function BoardPage() {
   const [addingColumn, setAddingColumn] = useState(false)
   const [pinPopoverOpen, setPinPopoverOpen] = useState(false)
   const [pendingUnpinCard, setPendingUnpinCard] = useState<Card | null>(null)
+  const [snapshotOpen, setSnapshotOpen] = useState(false)
 
   const pinPopoverRef = useRef<HTMLDivElement>(null)
 
@@ -161,6 +164,19 @@ export function BoardPage() {
           <p className="text-xs text-gray-400 dark:text-gray-500">PinFlow</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSnapshotOpen(true)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                <Clock className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('snapshot.dialogTitle')}</TooltipContent>
+          </Tooltip>
           <LocaleToggle />
           <Tooltip>
             <TooltipTrigger asChild>
@@ -376,6 +392,12 @@ export function BoardPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <SnapshotDialog
+        boardId={id}
+        open={snapshotOpen}
+        onClose={() => setSnapshotOpen(false)}
+      />
     </div>
   )
 }

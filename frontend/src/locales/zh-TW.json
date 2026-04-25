@@ -260,6 +260,39 @@
       "deleteError": "刪除標籤失敗",
       "attachError": "新增標籤失敗",
       "detachError": "移除標籤失敗"
+    },
+    "snapshot": {
+      "createSuccess": "快照已建立",
+      "createError": "建立快照失敗",
+      "restoreSuccess": "已還原至快照",
+      "restoreError": "還原失敗",
+      "deleteSuccess": "快照已刪除",
+      "deleteError": "刪除快照失敗"
+    }
+  },
+  "snapshot": {
+    "dialogTitle": "版本快照",
+    "manualSnapshots": "手動快照",
+    "autoSnapshots": "自動快照",
+    "createSnapshot": "建立快照",
+    "createTitle": "建立快照",
+    "nameLabel": "名稱（選填）",
+    "namePlaceholder": "留空則自動命名",
+    "restoreTitle": "確認還原快照？",
+    "restoreDesc": "系統將先自動建立「還原前快照」作為安全網，再將 board 還原至選定快照的狀態。此操作無法直接撤銷，但還原前快照可供復原。",
+    "confirmRestore": "確認還原",
+    "noSnapshots": "尚無快照",
+    "policyHint": "· 手動快照永久保留\n· 刪除操作每次觸發自動快照；其他操作 10 分鐘內至多一次\n· 自動快照超過 7 天自動刪除",
+    "manual": "手動",
+    "trigger": {
+      "manual": "手動",
+      "delete_card": "刪除卡片前",
+      "delete_column": "刪除欄位前",
+      "create_card": "建立卡片後",
+      "create_column": "建立欄位後",
+      "update_card": "更新卡片後",
+      "move_card": "移動卡片後",
+      "restore": "還原前"
     }
   },
   "graphView": {

@@ -37,6 +37,23 @@ export function TimelineCanvas({
   board,
 }: TimelineCanvasProps) {
   const hoveredCardId = useTimelineStore((s) => s.hoveredCardId)
+  const setHoveredCardId = useTimelineStore((s) => s.setHoveredCardId)
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const y = e.clientY - rect.top
+    const rowIdx = Math.floor(y / ROW_HEIGHT)
+    if (rowIdx >= 0 && rowIdx < rows.length) {
+      const row = rows[rowIdx]
+      if (row.kind === 'card') {
+        setHoveredCardId(row.card.id)
+        return
+      }
+    }
+    setHoveredCardId(null)
+  }
+
+  const handleMouseLeave = () => setHoveredCardId(null)
 
   const totalWidth = dayCount * dayWidth
   const totalHeight = rows.length * ROW_HEIGHT
@@ -62,6 +79,8 @@ export function TimelineCanvas({
     <div
       className="relative"
       style={{ width: totalWidth, height: totalHeight }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
     >
       {/* Background grid: weekend shading + week-start lines */}
       {days.map((day, idx) => {

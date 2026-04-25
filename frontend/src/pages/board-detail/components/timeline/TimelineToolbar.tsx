@@ -1,7 +1,11 @@
-import type { TimelineDepMode, TimelineGroupBy, TimelineZoom } from '@/stores/timelineStore'
+import type {
+  TimelineDepMode,
+  TimelineGroupBy,
+  TimelineZoom,
+} from '@/stores/timelineStore'
 import { useTimelineStore } from '@/stores/timelineStore'
 import { differenceInDays, startOfDay } from 'date-fns'
-import { AlignJustify, CalendarDays, Filter, Layers, Milestone } from 'lucide-react'
+import { AlignJustify, Columns2, Filter, Milestone } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { TimelineFilterPanel } from './TimelineFilterPanel'
@@ -18,9 +22,21 @@ const ZOOM_OPTIONS: { value: TimelineZoom; label: string }[] = [
   { value: 'month', label: 'M' },
 ]
 
-const GROUP_OPTIONS: { value: TimelineGroupBy; label: string; icon: React.ReactNode }[] = [
-  { value: 'flat', label: 'flat', icon: <AlignJustify className="h-3.5 w-3.5" /> },
-  { value: 'by-column', label: 'byColumn', icon: <Layers className="h-3.5 w-3.5" /> },
+const GROUP_OPTIONS: {
+  value: TimelineGroupBy
+  label: 'flat' | 'byColumn'
+  icon: React.ReactNode
+}[] = [
+  {
+    value: 'flat',
+    label: 'flat',
+    icon: <AlignJustify className="h-3.5 w-3.5" />,
+  },
+  {
+    value: 'by-column',
+    label: 'byColumn',
+    icon: <Columns2 className="h-3.5 w-3.5" />,
+  },
 ]
 
 const DEP_MODE_OPTIONS: { value: TimelineDepMode; label: string }[] = [
@@ -63,7 +79,10 @@ export function TimelineToolbar({
     const today = startOfDay(new Date())
     const todayLeft = differenceInDays(today, rangeStart) * dayWidth
     const viewportWidth = container.clientWidth
-    container.scrollTo({ left: todayLeft - viewportWidth * 0.25, behavior: 'smooth' })
+    container.scrollTo({
+      left: todayLeft - viewportWidth * 0.25,
+      behavior: 'smooth',
+    })
   }
 
   const hasFilterActive = depTypeFilter.length < 4

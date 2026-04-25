@@ -186,6 +186,11 @@ definitions:
     - toCardId
     - type
     type: object
+  dto.CreateSnapshotRequest:
+    properties:
+      name:
+        type: string
+    type: object
   dto.CreateTagRequest:
     properties:
       color:
@@ -304,6 +309,21 @@ definitions:
       locale:
         type: string
       theme:
+        type: string
+    type: object
+  dto.SnapshotResponse:
+    properties:
+      boardId:
+        type: integer
+      createdAt:
+        type: string
+      id:
+        type: integer
+      isManual:
+        type: boolean
+      name:
+        type: string
+      trigger:
         type: string
     type: object
   dto.SyncChecklistItemEntry:
@@ -785,6 +805,136 @@ paths:
       summary: Serve a board image
       tags:
       - images
+  /boards/{id}/snapshots:
+    get:
+      parameters:
+      - description: Board ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.SnapshotResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List snapshots for a board
+      tags:
+      - snapshots
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Board ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Snapshot name (optional)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/dto.CreateSnapshotRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.SnapshotResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Manually create a snapshot for a board
+      tags:
+      - snapshots
+  /boards/{id}/snapshots/{sid}:
+    delete:
+      parameters:
+      - description: Board ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Snapshot ID
+        in: path
+        name: sid
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a snapshot
+      tags:
+      - snapshots
+  /boards/{id}/snapshots/{sid}/restore:
+    post:
+      parameters:
+      - description: Board ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Snapshot ID
+        in: path
+        name: sid
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Restore a board to a snapshot
+      tags:
+      - snapshots
   /cards/{id}:
     delete:
       parameters:

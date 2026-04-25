@@ -114,6 +114,15 @@ export interface Settings {
   locale: string
 }
 
+export interface BoardSnapshot {
+  id: number
+  boardId: number
+  name: string
+  isManual: boolean
+  trigger: string
+  createdAt: string
+}
+
 export interface PinnedCard {
   id: number
   title: string

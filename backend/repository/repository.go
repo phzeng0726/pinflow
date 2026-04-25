@@ -93,6 +93,7 @@ type Repositories struct {
 	Dependency    DependencyRepository
 	Comment       CommentRepository
 	Settings      SettingsRepository
+	Snapshot      SnapshotRepository
 }
 
 func NewRepositories(fs *store.FileStore) *Repositories {
@@ -106,5 +107,6 @@ func NewRepositories(fs *store.FileStore) *Repositories {
 		Dependency:    newDependencyRepository(fs),
 		Comment:       newCommentRepository(fs),
 		Settings:      newSettingsRepository(fs),
+		Snapshot:      newSnapshotRepository(fs),
 	}
 }

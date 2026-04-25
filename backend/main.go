@@ -29,7 +29,7 @@ func main() {
 	repos := repository.NewRepositories(fs)
 	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 	handlers := api.NewHandlers(services)
-	router := api.NewRouter(handlers)
+	router := api.NewRouter(handlers, fs)
 
 	log.Println("Starting PinFlow API on :34115")
 	if err := router.Run(":34115"); err != nil {

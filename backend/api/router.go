@@ -7,9 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"pinflow/api/middleware"
+	"pinflow/store"
 )
 
-func NewRouter(h *Handlers) *gin.Engine {
+func NewRouter(h *Handlers, fs *store.FileStore) *gin.Engine {
 	r := gin.Default()
 	r.MaxMultipartMemory = 5 << 20
 
@@ -27,6 +29,7 @@ func NewRouter(h *Handlers) *gin.Engine {
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	v1 := r.Group("/api/v1")
+	v1.Use(middleware.Snapshot(h.Snapshot.services.Snapshot, fs))
 	{
 		boards := v1.Group("/boards")
 		{
@@ -38,6 +41,10 @@ func NewRouter(h *Handlers) *gin.Engine {
 			boards.POST("/:id/columns", h.Column.CreateColumn)
 			boards.GET("/:id/dependencies", h.Dependency.ListBoardDependencies)
 			boards.GET("/:id/images/:filename", h.Image.ServeImage)
+			boards.GET("/:id/snapshots", h.Snapshot.ListSnapshots)
+			boards.POST("/:id/snapshots", h.Snapshot.CreateSnapshot)
+			boards.POST("/:id/snapshots/:sid/restore", h.Snapshot.RestoreSnapshot)
+			boards.DELETE("/:id/snapshots/:sid", h.Snapshot.DeleteSnapshot)
 		}
 
 		columns := v1.Group("/columns")

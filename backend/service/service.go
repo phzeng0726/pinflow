@@ -101,6 +101,7 @@ type Services struct {
 	Comment    CommentService
 	Image      ImageService
 	Settings   SettingsService
+	Snapshot   SnapshotService
 }
 
 func NewServices(deps Deps) *Services {
@@ -116,5 +117,6 @@ func NewServices(deps Deps) *Services {
 		Comment:    newCommentService(repos.Comment, repos.Card, deps.Store, imageSvc),
 		Image:      imageSvc,
 		Settings:   newSettingsService(repos.Settings),
+		Snapshot:   newSnapshotService(repos.Snapshot, deps.Store),
 	}
 }

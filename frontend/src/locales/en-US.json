@@ -260,6 +260,39 @@
       "deleteError": "Failed to delete tag",
       "attachError": "Failed to add tag",
       "detachError": "Failed to remove tag"
+    },
+    "snapshot": {
+      "createSuccess": "Snapshot created",
+      "createError": "Failed to create snapshot",
+      "restoreSuccess": "Restored to snapshot",
+      "restoreError": "Failed to restore snapshot",
+      "deleteSuccess": "Snapshot deleted",
+      "deleteError": "Failed to delete snapshot"
+    }
+  },
+  "snapshot": {
+    "dialogTitle": "Board Snapshots",
+    "manualSnapshots": "Manual Snapshots",
+    "autoSnapshots": "Auto Snapshots",
+    "createSnapshot": "Create Snapshot",
+    "createTitle": "Create Snapshot",
+    "nameLabel": "Name (optional)",
+    "namePlaceholder": "Leave empty to auto-name",
+    "restoreTitle": "Restore Snapshot?",
+    "restoreDesc": "The system will first create a \"pre-restore snapshot\" as a safety net, then restore the board to the selected snapshot state. This action cannot be directly undone, but the pre-restore snapshot can be used for recovery.",
+    "confirmRestore": "Confirm Restore",
+    "noSnapshots": "No snapshots",
+    "policyHint": "· Manual snapshots are kept forever\n· Delete actions always trigger a snapshot; other actions are limited to one per 10 minutes\n· Auto snapshots older than 7 days are deleted automatically",
+    "manual": "Manual",
+    "trigger": {
+      "manual": "Manual",
+      "delete_card": "Before deleting card",
+      "delete_column": "Before deleting column",
+      "create_card": "After creating card",
+      "create_column": "After creating column",
+      "update_card": "After updating card",
+      "move_card": "After moving card",
+      "restore": "Before restore"
     }
   },
   "graphView": {

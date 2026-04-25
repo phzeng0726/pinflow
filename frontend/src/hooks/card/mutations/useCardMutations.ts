@@ -18,6 +18,10 @@ export function useCardMutations(boardId?: number) {
     qc.invalidateQueries({ queryKey: queryKeys.cards.detail(id) })
   const invalidatePinned = () =>
     qc.invalidateQueries({ queryKey: queryKeys.cards.pinned() })
+  const invalidateSnapshots = () =>
+    boardId != null
+      ? qc.invalidateQueries({ queryKey: queryKeys.snapshots.byBoard(boardId) })
+      : Promise.resolve()
 
   const create = useMutation({
     mutationFn: (props: { columnId: number; form: NewCardForm }) => {
@@ -25,7 +29,7 @@ export function useCardMutations(boardId?: number) {
       return api.createCard(columnId, form)
     },
     onSuccess: async () => {
-      await Promise.all([invalidateBoardDetail(), invalidatePinned()])
+      await Promise.all([invalidateBoardDetail(), invalidatePinned(), invalidateSnapshots()])
       toast.success(t('toast.card.createSuccess'))
     },
     onError: () => toast.error(t('toast.card.createError')),
@@ -42,7 +46,7 @@ export function useCardMutations(boardId?: number) {
       position: number
     }) => api.moveCard(id, columnId, position),
     onSuccess: async () => {
-      await Promise.all([invalidateBoardDetail(), invalidatePinned()])
+      await Promise.all([invalidateBoardDetail(), invalidatePinned(), invalidateSnapshots()])
     },
     onError: async () => {
       await invalidateBoardDetail()
@@ -69,6 +73,7 @@ export function useCardMutations(boardId?: number) {
         invalidateBoardDetail(),
         invalidateCardDetail(variables.id),
         invalidatePinned(),
+        invalidateSnapshots(),
       ])
       toast.success(t('toast.card.updateSuccess'))
     },
@@ -97,11 +102,32 @@ export function useCardMutations(boardId?: number) {
 
   const remove = useMutation({
     mutationFn: (id: number) => api.deleteCard(id),
+    onMutate: async (cardId) => {
+      if (boardId == null) return
+      await qc.cancelQueries({ queryKey: queryKeys.boards.detail(boardId) })
+      const previousBoard = qc.getQueryData(queryKeys.boards.detail(boardId))
+      qc.setQueryData(queryKeys.boards.detail(boardId), (old: any) => {
+        if (!old) return old
+        return {
+          ...old,
+          columns: old.columns.map((col: any) => ({
+            ...col,
+            cards: col.cards?.filter((c: any) => c.id !== cardId) ?? [],
+          })),
+        }
+      })
+      return { previousBoard }
+    },
     onSuccess: async () => {
-      await Promise.all([invalidateBoardDetail(), invalidatePinned()])
+      await Promise.all([invalidateBoardDetail(), invalidatePinned(), invalidateSnapshots()])
       toast.success(t('toast.card.deleteSuccess'))
     },
-    onError: () => toast.error(t('toast.card.deleteError')),
+    onError: (_err, _cardId, context: any) => {
+      if (boardId != null && context?.previousBoard != null) {
+        qc.setQueryData(queryKeys.boards.detail(boardId), context.previousBoard)
+      }
+      toast.error(t('toast.card.deleteError'))
+    },
   })
 
   const duplicate = useMutation({

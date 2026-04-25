@@ -295,9 +295,33 @@
       "restore": "還原前"
     }
   },
+  "timeline": {
+    "title": "時間軸",
+    "zoom": {
+      "day": "日",
+      "week": "週",
+      "month": "月"
+    },
+    "groupBy": {
+      "flat": "平鋪",
+      "byColumn": "依欄位"
+    },
+    "depMode": {
+      "all": "全部",
+      "hover": "Hover",
+      "off": "關閉"
+    },
+    "showAll": "全部顯示",
+    "hideAll": "全部隱藏",
+    "filter": "篩選",
+    "today": "今天",
+    "noDates": "無日期",
+    "searchPlaceholder": "搜尋卡片..."
+  },
   "graphView": {
     "boardView": "看板",
     "graphView": "關聯圖",
+    "timelineView": "時間軸",
     "sidebarTitle": "總覽",
     "searchPlaceholder": "搜尋卡片...",
     "hierarchy": "層級",

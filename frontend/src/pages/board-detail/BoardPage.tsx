@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils'
 import { AddColumnForm } from '@/pages/board-detail/components/columns/AddColumnForm'
 import { ColumnView } from '@/pages/board-detail/components/columns/ColumnView'
 import { GraphView } from '@/pages/board-detail/components/graph'
+import { TimelineView } from '@/pages/board-detail/components/timeline'
 import { useThemeStore } from '@/stores/themeStore'
 import type { Card } from '@/types'
 import { DndContext, DragOverlay } from '@dnd-kit/core'
@@ -36,6 +37,7 @@ import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import {
   ArrowLeft,
   Clock,
+  GanttChartSquare,
   GitBranch,
   LayoutGrid,
   Moon,
@@ -231,6 +233,22 @@ export function BoardPage() {
               </TooltipTrigger>
               <TooltipContent>{t('graphView.graphView')}</TooltipContent>
             </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => navigate({ search: { view: 'timeline' } })}
+                  className={[
+                    'rounded-md p-1.5 transition-colors',
+                    viewMode === 'timeline'
+                      ? 'bg-white shadow-sm dark:bg-gray-600'
+                      : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200',
+                  ].join(' ')}
+                >
+                  <GanttChartSquare className="h-4 w-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{t('graphView.timelineView')}</TooltipContent>
+            </Tooltip>
           </div>
           <div className="relative" ref={pinPopoverRef}>
             <Button
@@ -293,18 +311,25 @@ export function BoardPage() {
         </div>
       </div>
 
-      {/* Main area: Board or Graph view */}
-      {viewMode === 'graph' ? (
+      {/* Main area: Graph view */}
+      {viewMode === 'graph' && (
         <div className="flex-1 overflow-hidden">
           <GraphView boardId={id} />
         </div>
-      ) : null}
+      )}
+
+      {/* Main area: Timeline view */}
+      {viewMode === 'timeline' && (
+        <div className="flex-1 overflow-hidden">
+          <TimelineView boardId={id} />
+        </div>
+      )}
 
       {/* Columns */}
       <div
         className={cn(
           'flex-1 overflow-x-auto p-4',
-          viewMode === 'graph' && 'hidden',
+          (viewMode === 'graph' || viewMode === 'timeline') && 'hidden',
         )}
       >
         <DndContext

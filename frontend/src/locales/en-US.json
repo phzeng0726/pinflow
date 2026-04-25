@@ -295,9 +295,33 @@
       "restore": "Before restore"
     }
   },
+  "timeline": {
+    "title": "Timeline",
+    "zoom": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month"
+    },
+    "groupBy": {
+      "flat": "Flat",
+      "byColumn": "By Column"
+    },
+    "depMode": {
+      "all": "All",
+      "hover": "Hover",
+      "off": "Off"
+    },
+    "showAll": "Show All",
+    "hideAll": "Hide All",
+    "filter": "Filter",
+    "today": "Today",
+    "noDates": "No dates",
+    "searchPlaceholder": "Search cards..."
+  },
   "graphView": {
     "boardView": "Board",
     "graphView": "Graph",
+    "timelineView": "Timeline",
     "sidebarTitle": "Overview",
     "searchPlaceholder": "Search cards...",
     "hierarchy": "Hierarchy",

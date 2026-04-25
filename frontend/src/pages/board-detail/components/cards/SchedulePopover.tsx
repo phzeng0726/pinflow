@@ -64,12 +64,20 @@ export function SchedulePopover(props: SchedulePopoverProps) {
 
   const handleStartTimeChange = (iso: string | null) => {
     setStartTime(iso)
-    setError(null)
+    if (iso && endTime && iso > endTime) {
+      setError(t('schedule.endBeforeStart'))
+    } else {
+      setError(null)
+    }
   }
 
   const handleEndTimeChange = (iso: string | null) => {
     setEndTime(iso)
-    setError(null)
+    if (iso && startTime && iso < startTime) {
+      setError(t('schedule.endBeforeStart'))
+    } else {
+      setError(null)
+    }
   }
 
   const summary = formatScheduleSummary(

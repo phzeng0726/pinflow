@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils'
 import { AddColumnForm } from '@/pages/board-detail/components/columns/AddColumnForm'
 import { ColumnView } from '@/pages/board-detail/components/columns/ColumnView'
 import { GraphView } from '@/pages/board-detail/components/graph'
+import { SnapshotDialog } from '@/pages/board-detail/components/snapshots/SnapshotDialog'
 import { TimelineView } from '@/pages/board-detail/components/timeline'
 import { useThemeStore } from '@/stores/themeStore'
 import type { Card } from '@/types'
@@ -36,8 +37,8 @@ import {
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import {
   ArrowLeft,
+  CalendarRange,
   Clock,
-  GanttChartSquare,
   GitBranch,
   LayoutGrid,
   Moon,
@@ -47,7 +48,6 @@ import {
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { SnapshotDialog } from '@/pages/board-detail/components/snapshots/SnapshotDialog'
 
 export function BoardPage() {
   const navigate = useNavigate({ from: '/boards/$boardId' })
@@ -199,56 +199,44 @@ export function BoardPage() {
               {theme === 'dark' ? t('theme.toLight') : t('theme.toDark')}
             </TooltipContent>
           </Tooltip>
-          {/* Board / Graph segmented toggle */}
+          {/* Board / Graph / Timeline segmented toggle */}
           <div className="flex items-center rounded-lg border bg-gray-100 p-0.5 dark:border-gray-600 dark:bg-gray-700">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => navigate({ search: { view: 'board' } })}
-                  className={[
-                    'rounded-md p-1.5 transition-colors',
-                    viewMode === 'board'
-                      ? 'bg-white shadow-sm dark:bg-gray-600'
-                      : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200',
-                  ].join(' ')}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>{t('graphView.boardView')}</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => navigate({ search: { view: 'graph' } })}
-                  className={[
-                    'rounded-md p-1.5 transition-colors',
-                    viewMode === 'graph'
-                      ? 'bg-white shadow-sm dark:bg-gray-600'
-                      : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200',
-                  ].join(' ')}
-                >
-                  <GitBranch className="h-4 w-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>{t('graphView.graphView')}</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => navigate({ search: { view: 'timeline' } })}
-                  className={[
-                    'rounded-md p-1.5 transition-colors',
-                    viewMode === 'timeline'
-                      ? 'bg-white shadow-sm dark:bg-gray-600'
-                      : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200',
-                  ].join(' ')}
-                >
-                  <GanttChartSquare className="h-4 w-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>{t('graphView.timelineView')}</TooltipContent>
-            </Tooltip>
+            <button
+              onClick={() => navigate({ search: { view: 'board' } })}
+              className={[
+                'flex items-center gap-1 rounded-md px-2 py-1.5 text-xs transition-colors',
+                viewMode === 'board'
+                  ? 'bg-white shadow-sm dark:bg-gray-600'
+                  : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200',
+              ].join(' ')}
+            >
+              <LayoutGrid className="h-4 w-4" />
+              {t('graphView.boardView')}
+            </button>
+            <button
+              onClick={() => navigate({ search: { view: 'graph' } })}
+              className={[
+                'flex items-center gap-1 rounded-md px-2 py-1.5 text-xs transition-colors',
+                viewMode === 'graph'
+                  ? 'bg-white shadow-sm dark:bg-gray-600'
+                  : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200',
+              ].join(' ')}
+            >
+              <GitBranch className="h-4 w-4" />
+              {t('graphView.graphView')}
+            </button>
+            <button
+              onClick={() => navigate({ search: { view: 'timeline' } })}
+              className={[
+                'flex items-center gap-1 rounded-md px-2 py-1.5 text-xs transition-colors',
+                viewMode === 'timeline'
+                  ? 'bg-white shadow-sm dark:bg-gray-600'
+                  : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200',
+              ].join(' ')}
+            >
+              <CalendarRange className="h-4 w-4" />
+              {t('graphView.timelineView')}
+            </button>
           </div>
           <div className="relative" ref={pinPopoverRef}>
             <Button

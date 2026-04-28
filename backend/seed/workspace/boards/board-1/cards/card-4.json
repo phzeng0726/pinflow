@@ -1,0 +1,39 @@
+{
+  "id": 4,
+  "columnId": 2,
+  "title": "Refactor Database Access Layer",
+  "description": "Replace direct SQL calls with a repository pattern to improve testability and reduce N+1 query issues. Performance profiling shows this is the primary latency bottleneck.",
+  "position": 1,
+  "isPinned": false,
+  "storyPoint": 7,
+  "priority": null,
+  "startTime": "2026-04-20T00:00:00Z",
+  "endTime": "2026-05-05T00:00:00Z",
+  "tag_ids": [3],
+  "checklists": [
+    {
+      "id": 2,
+      "cardId": 4,
+      "title": "Refactor Checklist",
+      "position": 1,
+      "items": [
+        {"id": 5, "checklistId": 2, "text": "Identify performance bottlenecks via profiling", "completed": true, "position": 1},
+        {"id": 6, "checklistId": 2, "text": "Design new repository interfaces", "completed": true, "position": 2},
+        {"id": 7, "checklistId": 2, "text": "Migrate existing query logic", "completed": false, "position": 3},
+        {"id": 8, "checklistId": 2, "text": "Benchmark and profile improvements", "completed": false, "position": 4}
+      ]
+    }
+  ],
+  "comments": [
+    {
+      "id": 2,
+      "cardId": 4,
+      "text": "Profiling shows 40% of latency comes from N+1 queries in the card listing endpoint. Batching card fetches should cut response time significantly.",
+      "authorId": "system",
+      "createdAt": "2026-04-28T11:00:00Z",
+      "updatedAt": "2026-04-28T11:00:00Z"
+    }
+  ],
+  "createdAt": "2026-04-28T09:00:00Z",
+  "updatedAt": "2026-04-28T09:00:00Z"
+}

@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "workspaceId": "",
+  "next_ids": {
+    "board": 2,
+    "card": 10,
+    "checklist": 3,
+    "checklist_item": 9,
+    "column": 4,
+    "comment": 3,
+    "snapshot": 1
+  }
+}

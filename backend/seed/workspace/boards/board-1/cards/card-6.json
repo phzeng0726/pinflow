@@ -1,0 +1,17 @@
+{
+  "id": 6,
+  "columnId": 3,
+  "title": "Set Up CI/CD Pipeline",
+  "description": "Configured GitHub Actions to run tests, linting, and builds on every pull request. Deployment to staging is automated on merge to main.",
+  "position": 1,
+  "isPinned": false,
+  "storyPoint": 5,
+  "priority": null,
+  "startTime": "2026-04-10T00:00:00Z",
+  "endTime": "2026-04-18T00:00:00Z",
+  "tag_ids": [2],
+  "checklists": [],
+  "comments": [],
+  "createdAt": "2026-04-10T09:00:00Z",
+  "updatedAt": "2026-04-18T09:00:00Z"
+}

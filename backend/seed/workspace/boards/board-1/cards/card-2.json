@@ -1,0 +1,17 @@
+{
+  "id": 2,
+  "columnId": 1,
+  "title": "Write API Documentation",
+  "description": "Document all REST API endpoints with request/response examples, error codes, and authentication requirements. Target audience is external developers.",
+  "position": 2,
+  "isPinned": false,
+  "storyPoint": 3,
+  "priority": null,
+  "startTime": null,
+  "endTime": "2026-05-20T00:00:00Z",
+  "tag_ids": [4],
+  "checklists": [],
+  "comments": [],
+  "createdAt": "2026-04-28T09:00:00Z",
+  "updatedAt": "2026-04-28T09:00:00Z"
+}

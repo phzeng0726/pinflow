@@ -1,0 +1,17 @@
+{
+  "id": 5,
+  "columnId": 2,
+  "title": "Add Dark Mode Support",
+  "description": "Implement a dark color theme using CSS custom properties. The design team has approved the palette. All new components must support both light and dark mode from day one.",
+  "position": 2,
+  "isPinned": true,
+  "storyPoint": 5,
+  "priority": null,
+  "startTime": "2026-04-25T00:00:00Z",
+  "endTime": "2026-05-10T00:00:00Z",
+  "tag_ids": [2],
+  "checklists": [],
+  "comments": [],
+  "createdAt": "2026-04-28T09:00:00Z",
+  "updatedAt": "2026-04-28T09:00:00Z"
+}

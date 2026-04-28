@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "boardId": 1,
+    "name": "Todo",
+    "position": 1,
+    "autoPin": false,
+    "createdAt": "2026-04-28T09:00:00Z",
+    "updatedAt": "2026-04-28T09:00:00Z"
+  },
+  {
+    "id": 2,
+    "boardId": 1,
+    "name": "In Progress",
+    "position": 2,
+    "autoPin": false,
+    "createdAt": "2026-04-28T09:00:00Z",
+    "updatedAt": "2026-04-28T09:00:00Z"
+  },
+  {
+    "id": 3,
+    "boardId": 1,
+    "name": "Done",
+    "position": 3,
+    "autoPin": false,
+    "createdAt": "2026-04-28T09:00:00Z",
+    "updatedAt": "2026-04-28T09:00:00Z"
+  }
+]

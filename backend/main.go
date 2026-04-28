@@ -10,6 +10,7 @@ import (
 	"log"
 	"pinflow/api"
 	"pinflow/repository"
+	"pinflow/seed"
 	"pinflow/service"
 	"pinflow/store"
 
@@ -19,6 +20,10 @@ import (
 func main() {
 	workspace := flag.String("workspace", "./pinflow-workspace", "path to workspace directory")
 	flag.Parse()
+
+	if err := seed.SeedIfEmpty(*workspace); err != nil {
+		log.Printf("Warning: could not seed workspace: %v", err)
+	}
 
 	fs, err := store.New(*workspace)
 	if err != nil {

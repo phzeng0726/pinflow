@@ -104,9 +104,9 @@ export function useCardMutations(boardId?: number) {
   const remove = useMutation({
     mutationFn: (id: number) => api.deleteCard(id),
     onMutate: async (cardId) => {
-      if (boardId == null) return
+      if (boardId == null) return { previousBoard: undefined }
       await qc.cancelQueries({ queryKey: queryKeys.boards.detail(boardId) })
-      const previousBoard = qc.getQueryData(queryKeys.boards.detail(boardId))
+      const previousBoard = qc.getQueryData<Board>(queryKeys.boards.detail(boardId))
       qc.setQueryData(queryKeys.boards.detail(boardId), (old: Board | undefined) => {
         if (!old) return old
         return {

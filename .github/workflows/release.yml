@@ -61,7 +61,7 @@ jobs:
           ELECTRON_BUILD: '1'
 
       - name: Package Electron app
-        run: pnpm exec electron-builder --win
+        run: pnpm exec electron-builder --win --publish never
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2

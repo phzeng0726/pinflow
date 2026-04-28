@@ -17,7 +17,7 @@
 
 ## 3. 驗證
 
-- [ ] 3.1 推送 pre-release tag（例如 `v0.0.1-test`）觀察 Actions workflow 是否成功觸發並完成
-- [ ] 3.2 確認 GitHub Releases 頁面出現對應 Release，附件包含 `PinFlow Setup 0.0.1-test.exe`
-- [ ] 3.3 下載並安裝 `.exe`，確認 PinFlow 可正常啟動
-- [ ] 3.4 清理測試 Release 與 tag：`gh release delete v0.0.1-test --yes && git push --delete origin v0.0.1-test && git tag -d v0.0.1-test`
+- [x] 3.1 推送 pre-release tag（例如 `v0.0.1-test`）觀察 Actions workflow 是否成功觸發並完成
+- [x] 3.2 確認 GitHub Releases 頁面出現對應 Release，附件包含 `PinFlow Setup 0.0.1-test.exe`
+- [x] 3.3 下載並安裝 `.exe`，確認 PinFlow 可正常啟動
+- [x] 3.4 清理測試 Release 與 tag：`gh release delete v0.0.1-test --yes && git push --delete origin v0.0.1-test && git tag -d v0.0.1-test`

@@ -211,6 +211,44 @@ docker-compose down
 
 ---
 
+## 自動化版本發佈（CI/CD）
+
+專案透過 GitHub Actions（`.github/workflows/release.yml`）在推送符合 `v*` 格式的 Git tag 時，自動完成打包並建立 GitHub Release。
+
+### 觸發方式
+
+```bash
+# 1. 在本地建立帶版號的 tag
+git tag v0.1.0
+
+# 2. 推送 tag 到遠端
+git push origin v0.1.0
+```
+
+> tag 名稱會自動去除前綴 `v`，並同步寫入根目錄 `package.json` 的 `version` 欄位作為打包版號。
+
+### 自動執行流程
+
+| 步驟 | 說明                                                          |
+| ---- | ------------------------------------------------------------- |
+| 1    | 在 `windows-latest` runner 上 checkout                        |
+| 2    | 從 tag 解析版本號並同步到 `package.json`                      |
+| 3    | 安裝 Go 1.25、Node.js 20、pnpm 9                              |
+| 4    | 編譯 Go backend → `electron/resources/pinflow-backend.exe`    |
+| 5    | 建置 Frontend（`ELECTRON_BUILD=1`）                           |
+| 6    | 執行 `electron-builder --win --publish never` 打包 NSIS 安裝檔 |
+| 7    | 將 `dist-electron/` 內的 `.exe`、`.exe.blockmap`、`latest.yml` 上傳至 GitHub Release（自動產生 Release Notes） |
+
+### 產出檔案
+
+Release 頁面會附帶下列檔案，可直接提供使用者下載安裝：
+
+- `PinFlow Setup <version>.exe`
+- `PinFlow Setup <version>.exe.blockmap`
+- `latest.yml`（auto-update 用 metadata）
+
+---
+
 ## 專案結構
 
 ```
@@ -240,6 +278,9 @@ pinflow/
 │   ├── config.yaml   # openspec 設定
 │   ├── specs/        # 功能規格（每個功能一個子目錄）
 │   └── changes/      # 變更記錄
+├── .github/
+│   └── workflows/
+│       └── release.yml      # Tag 觸發的自動打包與 Release 發佈
 ├── scripts/          # 輔助建置腳本
 │   ├── build.bat           # 一鍵打包腳本（Windows Batch）
 │   └── patch-rcedit.js    # postinstall hook：修補 electron-builder rcedit 問題

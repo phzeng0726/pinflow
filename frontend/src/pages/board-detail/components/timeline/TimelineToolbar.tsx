@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next'
 import { TimelineFilterPanel } from './TimelineFilterPanel'
 
 interface TimelineToolbarProps {
-  scrollContainerRef: React.RefObject<HTMLDivElement>
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>
   rangeStart: Date
   dayWidth: number
 }

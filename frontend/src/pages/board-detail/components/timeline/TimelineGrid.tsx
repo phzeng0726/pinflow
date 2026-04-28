@@ -5,10 +5,9 @@ import { TimelineCanvas } from './TimelineCanvas'
 import { TimelineDateHeader } from './TimelineDateHeader'
 import { TimelineLeftPanel } from './TimelineLeftPanel'
 import type { BarProps, TimelineRow } from './useTimelineData'
-import { ROW_HEIGHT } from './useTimelineData'
 
 interface TimelineGridProps {
-  scrollContainerRef: React.RefObject<HTMLDivElement>
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>
   rows: TimelineRow[]
   rangeStart: Date
   rangeEnd: Date
@@ -52,7 +51,6 @@ export function TimelineGrid({
     })
   }, [scrollContainerRef])
 
-  const totalHeight = rows.length * ROW_HEIGHT
   const HEADER_H = 56
 
   return (

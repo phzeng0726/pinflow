@@ -63,14 +63,17 @@ Data is stored as JSON files in a **workspace directory** (Bruno-style, no datab
 
 ```
 pinflow-workspace/
-  manifest.json          # Version + ID counters
-  tags.json              # Global tags [{id, name, color}]
+  manifest.json          # Version + global ID counters
+  settings.json          # User settings (theme, locale)
   boards/
     board-N/
       board.json         # Board metadata
+      manifest.json      # Per-board ID counters (tag, dependency)
       columns.json       # All columns for this board
+      tags.json          # Per-board tags
+      dependencies.json  # Per-board card dependencies
       cards/
-        card-N.json      # Card with tag_ids + embedded checklists
+        card-N.json      # Card with tag_ids + embedded checklists + comments
 ```
 
 - `--workspace` flag sets the workspace path (default `./pinflow-workspace`)
@@ -86,6 +89,7 @@ repository/ → Repositories container (repository.go) + file-based implementati
 service/    → Services container (service.go) + business logic; auto-pin logic lives here
 dto/        → Request/Response types for JSON binding
 api/        → Handlers container (handler.go) + Gin handlers + router.go
+seed/       → Embedded example workspace JSON; seeds on first launch if no boards exist
 tests/      → All tests (repository, service, handler layers)
 ```
 

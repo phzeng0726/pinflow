@@ -258,6 +258,7 @@ func (h *CardHandler) GetPinnedCards(c *gin.Context) {
 // @Produce     json
 // @Param       q query string false "Search query"
 // @Param       limit query int false "Max results (default 20)"
+// @Param       board_id query int false "Filter by board ID"
 // @Success     200 {array} dto.CardSearchResult
 // @Router      /cards/search [get]
 func (h *CardHandler) SearchCards(c *gin.Context) {
@@ -268,10 +269,25 @@ func (h *CardHandler) SearchCards(c *gin.Context) {
 			limit = int(parsed)
 		}
 	}
+	var boardID uint64
+	if b := c.Query("board_id"); b != "" {
+		if parsed, err := parseUintFromString(b); err == nil {
+			boardID = parsed
+		}
+	}
 	results, err := h.services.Card.Search(query, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+	if boardID > 0 {
+		filtered := results[:0]
+		for _, r := range results {
+			if r.BoardID == uint(boardID) {
+				filtered = append(filtered, r)
+			}
+		}
+		results = filtered
 	}
 	c.JSON(http.StatusOK, results)
 }

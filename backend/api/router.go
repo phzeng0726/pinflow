@@ -45,6 +45,8 @@ func NewRouter(h *Handlers, fs *store.FileStore) *gin.Engine {
 			boards.POST("/:id/snapshots", h.Snapshot.CreateSnapshot)
 			boards.POST("/:id/snapshots/:sid/restore", h.Snapshot.RestoreSnapshot)
 			boards.DELETE("/:id/snapshots/:sid", h.Snapshot.DeleteSnapshot)
+			boards.GET("/:id/tags", h.Tag.ListBoardTags)
+			boards.POST("/:id/tags", h.Tag.CreateBoardTag)
 		}
 
 		columns := v1.Group("/columns")
@@ -82,8 +84,6 @@ func NewRouter(h *Handlers, fs *store.FileStore) *gin.Engine {
 
 		tags := v1.Group("/tags")
 		{
-			tags.GET("", h.Tag.ListTags)
-			tags.POST("", h.Tag.CreateTag)
 			tags.PATCH("/:id", h.Tag.UpdateTag)
 			tags.DELETE("/:id", h.Tag.DeleteTag)
 		}

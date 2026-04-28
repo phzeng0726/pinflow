@@ -61,11 +61,12 @@ export function useBoardDnd(params: UseBoardDndParams) {
   const handleDragStart = (e: DragStartEvent) => {
     const data = e.active.data.current
     switch (data?.type) {
-      case DND_TYPE.CARD:
+      case DND_TYPE.CARD: {
         setActiveCard(data.card)
         const startCol = columns.find((c) => c.id === data.card.columnId)
         sourceColumnRef.current = startCol ?? null
         break
+      }
       case DND_TYPE.COLUMN:
         setActiveColumn(data.column)
         break
@@ -96,7 +97,7 @@ export function useBoardDnd(params: UseBoardDndParams) {
 
     // 1. 判定目標 Column 與 Card
     switch (parsedOver.type) {
-      case DND_PATTERN_TYPE.CARD:
+      case DND_PATTERN_TYPE.CARD: {
         overCardId = parsedOver.id
         const overCol = columns.find((c) =>
           c.cards?.some((card) => card.id === overCardId),
@@ -105,13 +106,15 @@ export function useBoardDnd(params: UseBoardDndParams) {
         targetColumnId = overCol.id
         targetCards = overCol.cards ?? []
         break
+      }
 
-      case DND_PATTERN_TYPE.COLUMN_DROP:
+      case DND_PATTERN_TYPE.COLUMN_DROP: {
         targetColumnId = parsedOver.id
         const col = columns.find((c) => c.id === targetColumnId)
         if (!col) return
         targetCards = col.cards ?? []
         break
+      }
 
       default:
         return

@@ -204,6 +204,7 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
             </button>
             <button
               type="button"
+              data-testid="unpin-btn"
               className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
               onClick={() => {
                 setPopoverOpen(false)

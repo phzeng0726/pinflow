@@ -18,7 +18,11 @@ func TestTagRepository_CreateOrGet(t *testing.T) {
 	fs := setupTestStore(t)
 	repos := repository.NewRepositories(fs)
 
-	tag, err := repos.Tag.CreateOrGet("urgent", "")
+	// Need a board first
+	board := &model.Board{Name: "B"}
+	_ = repos.Board.Create(board)
+
+	tag, err := repos.Tag.CreateOrGet(board.ID, "urgent", "")
 	if err != nil {
 		t.Fatalf("CreateOrGet error: %v", err)
 	}
@@ -27,7 +31,7 @@ func TestTagRepository_CreateOrGet(t *testing.T) {
 	}
 
 	// Getting same name returns existing tag
-	tag2, err := repos.Tag.CreateOrGet("urgent", "")
+	tag2, err := repos.Tag.CreateOrGet(board.ID, "urgent", "")
 	if err != nil {
 		t.Fatalf("CreateOrGet (duplicate) error: %v", err)
 	}
@@ -40,8 +44,11 @@ func TestTagRepository_CreateOrGet_CaseInsensitive(t *testing.T) {
 	fs := setupTestStore(t)
 	repos := repository.NewRepositories(fs)
 
-	tag1, _ := repos.Tag.CreateOrGet("Bug", "")
-	tag2, _ := repos.Tag.CreateOrGet("bug", "")
+	board := &model.Board{Name: "B"}
+	_ = repos.Board.Create(board)
+
+	tag1, _ := repos.Tag.CreateOrGet(board.ID, "Bug", "")
+	tag2, _ := repos.Tag.CreateOrGet(board.ID, "bug", "")
 	if tag1.ID != tag2.ID {
 		t.Errorf("expected case-insensitive match: got IDs %d and %d", tag1.ID, tag2.ID)
 	}
@@ -59,7 +66,7 @@ func TestTagRepository_AttachDetach(t *testing.T) {
 	card := &model.Card{ColumnID: col.ID, Title: "Card", Position: 1}
 	_ = repos.Card.Create(card)
 
-	tag, _ := repos.Tag.CreateOrGet("feature", "")
+	tag, _ := repos.Tag.CreateOrGet(board.ID, "feature", "")
 
 	// Attach
 	if err := repos.Tag.AttachToCard(card.ID, tag.ID); err != nil {
@@ -257,7 +264,10 @@ func TestTagRepository_CreateOrGet_WithColor(t *testing.T) {
 	fs := setupTestStore(t)
 	repos := repository.NewRepositories(fs)
 
-	tag, err := repos.Tag.CreateOrGet("urgent", "red")
+	board := &model.Board{Name: "B"}
+	_ = repos.Board.Create(board)
+
+	tag, err := repos.Tag.CreateOrGet(board.ID, "urgent", "red")
 	if err != nil {
 		t.Fatalf("CreateOrGet error: %v", err)
 	}
@@ -271,7 +281,9 @@ func TestTagService_UpdateTag(t *testing.T) {
 	repos := repository.NewRepositories(fs)
 	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
-	tag, _ := services.Tag.CreateOrGet("feature", "blue")
+	board, _ := services.Board.CreateBoard("B")
+
+	tag, _ := services.Tag.CreateOrGet(board.ID, "feature", "blue")
 
 	newName := "enhancement"
 	newColor := "green"
@@ -289,8 +301,10 @@ func TestTagService_UpdateTag_DuplicateName(t *testing.T) {
 	repos := repository.NewRepositories(fs)
 	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
-	services.Tag.CreateOrGet("bug", "red")
-	tag2, _ := services.Tag.CreateOrGet("feature", "blue")
+	board, _ := services.Board.CreateBoard("B")
+
+	services.Tag.CreateOrGet(board.ID, "bug", "red")
+	tag2, _ := services.Tag.CreateOrGet(board.ID, "feature", "blue")
 
 	dupName := "bug"
 	_, err := services.Tag.UpdateTag(tag2.ID, dto.UpdateTagRequest{Name: &dupName})
@@ -304,22 +318,19 @@ func TestTagService_DeleteTag(t *testing.T) {
 	repos := repository.NewRepositories(fs)
 	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
 
-	board := &model.Board{Name: "B"}
-	_ = repos.Board.Create(board)
-	col := &model.Column{BoardID: board.ID, Name: "C", Position: 1}
-	_ = repos.Column.Create(col)
-	card := &model.Card{ColumnID: col.ID, Title: "Card", Position: 1}
-	_ = repos.Card.Create(card)
+	board, _ := services.Board.CreateBoard("B")
+	col, _ := services.Column.CreateColumn(board.ID, "C")
+	card, _ := services.Card.CreateCard(col.ID, "Card", "")
 
-	tag, _ := services.Tag.CreateOrGet("toDelete", "")
+	tag, _ := services.Tag.CreateOrGet(board.ID, "toDelete", "")
 	_ = services.Tag.AttachToCard(card.ID, tag.ID)
 
 	if err := services.Tag.DeleteTag(tag.ID); err != nil {
 		t.Fatalf("DeleteTag error: %v", err)
 	}
 
-	// Verify tag is gone
-	tags, _ := services.Tag.ListAll()
+	// Verify tag is gone from board
+	tags, _ := services.Tag.ListByBoard(board.ID)
 	for _, tt := range tags {
 		if tt.ID == tag.ID {
 			t.Error("tag should be deleted")

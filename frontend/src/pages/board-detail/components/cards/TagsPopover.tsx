@@ -7,7 +7,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { useTagMutations } from '@/hooks/tag/mutations/useTagMutations'
-import { useTags } from '@/hooks/tag/queries/useTags'
+import { useBoardTags } from '@/hooks/tag/queries/useBoardTags'
 import { createTagSchema } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import {
@@ -51,7 +51,7 @@ export function TagsPopover(props: TagsPopoverProps) {
 
   const { t } = useTranslation()
   const tagSchema = useMemo(() => createTagSchema(t), [t])
-  const { data: allTags = [] } = useTags()
+  const { data: allTags = [] } = useBoardTags(boardId)
   const { createTag, updateTag, deleteTag, attachTag, detachTag } =
     useTagMutations(boardId)
 

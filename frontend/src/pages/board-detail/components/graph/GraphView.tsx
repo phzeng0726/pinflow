@@ -177,7 +177,6 @@ export function GraphView({ boardId }: GraphViewProps) {
 
         {/* Toolbar */}
         <GraphToolbar
-          boardId={boardId}
           filterOpen={filterOpen}
           onToggleFilter={handleToggleFilter}
         />

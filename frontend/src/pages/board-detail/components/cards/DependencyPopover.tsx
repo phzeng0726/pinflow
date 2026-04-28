@@ -36,7 +36,7 @@ export function DependencyPopover(props: DependencyPopoverProps) {
   const { createDep } = useDependencyMutations(card.id, boardId)
 
   const limit = query.trim() ? 100 : 10
-  const { data: results = [], isFetching } = useCardSearch(query, limit)
+  const { data: results = [], isFetching } = useCardSearch(query, limit, 300, boardId)
   const filteredResults = results.filter((r) => r.id !== card.id)
 
   const selectedRelationDef = selectedRelation

@@ -1,37 +1,4 @@
-## Purpose
-
-Card dependencies allow users to express relationships between cards using 4 canonical directed edge types. Dependencies are visible in the card detail dialog and reflected as a count badge on board card items.
-
-## Requirements
-
-### Requirement: Dependency data model supports 4 canonical types
-The system SHALL store card dependencies as directed edges with 4 canonical types: `blocks`, `parent_of`, `duplicates`, `related_to`. Each dependency SHALL have a unique ID, `fromCardId`, `toCardId`, `type`, and `createdAt`.
-
-#### Scenario: Valid dependency types accepted
-- **WHEN** client sends POST /api/v1/cards/:id/dependencies with type `blocks`, `parent_of`, `duplicates`, or `related_to`
-- **THEN** system creates and persists the dependency
-
-#### Scenario: Invalid type rejected
-- **WHEN** client sends POST /api/v1/cards/:id/dependencies with an unknown type
-- **THEN** system returns HTTP 400
-
-### Requirement: Self-referential dependencies are rejected
-The system SHALL reject any attempt to create a dependency where `fromCardId` equals `toCardId`.
-
-#### Scenario: Self-reference attempt
-- **WHEN** client sends POST /api/v1/cards/:id/dependencies with `toCardId` equal to `:id`
-- **THEN** system returns HTTP 400 with error message
-
-### Requirement: Duplicate dependencies are rejected
-The system SHALL reject creating a dependency if an identical edge (same from, to, type) already exists. For `related_to` type, the system SHALL also check the reverse direction (from=to, to=from) as it is symmetric.
-
-#### Scenario: Exact duplicate rejected
-- **WHEN** client creates the same dependency (fromCardId, toCardId, type) twice
-- **THEN** second request returns HTTP 409
-
-#### Scenario: Symmetric related_to duplicate rejected
-- **WHEN** dependency (A, B, related_to) exists and client creates (B, A, related_to)
-- **THEN** system returns HTTP 409
+## ADDED Requirements
 
 ### Requirement: Cross-board dependency creation is rejected
 The system SHALL reject any attempt to create a dependency between cards that belong to different boards.
@@ -39,6 +6,8 @@ The system SHALL reject any attempt to create a dependency between cards that be
 #### Scenario: Cross-board dependency rejected
 - **WHEN** client sends POST /api/v1/cards/:id/dependencies where the source card and target card belong to different boards
 - **THEN** system returns HTTP 422 with an error indicating cross-board dependencies are not allowed
+
+## MODIFIED Requirements
 
 ### Requirement: Create dependency endpoint
 The system SHALL provide `POST /api/v1/cards/:id/dependencies` to create a dependency from card `:id` to another card, with a specified canonical type. Both cards MUST belong to the same board.
@@ -58,35 +27,6 @@ The system SHALL provide `POST /api/v1/cards/:id/dependencies` to create a depen
 #### Scenario: Cross-board dependency rejected
 - **WHEN** client sends POST where source and target cards are in different boards
 - **THEN** system returns HTTP 422
-
-### Requirement: List dependencies endpoint
-The system SHALL provide `GET /api/v1/cards/:id/dependencies` to list all dependencies involving card `:id`, regardless of direction.
-
-#### Scenario: Returns both directions
-- **WHEN** dependency (A blocks B) exists and client fetches GET /api/v1/cards/B/dependencies
-- **THEN** response includes the dependency with fromCardId=A, toCardId=B
-
-#### Scenario: Empty list
-- **WHEN** card has no dependencies
-- **THEN** response returns empty array with HTTP 200
-
-### Requirement: Delete dependency endpoint
-The system SHALL provide `DELETE /api/v1/dependencies/:id` to remove a dependency by its ID.
-
-#### Scenario: Successful deletion
-- **WHEN** client sends DELETE /api/v1/dependencies/1
-- **THEN** dependency is removed and both cards no longer show it in their dependency list
-
-#### Scenario: Dependency not found
-- **WHEN** client sends DELETE with a non-existent dependency ID
-- **THEN** system returns HTTP 404
-
-### Requirement: Card deletion cascades to dependencies
-The system SHALL remove all dependencies involving a card when that card is deleted.
-
-#### Scenario: Delete card removes its dependencies
-- **WHEN** card A is deleted and had dependencies (A blocks B) and (C is parent to A)
-- **THEN** both dependencies are removed; card B and C no longer show them
 
 ### Requirement: Board-scoped card search endpoint
 The system SHALL provide `GET /api/v1/cards/search?q=<query>&limit=<n>&board_id=<id>` to search cards by title. The `board_id` parameter is optional; when provided, results MUST be restricted to that board only. When omitted, all boards are searched (for backward compatibility).
@@ -133,14 +73,3 @@ The system SHALL provide a popover in CardDetailDialog that guides users through
 #### Scenario: Cancel discards selection
 - **WHEN** user clicks cancel
 - **THEN** no dependency is created and popover closes
-
-### Requirement: CardItem displays dependency count
-The system SHALL display a link icon and dependency count in the card meta row on the board view when a card has one or more dependencies.
-
-#### Scenario: Card with dependencies shows count
-- **WHEN** a card has 2 dependencies
-- **THEN** board view card shows a link icon and "2" in the meta row
-
-#### Scenario: Card with no dependencies shows nothing
-- **WHEN** a card has 0 dependencies
-- **THEN** no dependency indicator is shown on the board card

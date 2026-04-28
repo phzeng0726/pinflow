@@ -16,11 +16,22 @@ import (
 // ErrNotFound is returned when an entity is not found in the store.
 var ErrNotFound = fmt.Errorf("record not found")
 
+// ErrCrossBoardTag is returned when a tag is attached to a card on a different board.
+var ErrCrossBoardTag = fmt.Errorf("tag belongs to a different board")
+
+// ErrCrossBoardDependency is returned when a dependency is created across different boards.
+var ErrCrossBoardDependency = fmt.Errorf("dependency cards belong to different boards")
+
 // Manifest tracks the workspace version and auto-increment ID counters.
 type Manifest struct {
 	Version     string          `json:"version"`
 	WorkspaceID string          `json:"workspaceId,omitempty"`
 	NextIDs     map[string]uint `json:"next_ids"`
+}
+
+// BoardManifest tracks per-board auto-increment ID counters (tag, dependency).
+type BoardManifest struct {
+	NextIDs map[string]uint `json:"next_ids"`
 }
 
 // CardFile is the on-disk representation of a card (card-N.json).
@@ -59,6 +70,13 @@ type FileStore struct {
 	dependencies map[uint]*model.Dependency
 	settings     *model.Settings
 
+	// Per-board manifests (tag/dep ID counters)
+	boardManifests map[uint]*BoardManifest
+
+	// Per-board indexes
+	tagsByBoard map[uint]map[uint]*model.Tag        // boardID → tagID → Tag
+	depsByBoard map[uint]map[uint]*model.Dependency // boardID → depID → Dependency
+
 	// Reverse indexes for O(1) lookups
 	columnsByBoard  map[uint][]uint // boardID → []columnID
 	cardsByColumn   map[uint][]uint // columnID → []cardID
@@ -76,6 +94,9 @@ func New(basePath string) (*FileStore, error) {
 		cards:           make(map[uint]*CardFile),
 		tags:            make(map[uint]*model.Tag),
 		dependencies:    make(map[uint]*model.Dependency),
+		boardManifests:  make(map[uint]*BoardManifest),
+		tagsByBoard:     make(map[uint]map[uint]*model.Tag),
+		depsByBoard:     make(map[uint]map[uint]*model.Dependency),
 		columnsByBoard:  make(map[uint][]uint),
 		cardsByColumn:   make(map[uint][]uint),
 		checklistToCard: make(map[uint]uint),
@@ -85,8 +106,8 @@ func New(basePath string) (*FileStore, error) {
 			Version: "1.0",
 			NextIDs: map[string]uint{
 				"board": 1, "column": 1, "card": 1,
-				"tag": 1, "checklist": 1, "checklist_item": 1,
-				"dependency": 1, "comment": 1, "snapshot": 1,
+				"checklist": 1, "checklist_item": 1,
+				"comment": 1, "snapshot": 1,
 			},
 		},
 	}
@@ -152,24 +173,7 @@ func (s *FileStore) load() error {
 		}
 	}
 
-	// Tags
-	tp := filepath.Join(s.basePath, "tags.json")
-	if fileExists(tp) {
-		var tags []model.Tag
-		if err := readJSON(tp, &tags); err != nil {
-			return fmt.Errorf("tags: %w", err)
-		}
-		for i := range tags {
-			s.tags[tags[i].ID] = &tags[i]
-		}
-	}
-
-	// Dependencies
-	if err := s.loadDependencies(); err != nil {
-		return err
-	}
-
-	// Boards
+	// Boards (per-board data: manifest, tags, dependencies, columns, cards)
 	entries, err := os.ReadDir(filepath.Join(s.basePath, "boards"))
 	if err != nil {
 		return nil
@@ -192,6 +196,42 @@ func (s *FileStore) load() error {
 		}
 		board.Columns = nil
 		s.boards[board.ID] = &board
+
+		// per-board manifest.json
+		bm := &BoardManifest{NextIDs: map[string]uint{"tag": 1, "dependency": 1}}
+		bmp := s.boardManifestPath(board.ID)
+		if fileExists(bmp) {
+			_ = readJSON(bmp, bm)
+		}
+		s.boardManifests[board.ID] = bm
+
+		// per-board tags.json
+		s.tagsByBoard[board.ID] = make(map[uint]*model.Tag)
+		tagPath := s.boardTagsPath(board.ID)
+		if fileExists(tagPath) {
+			var tags []model.Tag
+			if err := readJSON(tagPath, &tags); err == nil {
+				for i := range tags {
+					tags[i].BoardID = board.ID
+					s.tags[tags[i].ID] = &tags[i]
+					s.tagsByBoard[board.ID][tags[i].ID] = &tags[i]
+				}
+			}
+		}
+
+		// per-board dependencies.json
+		s.depsByBoard[board.ID] = make(map[uint]*model.Dependency)
+		depPath := s.boardDependenciesPath(board.ID)
+		if fileExists(depPath) {
+			var deps []model.Dependency
+			if err := readJSON(depPath, &deps); err == nil {
+				for i := range deps {
+					deps[i].BoardID = board.ID
+					s.dependencies[deps[i].ID] = &deps[i]
+					s.depsByBoard[board.ID][deps[i].ID] = &deps[i]
+				}
+			}
+		}
 
 		// columns.json
 		cp := filepath.Join(dir, "columns.json")
@@ -240,9 +280,35 @@ func (s *FileStore) NextID(entity string) uint {
 	s.idMu.Lock()
 	defer s.idMu.Unlock()
 	id := s.manifest.NextIDs[entity]
+	if id == 0 {
+		id = 1
+	}
 	s.manifest.NextIDs[entity] = id + 1
 	_ = s.saveManifest()
 	return id
+}
+
+// NextBoardID returns the next auto-increment ID for a per-board entity (e.g. "tag", "dependency").
+// Thread-safe.
+func (s *FileStore) NextBoardID(boardID uint, entity string) uint {
+	s.idMu.Lock()
+	defer s.idMu.Unlock()
+	bm, ok := s.boardManifests[boardID]
+	if !ok {
+		bm = &BoardManifest{NextIDs: map[string]uint{"tag": 1, "dependency": 1}}
+		s.boardManifests[boardID] = bm
+	}
+	id := bm.NextIDs[entity]
+	if id == 0 {
+		id = 1
+	}
+	bm.NextIDs[entity] = id + 1
+	_ = writeBoardManifest(s.boardManifestPath(boardID), bm)
+	return id
+}
+
+func writeBoardManifest(path string, bm *BoardManifest) error {
+	return writeJSON(path, bm)
 }
 
 // ============================================================
@@ -266,7 +332,26 @@ func (s *FileStore) CreateBoard(b *model.Board) error {
 	if err := writeJSON(filepath.Join(dir, "board.json"), b); err != nil {
 		return err
 	}
-	return writeJSON(filepath.Join(dir, "columns.json"), []model.Column{})
+	if err := writeJSON(filepath.Join(dir, "columns.json"), []model.Column{}); err != nil {
+		return err
+	}
+
+	// Initialize per-board manifest, tags, dependencies
+	bm := &BoardManifest{NextIDs: map[string]uint{"tag": 1, "dependency": 1}}
+	s.boardManifests[b.ID] = bm
+	if err := writeJSON(s.boardManifestPath(b.ID), bm); err != nil {
+		return err
+	}
+	if err := writeJSON(s.boardTagsPath(b.ID), []model.Tag{}); err != nil {
+		return err
+	}
+	if err := writeJSON(s.boardDependenciesPath(b.ID), []model.Dependency{}); err != nil {
+		return err
+	}
+	s.tagsByBoard[b.ID] = make(map[uint]*model.Tag)
+	s.depsByBoard[b.ID] = make(map[uint]*model.Dependency)
+
+	return nil
 }
 
 func (s *FileStore) GetBoard(id uint) (*model.Board, error) {
@@ -330,6 +415,24 @@ func (s *FileStore) DeleteBoard(id uint) error {
 	}
 	delete(s.columnsByBoard, id)
 	delete(s.boards, id)
+
+	// Clean per-board tag indexes
+	if boardTags, ok := s.tagsByBoard[id]; ok {
+		for tagID := range boardTags {
+			delete(s.tags, tagID)
+		}
+		delete(s.tagsByBoard, id)
+	}
+
+	// Clean per-board dependency indexes
+	if boardDeps, ok := s.depsByBoard[id]; ok {
+		for depID := range boardDeps {
+			delete(s.dependencies, depID)
+		}
+		delete(s.depsByBoard, id)
+	}
+
+	delete(s.boardManifests, id)
 
 	return os.RemoveAll(s.boardDir(id))
 }
@@ -587,34 +690,66 @@ func (s *FileStore) CreateDependency(d *model.Dependency) error {
 		return ErrSelfReference
 	}
 
-	// Duplicate check
-	for _, existing := range s.dependencies {
-		if existing.Type == d.Type {
-			if existing.FromCardID == d.FromCardID && existing.ToCardID == d.ToCardID {
-				return ErrDependencyConflict
-			}
-			// related_to is symmetric: also check reverse direction
-			if d.Type == model.DependencyTypeRelatedTo &&
-				existing.FromCardID == d.ToCardID && existing.ToCardID == d.FromCardID {
-				return ErrDependencyConflict
+	// Verify both cards belong to the same board (and auto-fill BoardID)
+	fromCard, ok := s.cards[d.FromCardID]
+	if !ok {
+		return fmt.Errorf("from card %d not found", d.FromCardID)
+	}
+	toCard, ok := s.cards[d.ToCardID]
+	if !ok {
+		return fmt.Errorf("to card %d not found", d.ToCardID)
+	}
+	fromCol, ok := s.columns[fromCard.ColumnID]
+	if !ok {
+		return fmt.Errorf("column for from card not found")
+	}
+	toCol, ok := s.columns[toCard.ColumnID]
+	if !ok {
+		return fmt.Errorf("column for to card not found")
+	}
+	if fromCol.BoardID != toCol.BoardID {
+		return ErrCrossBoardDependency
+	}
+	d.BoardID = fromCol.BoardID
+
+	// Duplicate check within board
+	if boardDeps, ok := s.depsByBoard[d.BoardID]; ok {
+		for _, existing := range boardDeps {
+			if existing.Type == d.Type {
+				if existing.FromCardID == d.FromCardID && existing.ToCardID == d.ToCardID {
+					return ErrDependencyConflict
+				}
+				if d.Type == model.DependencyTypeRelatedTo &&
+					existing.FromCardID == d.ToCardID && existing.ToCardID == d.FromCardID {
+					return ErrDependencyConflict
+				}
 			}
 		}
 	}
 
-	d.ID = s.NextID("dependency")
+	d.ID = s.nextBoardIDLocked(d.BoardID, "dependency")
 	s.dependencies[d.ID] = d
-	return s.persistDependencies()
+	if s.depsByBoard[d.BoardID] == nil {
+		s.depsByBoard[d.BoardID] = make(map[uint]*model.Dependency)
+	}
+	s.depsByBoard[d.BoardID][d.ID] = d
+	return s.persistDependenciesForBoard(d.BoardID)
 }
 
 func (s *FileStore) DeleteDependency(id uint) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if _, ok := s.dependencies[id]; !ok {
+	dep, ok := s.dependencies[id]
+	if !ok {
 		return ErrNotFound
 	}
+	boardID := dep.BoardID
 	delete(s.dependencies, id)
-	return s.persistDependencies()
+	if boardDeps, ok := s.depsByBoard[boardID]; ok {
+		delete(boardDeps, id)
+	}
+	return s.persistDependenciesForBoard(boardID)
 }
 
 func (s *FileStore) ListDependenciesByCard(cardID uint) []model.Dependency {
@@ -647,32 +782,32 @@ func (s *FileStore) ListDependenciesByBoard(boardID uint) []model.Dependency {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	// Build cardSet for all cards belonging to this board
-	cardSet := make(map[uint]struct{})
-	for _, colID := range s.columnsByBoard[boardID] {
-		for _, cardID := range s.cardsByColumn[colID] {
-			cardSet[cardID] = struct{}{}
-		}
+	boardDeps, ok := s.depsByBoard[boardID]
+	if !ok {
+		return nil
 	}
-
-	var result []model.Dependency
-	for _, d := range s.dependencies {
-		_, fromOk := cardSet[d.FromCardID]
-		_, toOk := cardSet[d.ToCardID]
-		if fromOk || toOk {
-			result = append(result, *d)
-		}
+	result := make([]model.Dependency, 0, len(boardDeps))
+	for _, d := range boardDeps {
+		result = append(result, *d)
 	}
 	return result
 }
 
 func (s *FileStore) cleanDependenciesByCard(cardID uint) {
+	// Collect all affected board IDs
+	affected := make(map[uint]struct{})
 	for id, d := range s.dependencies {
 		if d.FromCardID == cardID || d.ToCardID == cardID {
+			affected[d.BoardID] = struct{}{}
+			if boardDeps, ok := s.depsByBoard[d.BoardID]; ok {
+				delete(boardDeps, id)
+			}
 			delete(s.dependencies, id)
 		}
 	}
-	_ = s.persistDependencies()
+	for boardID := range affected {
+		_ = s.persistDependenciesForBoard(boardID)
+	}
 }
 
 // ============================================================
@@ -683,8 +818,17 @@ func (s *FileStore) CreateTag(t *model.Tag) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if t.BoardID == 0 {
+		return fmt.Errorf("tag must have a BoardID")
+	}
+
+	t.ID = s.nextBoardIDLocked(t.BoardID, "tag")
 	s.tags[t.ID] = t
-	return s.persistTags()
+	if s.tagsByBoard[t.BoardID] == nil {
+		s.tagsByBoard[t.BoardID] = make(map[uint]*model.Tag)
+	}
+	s.tagsByBoard[t.BoardID][t.ID] = t
+	return s.persistTagsForBoard(t.BoardID)
 }
 
 func (s *FileStore) GetTag(id uint) (*model.Tag, error) {
@@ -699,12 +843,16 @@ func (s *FileStore) GetTag(id uint) (*model.Tag, error) {
 	return &cp, nil
 }
 
-func (s *FileStore) GetTagByName(name string) (*model.Tag, error) {
+func (s *FileStore) GetTagByName(boardID uint, name string) (*model.Tag, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	lower := strings.ToLower(strings.TrimSpace(name))
-	for _, t := range s.tags {
+	boardTags, ok := s.tagsByBoard[boardID]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	for _, t := range boardTags {
 		if strings.ToLower(t.Name) == lower {
 			cp := *t
 			return &cp, nil
@@ -713,12 +861,16 @@ func (s *FileStore) GetTagByName(name string) (*model.Tag, error) {
 	return nil, ErrNotFound
 }
 
-func (s *FileStore) GetAllTags() []model.Tag {
+func (s *FileStore) GetTagsByBoard(boardID uint) []model.Tag {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	result := make([]model.Tag, 0, len(s.tags))
-	for _, t := range s.tags {
+	boardTags, ok := s.tagsByBoard[boardID]
+	if !ok {
+		return nil
+	}
+	result := make([]model.Tag, 0, len(boardTags))
+	for _, t := range boardTags {
 		result = append(result, *t)
 	}
 	sort.Slice(result, func(i, j int) bool {
@@ -731,34 +883,54 @@ func (s *FileStore) UpdateTag(t *model.Tag) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if _, ok := s.tags[t.ID]; !ok {
+	old, ok := s.tags[t.ID]
+	if !ok {
 		return ErrNotFound
 	}
+	// Preserve BoardID
+	if t.BoardID == 0 {
+		t.BoardID = old.BoardID
+	}
 	s.tags[t.ID] = t
-	return s.persistTags()
+	if s.tagsByBoard[t.BoardID] == nil {
+		s.tagsByBoard[t.BoardID] = make(map[uint]*model.Tag)
+	}
+	s.tagsByBoard[t.BoardID][t.ID] = t
+	return s.persistTagsForBoard(t.BoardID)
 }
 
 func (s *FileStore) DeleteTag(id uint) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if _, ok := s.tags[id]; !ok {
+	tag, ok := s.tags[id]
+	if !ok {
 		return ErrNotFound
 	}
+	boardID := tag.BoardID
 	delete(s.tags, id)
+	if boardTags, ok := s.tagsByBoard[boardID]; ok {
+		delete(boardTags, id)
+	}
 
-	// Remove tag reference from all cards
-	for _, card := range s.cards {
-		newIDs, found := removeFromSliceWithFlag(card.TagIDs, id)
-		if found {
-			card.TagIDs = newIDs
-			if col := s.columns[card.ColumnID]; col != nil {
-				_ = writeJSON(s.cardPath(col.BoardID, card.ID), card)
+	// Remove tag reference only from cards in this board
+	for _, colID := range s.columnsByBoard[boardID] {
+		for _, cardID := range s.cardsByColumn[colID] {
+			card, ok := s.cards[cardID]
+			if !ok {
+				continue
+			}
+			newIDs, found := removeFromSliceWithFlag(card.TagIDs, id)
+			if found {
+				card.TagIDs = newIDs
+				if col := s.columns[card.ColumnID]; col != nil {
+					_ = writeJSON(s.cardPath(col.BoardID, card.ID), card)
+				}
 			}
 		}
 	}
 
-	return s.persistTags()
+	return s.persistTagsForBoard(boardID)
 }
 
 // ============================================================
@@ -773,16 +945,27 @@ func (s *FileStore) AttachTagToCard(cardID, tagID uint) error {
 	if !ok {
 		return ErrNotFound
 	}
+	tag, ok := s.tags[tagID]
+	if !ok {
+		return ErrNotFound
+	}
+
+	// Cross-board check
+	col, ok := s.columns[card.ColumnID]
+	if !ok {
+		return fmt.Errorf("column for card not found")
+	}
+	if tag.BoardID != col.BoardID {
+		return ErrCrossBoardTag
+	}
+
 	for _, id := range card.TagIDs {
 		if id == tagID {
 			return nil // already attached
 		}
 	}
 	card.TagIDs = append(card.TagIDs, tagID)
-	if col := s.columns[card.ColumnID]; col != nil {
-		return writeJSON(s.cardPath(col.BoardID, card.ID), card)
-	}
-	return nil
+	return writeJSON(s.cardPath(col.BoardID, card.ID), card)
 }
 
 func (s *FileStore) DetachTagFromCard(cardID, tagID uint) error {
@@ -856,6 +1039,21 @@ func (s *FileStore) CardIDForComment(commentID uint) (uint, bool) {
 // BoardDir returns the absolute path of the board directory for the given boardID.
 func (s *FileStore) BoardDir(boardID uint) string {
 	return s.boardDir(boardID)
+}
+
+// BoardManifestPath returns the path to the per-board manifest.json.
+func (s *FileStore) BoardManifestPath(boardID uint) string {
+	return s.boardManifestPath(boardID)
+}
+
+// BoardTagsPath returns the path to the per-board tags.json.
+func (s *FileStore) BoardTagsPath(boardID uint) string {
+	return s.boardTagsPath(boardID)
+}
+
+// BoardDependenciesPath returns the path to the per-board dependencies.json.
+func (s *FileStore) BoardDependenciesPath(boardID uint) string {
+	return s.boardDependenciesPath(boardID)
 }
 
 // BoardIDOfCard returns the boardID for the given cardID via O(1) in-memory lookup.
@@ -946,7 +1144,6 @@ func (s *FileStore) BoardIDOfChecklistItem(itemID uint) (uint, bool) {
 }
 
 // BoardIDOfDependency returns the boardID for the given dependencyID via in-memory lookup.
-// It uses the fromCardID of the dependency to resolve the board.
 func (s *FileStore) BoardIDOfDependency(dependencyID uint) (uint, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -954,6 +1151,10 @@ func (s *FileStore) BoardIDOfDependency(dependencyID uint) (uint, bool) {
 	if !ok {
 		return 0, false
 	}
+	if dep.BoardID != 0 {
+		return dep.BoardID, true
+	}
+	// Fallback: resolve from fromCardID
 	card, ok := s.cards[dep.FromCardID]
 	if !ok {
 		return 0, false
@@ -978,6 +1179,24 @@ func (s *FileStore) BumpManifestNextIDs(snapshotNextIDs map[string]uint) error {
 	return s.saveManifest()
 }
 
+// BumpBoardManifestNextIDs updates per-board NextIDs to max(current, provided).
+// Used after snapshot restore to prevent per-board ID collisions.
+func (s *FileStore) BumpBoardManifestNextIDs(boardID uint, snapshotNextIDs map[string]uint) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	bm, ok := s.boardManifests[boardID]
+	if !ok {
+		bm = &BoardManifest{NextIDs: map[string]uint{"tag": 1, "dependency": 1}}
+		s.boardManifests[boardID] = bm
+	}
+	for key, val := range snapshotNextIDs {
+		if current, ok := bm.NextIDs[key]; !ok || val > current {
+			bm.NextIDs[key] = val
+		}
+	}
+	return writeJSON(s.boardManifestPath(boardID), bm)
+}
+
 // GetAllDependencies returns all dependencies in the store.
 func (s *FileStore) GetAllDependencies() []model.Dependency {
 	s.mu.RLock()
@@ -989,16 +1208,58 @@ func (s *FileStore) GetAllDependencies() []model.Dependency {
 	return result
 }
 
+// ReplaceBoardDependencies replaces the per-board dependency map and persists to disk.
+// Used during snapshot restore for a specific board.
+func (s *FileStore) ReplaceBoardDependencies(boardID uint, deps []model.Dependency) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// Remove existing deps for this board from global map
+	if boardDeps, ok := s.depsByBoard[boardID]; ok {
+		for depID := range boardDeps {
+			delete(s.dependencies, depID)
+		}
+	}
+
+	newBoardDeps := make(map[uint]*model.Dependency, len(deps))
+	for i := range deps {
+		deps[i].BoardID = boardID
+		s.dependencies[deps[i].ID] = &deps[i]
+		newBoardDeps[deps[i].ID] = &deps[i]
+	}
+	s.depsByBoard[boardID] = newBoardDeps
+	return s.persistDependenciesForBoard(boardID)
+}
+
 // ReplaceAllDependencies replaces the entire in-memory dependency map and persists to disk.
-// Used during snapshot restore to restore board-related dependencies.
+// Deprecated: use ReplaceBoardDependencies for per-board operations.
 func (s *FileStore) ReplaceAllDependencies(deps []model.Dependency) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.dependencies = make(map[uint]*model.Dependency, len(deps))
+	// Clear all per-board dep maps
+	for k := range s.depsByBoard {
+		s.depsByBoard[k] = make(map[uint]*model.Dependency)
+	}
 	for i := range deps {
 		s.dependencies[deps[i].ID] = &deps[i]
+		boardID := deps[i].BoardID
+		if s.depsByBoard[boardID] == nil {
+			s.depsByBoard[boardID] = make(map[uint]*model.Dependency)
+		}
+		s.depsByBoard[boardID][deps[i].ID] = &deps[i]
 	}
-	return s.persistDependencies()
+	// Persist per-board
+	for boardID, boardDeps := range s.depsByBoard {
+		depSlice := make([]model.Dependency, 0, len(boardDeps))
+		for _, d := range boardDeps {
+			depSlice = append(depSlice, *d)
+		}
+		if err := writeJSON(s.boardDependenciesPath(boardID), depSlice); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // ReloadBoard clears and reloads all in-memory state for the given board from disk.
@@ -1020,7 +1281,57 @@ func (s *FileStore) ReloadBoard(boardID uint) error {
 	}
 	delete(s.columnsByBoard, boardID)
 
+	// Clear per-board tags
+	if boardTags, ok := s.tagsByBoard[boardID]; ok {
+		for tagID := range boardTags {
+			delete(s.tags, tagID)
+		}
+	}
+	s.tagsByBoard[boardID] = make(map[uint]*model.Tag)
+
+	// Clear per-board deps
+	if boardDeps, ok := s.depsByBoard[boardID]; ok {
+		for depID := range boardDeps {
+			delete(s.dependencies, depID)
+		}
+	}
+	s.depsByBoard[boardID] = make(map[uint]*model.Dependency)
+
 	dir := s.boardDir(boardID)
+
+	// Reload per-board manifest.json
+	bm := &BoardManifest{NextIDs: map[string]uint{"tag": 1, "dependency": 1}}
+	bmp := s.boardManifestPath(boardID)
+	if fileExists(bmp) {
+		_ = readJSON(bmp, bm)
+	}
+	s.boardManifests[boardID] = bm
+
+	// Reload per-board tags.json
+	tagPath := s.boardTagsPath(boardID)
+	if fileExists(tagPath) {
+		var tags []model.Tag
+		if err := readJSON(tagPath, &tags); err == nil {
+			for i := range tags {
+				tags[i].BoardID = boardID
+				s.tags[tags[i].ID] = &tags[i]
+				s.tagsByBoard[boardID][tags[i].ID] = &tags[i]
+			}
+		}
+	}
+
+	// Reload per-board dependencies.json
+	depPath := s.boardDependenciesPath(boardID)
+	if fileExists(depPath) {
+		var deps []model.Dependency
+		if err := readJSON(depPath, &deps); err == nil {
+			for i := range deps {
+				deps[i].BoardID = boardID
+				s.dependencies[deps[i].ID] = &deps[i]
+				s.depsByBoard[boardID][deps[i].ID] = &deps[i]
+			}
+		}
+	}
 
 	// Reload board.json
 	bp := filepath.Join(dir, "board.json")
@@ -1081,31 +1392,58 @@ func (s *FileStore) cardPath(boardID, cardID uint) string {
 	return filepath.Join(s.boardDir(boardID), "cards", fmt.Sprintf("card-%d.json", cardID))
 }
 
-func (s *FileStore) dependenciesPath() string {
-	return filepath.Join(s.basePath, "dependencies.json")
+func (s *FileStore) boardManifestPath(boardID uint) string {
+	return filepath.Join(s.boardDir(boardID), "manifest.json")
 }
 
-func (s *FileStore) loadDependencies() error {
-	dp := s.dependenciesPath()
-	if !fileExists(dp) {
-		return nil
-	}
-	var deps []model.Dependency
-	if err := readJSON(dp, &deps); err != nil {
-		return fmt.Errorf("dependencies: %w", err)
-	}
-	for i := range deps {
-		s.dependencies[deps[i].ID] = &deps[i]
-	}
-	return nil
+func (s *FileStore) boardTagsPath(boardID uint) string {
+	return filepath.Join(s.boardDir(boardID), "tags.json")
 }
 
-func (s *FileStore) persistDependencies() error {
-	deps := make([]model.Dependency, 0, len(s.dependencies))
-	for _, d := range s.dependencies {
+func (s *FileStore) boardDependenciesPath(boardID uint) string {
+	return filepath.Join(s.boardDir(boardID), "dependencies.json")
+}
+
+func (s *FileStore) persistTagsForBoard(boardID uint) error {
+	boardTags, ok := s.tagsByBoard[boardID]
+	if !ok {
+		return writeJSON(s.boardTagsPath(boardID), []model.Tag{})
+	}
+	tags := make([]model.Tag, 0, len(boardTags))
+	for _, t := range boardTags {
+		tags = append(tags, *t)
+	}
+	sort.Slice(tags, func(i, j int) bool { return tags[i].Name < tags[j].Name })
+	return writeJSON(s.boardTagsPath(boardID), tags)
+}
+
+func (s *FileStore) persistDependenciesForBoard(boardID uint) error {
+	boardDeps, ok := s.depsByBoard[boardID]
+	if !ok {
+		return writeJSON(s.boardDependenciesPath(boardID), []model.Dependency{})
+	}
+	deps := make([]model.Dependency, 0, len(boardDeps))
+	for _, d := range boardDeps {
 		deps = append(deps, *d)
 	}
-	return writeJSON(s.dependenciesPath(), deps)
+	return writeJSON(s.boardDependenciesPath(boardID), deps)
+}
+
+// nextBoardIDLocked allocates the next per-board ID.
+// Must be called while mu write lock is held (uses internal boardManifests directly).
+func (s *FileStore) nextBoardIDLocked(boardID uint, entity string) uint {
+	bm, ok := s.boardManifests[boardID]
+	if !ok {
+		bm = &BoardManifest{NextIDs: map[string]uint{"tag": 1, "dependency": 1}}
+		s.boardManifests[boardID] = bm
+	}
+	id := bm.NextIDs[entity]
+	if id == 0 {
+		id = 1
+	}
+	bm.NextIDs[entity] = id + 1
+	_ = writeJSON(s.boardManifestPath(boardID), bm)
+	return id
 }
 
 // ============================================================
@@ -1155,13 +1493,9 @@ func (s *FileStore) persistSettings() error {
 	return writeJSON(filepath.Join(s.basePath, "settings.json"), s.settings)
 }
 
+// persistTags is kept for backward compat but is a no-op (use persistTagsForBoard).
 func (s *FileStore) persistTags() error {
-	tags := make([]model.Tag, 0, len(s.tags))
-	for _, t := range s.tags {
-		tags = append(tags, *t)
-	}
-	sort.Slice(tags, func(i, j int) bool { return tags[i].Name < tags[j].Name })
-	return writeJSON(filepath.Join(s.basePath, "tags.json"), tags)
+	return nil
 }
 
 // ============================================================

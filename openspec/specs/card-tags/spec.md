@@ -1,26 +1,60 @@
 ## Requirements
 
-### Requirement: Global tag creation
-The system SHALL allow users to create named tags globally (not board-scoped). Tag names MUST be unique (case-insensitive). If a tag with the same name already exists the system SHALL return the existing tag instead of creating a duplicate. The create request MAY include a `color` field.
+### Requirement: Board-scoped tag creation
+The system SHALL allow creating tags scoped to a specific board via `POST /api/v1/boards/:id/tags`. Tag names MUST be unique within a board (case-insensitive). If a tag with the same name already exists in that board, the system SHALL return the existing tag. Tag names MAY be reused across different boards as independent entities with separate IDs. Each board's tags use a per-board ID counter starting at 1.
 
-#### Scenario: Create new tag
-- **WHEN** user submits POST /api/tags with `{"name": "urgent", "color": "red"}`
-- **THEN** system creates tag and returns `{id, name, color}` with HTTP 201
+#### Scenario: Create new board-scoped tag
+- **WHEN** user sends POST /api/v1/boards/1/tags with `{"name": "urgent", "color": "red"}`
+- **THEN** system creates tag with a per-board ID and returns `{id, name, color, boardId}` with HTTP 201
 
-#### Scenario: Duplicate tag name
-- **WHEN** user submits POST /api/tags with a name that already exists
+#### Scenario: Duplicate tag name within same board
+- **WHEN** user sends POST /api/v1/boards/1/tags with a name that already exists in board 1
 - **THEN** system returns the existing tag with HTTP 200
 
+#### Scenario: Same tag name in different boards is allowed
+- **WHEN** board 1 has tag "Bug" and user sends POST /api/v1/boards/2/tags with `{"name": "Bug"}`
+- **THEN** system creates a new independent tag with a different ID in board 2 and returns HTTP 201
+
+#### Scenario: Board not found
+- **WHEN** user sends POST /api/v1/boards/999/tags
+- **THEN** system returns HTTP 404
+
+### Requirement: Board-scoped tag list
+The system SHALL expose `GET /api/v1/boards/:id/tags` returning all tags belonging to that board, ordered by name.
+
+#### Scenario: List board tags
+- **WHEN** user sends GET /api/v1/boards/1/tags
+- **THEN** system returns array of tags `{id, name, color}` belonging to board 1, ordered by name
+
+#### Scenario: Empty board
+- **WHEN** board has no tags
+- **THEN** response returns empty array with HTTP 200
+
+#### Scenario: Board not found
+- **WHEN** user sends GET /api/v1/boards/999/tags
+- **THEN** system returns HTTP 404
+
+### Requirement: Cross-board tag attach is rejected
+The system SHALL reject any attempt to attach a tag to a card when the tag belongs to a different board than the card.
+
+#### Scenario: Cross-board attach rejected
+- **WHEN** user sends POST /api/v1/cards/:cardId/tags with a tag_id belonging to a different board
+- **THEN** system returns HTTP 422 with an error indicating cross-board tag assignment is not allowed
+
 ### Requirement: Attach tag to card
-The system SHALL allow attaching one or more tags to a card via POST /api/cards/:id/tags.
+The system SHALL allow attaching one or more tags to a card via POST /api/cards/:id/tags. The tag MUST belong to the same board as the card.
 
 #### Scenario: Attach existing tag
-- **WHEN** user posts `{"tag_id": 5}` to /api/cards/1/tags
+- **WHEN** user posts `{"tag_id": 5}` to /api/cards/1/tags and tag 5 belongs to the same board as card 1
 - **THEN** system creates the card-tag association and returns updated tag list with HTTP 200
 
 #### Scenario: Attach already-associated tag
 - **WHEN** the tag is already associated with the card
 - **THEN** system returns HTTP 200 without duplicating the association
+
+#### Scenario: Attach tag from different board
+- **WHEN** user posts with a tag_id belonging to a different board than card 1
+- **THEN** system returns HTTP 422
 
 ### Requirement: Detach tag from card
 The system SHALL allow removing a tag association from a card via DELETE /api/cards/:id/tags/:tagId without deleting the global tag.
@@ -35,13 +69,6 @@ The system SHALL return the card's associated tags (including color) in the card
 #### Scenario: Card response includes tags
 - **WHEN** user fetches GET /api/cards/:id
 - **THEN** response includes `"tags": [{id, name, color}, ...]`
-
-### Requirement: List all global tags
-The system SHALL expose GET /api/tags returning all tags (including color) for use in tag pickers.
-
-#### Scenario: List tags
-- **WHEN** user sends GET /api/tags
-- **THEN** system returns array of all tags with `{id, name, color}` ordered by name
 
 ### Requirement: Tag color field
 The system SHALL support an optional `color` field on Tag. The value MUST be a predefined color key string (e.g., `"red"`, `"blue"`, `"green"`) or empty string (no color). The field SHALL be included in all Tag response DTOs.
@@ -122,11 +149,15 @@ The system SHALL display selected tags as Badges before the `+` trigger button. 
 - **THEN** only the `+` button is rendered
 
 ### Requirement: Tags popover list view
-The system SHALL show a list view by default when the Tags popover is opened. The list view SHALL include a search input, a list of all global tags with checkboxes and edit buttons, and a "Create a new tag" button at the bottom.
+The system SHALL show a list view by default when the Tags popover is opened. The list view SHALL include a search input, a list of the **current board's** tags with checkboxes and edit buttons, and a "Create a new tag" button at the bottom. Only tags belonging to the card's board SHALL be shown.
 
 #### Scenario: Popover opens on + button click
 - **WHEN** user clicks the `+` trigger button
 - **THEN** the popover opens showing the list view with title "Tags"
+
+#### Scenario: Only current board tags are shown
+- **WHEN** workspace has tags in multiple boards
+- **THEN** the list view shows ONLY tags belonging to the current card's board
 
 #### Scenario: Checkbox reflects attach state
 - **WHEN** a tag is attached to the current card

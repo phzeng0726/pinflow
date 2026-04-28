@@ -7,19 +7,21 @@ import (
 	"pinflow/dto"
 	"pinflow/model"
 	"pinflow/repository"
+	"pinflow/store"
 )
 
 type tagService struct {
 	tagRepo  repository.TagRepository
 	cardRepo repository.CardRepository
+	fs       *store.FileStore
 }
 
-func newTagService(tagRepo repository.TagRepository, cardRepo repository.CardRepository) TagService {
-	return &tagService{tagRepo: tagRepo, cardRepo: cardRepo}
+func newTagService(tagRepo repository.TagRepository, cardRepo repository.CardRepository, fs *store.FileStore) TagService {
+	return &tagService{tagRepo: tagRepo, cardRepo: cardRepo, fs: fs}
 }
 
-func (s *tagService) CreateOrGet(name string, color string) (*model.Tag, error) {
-	return s.tagRepo.CreateOrGet(name, color)
+func (s *tagService) CreateOrGet(boardID uint, name string, color string) (*model.Tag, error) {
+	return s.tagRepo.CreateOrGet(boardID, name, color)
 }
 
 func (s *tagService) UpdateTag(id uint, req dto.UpdateTagRequest) (*model.Tag, error) {
@@ -32,9 +34,9 @@ func (s *tagService) UpdateTag(id uint, req dto.UpdateTagRequest) (*model.Tag, e
 		if newName == "" {
 			return nil, errors.New("tag name is required")
 		}
-		// Check uniqueness if name is changing
+		// Check uniqueness within the same board if name is changing
 		if !strings.EqualFold(tag.Name, newName) {
-			existing, _ := s.tagRepo.FindByName(newName)
+			existing, _ := s.tagRepo.FindByName(tag.BoardID, newName)
 			if existing != nil {
 				return nil, errors.New("tag name already exists")
 			}
@@ -57,8 +59,8 @@ func (s *tagService) DeleteTag(id uint) error {
 	return s.tagRepo.Delete(id)
 }
 
-func (s *tagService) ListAll() ([]model.Tag, error) {
-	return s.tagRepo.ListAll()
+func (s *tagService) ListByBoard(boardID uint) ([]model.Tag, error) {
+	return s.tagRepo.ListByBoard(boardID)
 }
 
 func (s *tagService) AttachToCard(cardID, tagID uint) error {
@@ -68,7 +70,11 @@ func (s *tagService) AttachToCard(cardID, tagID uint) error {
 	if _, err := s.tagRepo.FindByID(tagID); err != nil {
 		return err
 	}
-	return s.tagRepo.AttachToCard(cardID, tagID)
+	err := s.tagRepo.AttachToCard(cardID, tagID)
+	if err == store.ErrCrossBoardTag {
+		return store.ErrCrossBoardTag
+	}
+	return err
 }
 
 func (s *tagService) DetachFromCard(cardID, tagID uint) error {

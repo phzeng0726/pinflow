@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useBoardDetail } from '@/hooks/board/queries/useBoardDetail'
-import { useTags } from '@/hooks/tag/queries/useTags'
+import { useBoardTags } from '@/hooks/tag/queries/useBoardTags'
 import { useGraphViewStore } from '@/stores/graphViewStore'
 import { getColumnColor, getTagColorClasses } from '@/lib/styleConfig'
 import type { DependencyType } from '@/types'
@@ -22,7 +22,7 @@ interface GraphFilterPanelProps {
 export function GraphFilterPanel({ boardId }: GraphFilterPanelProps) {
   const { t } = useTranslation()
   const { data: board } = useBoardDetail(boardId)
-  const { data: allTags = [] } = useTags()
+  const { data: allTags = [] } = useBoardTags(boardId)
   const filters = useGraphViewStore((s) => s.filters)
   const setFilters = useGraphViewStore((s) => s.setFilters)
   const clearFilters = useGraphViewStore((s) => s.clearFilters)

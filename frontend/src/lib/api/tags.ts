@@ -1,16 +1,17 @@
 import type { Tag } from '@/types'
 import { client } from './client'
 
-export const listTags = async () => {
-  const res = await client.get<Tag[]>('/tags')
+
+export const listBoardTags = async (boardId: number) => {
+  const res = await client.get<Tag[]>(`/boards/${boardId}/tags`)
   return res.data
 }
 
-export const createTag = async (name: string, color: string = '') => {
-  const res = await client.post<Tag>('/tags', {
-    name,
-    color,
-  })
+export const createBoardTag = async (
+  boardId: number,
+  payload: { name: string; color?: string },
+) => {
+  const res = await client.post<Tag>(`/boards/${boardId}/tags`, payload)
   return res.data
 }
 

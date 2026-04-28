@@ -105,7 +105,7 @@ export function BoardPage() {
   const handlePinPopoverToggle = () => setPinPopoverOpen((v) => !v)
 
   const handleElectronPinWindow = () => {
-    ;(window as any).electronAPI.togglePinWindow()
+    window.electronAPI?.togglePinWindow?.()
     setPinPopoverOpen(false)
   }
 
@@ -293,7 +293,7 @@ export function BoardPage() {
                     ))}
                   </ul>
                 )}
-                {(window as any).electronAPI?.isElectron && (
+                {window.electronAPI?.isElectron && (
                   <div className="border-t px-3 py-2 dark:border-gray-700">
                     <Button
                       variant="link"

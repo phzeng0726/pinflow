@@ -30,10 +30,7 @@ export function PinWindow() {
   }, [])
 
   const handleCardEdit = (card: Parameters<typeof PinnedCardItem>[0]['card']) => {
-    const api = (window as any).electronAPI
-    if (api?.openCardDetail) {
-      api.openCardDetail(card.boardId, card.id)
-    }
+    window.electronAPI?.openCardDetail?.(card.boardId, card.id)
   }
 
   return (
@@ -62,8 +59,7 @@ export function PinWindow() {
             type="button"
             className="inline-flex h-6 w-6 items-center justify-center rounded-md text-white transition-colors hover:bg-white/20"
             onClick={() => {
-              const api = (window as any).electronAPI
-              if (api?.hidePinWindow) api.hidePinWindow()
+              if (window.electronAPI?.hidePinWindow) window.electronAPI.hidePinWindow()
               else close()
             }}
           >

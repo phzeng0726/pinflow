@@ -134,18 +134,18 @@ func (s *snapshotService) RestoreSnapshot(boardID, snapshotID uint) error {
 		return fmt.Errorf("restore board files: %w", err)
 	}
 
-	// Merge tags
-	if err := s.mergeTags(snapDir); err != nil {
-		log.Printf("snapshot: tag merge error: %v", err)
+	// Restore per-board tags
+	if err := s.mergeTags(boardID, snapDir); err != nil {
+		log.Printf("snapshot: tag restore error: %v", err)
 	}
 
-	// Replace board dependencies
+	// Restore per-board dependencies
 	if err := s.restoreDependencies(boardID, snapDir); err != nil {
 		log.Printf("snapshot: dependency restore error: %v", err)
 	}
 
 	// Bump manifest NextIDs
-	if err := s.bumpNextIDs(snapDir); err != nil {
+	if err := s.bumpNextIDs(boardID, snapDir); err != nil {
 		log.Printf("snapshot: manifest update error: %v", err)
 	}
 
@@ -174,8 +174,8 @@ func (s *snapshotService) cleanupOldAutoSnapshots(boardID uint) error {
 	return nil
 }
 
-// mergeTags merges snapshot tags into the global tags store (by ID; creates missing ones).
-func (s *snapshotService) mergeTags(snapDir string) error {
+// mergeTags restores per-board tags from snapshot by overwriting the board's tags.json.
+func (s *snapshotService) mergeTags(boardID uint, snapDir string) error {
 	tagsPath := filepath.Join(snapDir, "tags.json")
 	data, err := os.ReadFile(tagsPath)
 	if os.IsNotExist(err) {
@@ -188,18 +188,16 @@ func (s *snapshotService) mergeTags(snapDir string) error {
 	if err := json.Unmarshal(data, &tags); err != nil {
 		return err
 	}
-	for _, t := range tags {
-		if _, err := s.fs.GetTag(t.ID); err != nil {
-			tc := t
-			if err := s.fs.CreateTag(&tc); err != nil {
-				log.Printf("snapshot: failed to restore tag %d: %v", t.ID, err)
-			}
-		}
+	// Overwrite the board's tags.json
+	boardTagsPath := s.fs.BoardTagsPath(boardID)
+	if err := os.WriteFile(boardTagsPath, data, 0644); err != nil {
+		return err
 	}
+	_ = tags // reloaded by ReloadBoard
 	return nil
 }
 
-// restoreDependencies replaces the global dependencies for this board with snapshot's version.
+// restoreDependencies replaces the per-board dependencies with snapshot's version.
 func (s *snapshotService) restoreDependencies(boardID uint, snapDir string) error {
 	depsPath := filepath.Join(snapDir, "dependencies.json")
 	data, err := os.ReadFile(depsPath)
@@ -214,23 +212,22 @@ func (s *snapshotService) restoreDependencies(boardID uint, snapDir string) erro
 		return err
 	}
 
-	// Keep global dependencies that don't belong to this board
-	allDeps := s.fs.GetAllDependencies()
-	boardCardSet := s.boardCardSet(boardID)
-	kept := make([]model.Dependency, 0, len(allDeps))
-	for _, d := range allDeps {
-		_, fromOk := boardCardSet[d.FromCardID]
-		_, toOk := boardCardSet[d.ToCardID]
-		if !fromOk && !toOk {
-			kept = append(kept, d)
-		}
+	// Set BoardID on all snapshot deps
+	for i := range snapDeps {
+		snapDeps[i].BoardID = boardID
 	}
-	merged := append(kept, snapDeps...)
-	return s.fs.ReplaceAllDependencies(merged)
+
+	// Overwrite the board's dependencies.json
+	boardDepsPath := s.fs.BoardDependenciesPath(boardID)
+	if err := os.WriteFile(boardDepsPath, data, 0644); err != nil {
+		return err
+	}
+	_ = snapDeps // reloaded by ReloadBoard
+	return nil
 }
 
 // bumpNextIDs updates the manifest NextIDs based on snapshot content.
-func (s *snapshotService) bumpNextIDs(snapDir string) error {
+func (s *snapshotService) bumpNextIDs(boardID uint, snapDir string) error {
 	// Read snapshot cards to find max IDs
 	cardsDir := filepath.Join(snapDir, "cards")
 	entries, err := os.ReadDir(cardsDir)
@@ -284,7 +281,28 @@ func (s *snapshotService) bumpNextIDs(snapDir string) error {
 		}
 	}
 
-	// Read snapshot tags for max tag ID
+	// Bump global manifest (card, column, checklist, comment)
+	globalBumps := map[string]uint{
+		"card":           maxCardID + 1,
+		"column":         maxColumnID + 1,
+		"checklist":      maxChecklistID + 1,
+		"checklist_item": maxItemID + 1,
+		"comment":        maxCommentID + 1,
+	}
+	if err := s.fs.BumpManifestNextIDs(globalBumps); err != nil {
+		return err
+	}
+
+	// Read per-board manifest from snapshot for tag/dependency IDs
+	var snapBoardManifest store.BoardManifest
+	bmPath := filepath.Join(snapDir, "manifest.json")
+	if data, err := os.ReadFile(bmPath); err == nil {
+		if json.Unmarshal(data, &snapBoardManifest) == nil && snapBoardManifest.NextIDs != nil {
+			return s.fs.BumpBoardManifestNextIDs(boardID, snapBoardManifest.NextIDs)
+		}
+	}
+
+	// Fallback: compute from tags/deps in snapshot
 	var maxTagID uint
 	if data, err := os.ReadFile(filepath.Join(snapDir, "tags.json")); err == nil {
 		var tags []model.Tag
@@ -296,8 +314,6 @@ func (s *snapshotService) bumpNextIDs(snapDir string) error {
 			}
 		}
 	}
-
-	// Read snapshot dependencies for max dependency ID
 	var maxDepID uint
 	if data, err := os.ReadFile(filepath.Join(snapDir, "dependencies.json")); err == nil {
 		var deps []model.Dependency
@@ -309,17 +325,11 @@ func (s *snapshotService) bumpNextIDs(snapDir string) error {
 			}
 		}
 	}
-
-	bumps := map[string]uint{
-		"card":           maxCardID + 1,
-		"column":         maxColumnID + 1,
-		"checklist":      maxChecklistID + 1,
-		"checklist_item": maxItemID + 1,
-		"comment":        maxCommentID + 1,
-		"tag":            maxTagID + 1,
-		"dependency":     maxDepID + 1,
+	boardBumps := map[string]uint{
+		"tag":        maxTagID + 1,
+		"dependency": maxDepID + 1,
 	}
-	return s.fs.BumpManifestNextIDs(bumps)
+	return s.fs.BumpBoardManifestNextIDs(boardID, boardBumps)
 }
 
 // boardCardSet returns a set of all card IDs belonging to the given board.
@@ -359,32 +369,33 @@ func copyBoardToSnapshot(boardDir, snapDir string, boardID uint, fs *store.FileS
 	// images/
 	_ = copyDir(filepath.Join(boardDir, "images"), filepath.Join(snapDir, "images"))
 
-	// tags subset
-	cols := fs.GetColumnsByBoard(boardID)
-	tagIDSet := make(map[uint]struct{})
-	for _, col := range cols {
-		for _, card := range fs.GetCardsByColumn(col.ID) {
-			for _, tagID := range fs.GetTagIDsByCard(card.ID) {
-				tagIDSet[tagID] = struct{}{}
-			}
+	// per-board tags.json
+	tagsPath := fs.BoardTagsPath(boardID)
+	if err := copyFile(tagsPath, filepath.Join(snapDir, "tags.json")); err != nil {
+		// If file doesn't exist yet, write empty
+		if err2 := writeSnapshotJSON(filepath.Join(snapDir, "tags.json"), []model.Tag{}); err2 != nil {
+			return err2
 		}
-	}
-	tags := make([]model.Tag, 0)
-	for _, t := range fs.GetAllTags() {
-		if _, ok := tagIDSet[t.ID]; ok {
-			tags = append(tags, t)
-		}
-	}
-	if err := writeSnapshotJSON(filepath.Join(snapDir, "tags.json"), tags); err != nil {
-		return err
 	}
 
-	// dependencies subset
-	deps := fs.ListDependenciesByBoard(boardID)
-	if deps == nil {
-		deps = []model.Dependency{}
+	// per-board dependencies.json
+	depsPath := fs.BoardDependenciesPath(boardID)
+	if err := copyFile(depsPath, filepath.Join(snapDir, "dependencies.json")); err != nil {
+		if err2 := writeSnapshotJSON(filepath.Join(snapDir, "dependencies.json"), []model.Dependency{}); err2 != nil {
+			return err2
+		}
 	}
-	return writeSnapshotJSON(filepath.Join(snapDir, "dependencies.json"), deps)
+
+	// per-board manifest.json
+	manifestPath := fs.BoardManifestPath(boardID)
+	if err := copyFile(manifestPath, filepath.Join(snapDir, "manifest.json")); err != nil {
+		// Write empty manifest if not found
+		_ = writeSnapshotJSON(filepath.Join(snapDir, "manifest.json"), store.BoardManifest{
+			NextIDs: map[string]uint{"tag": 1, "dependency": 1},
+		})
+	}
+
+	return nil
 }
 
 // restoreBoardFromSnapshot overwrites board-N/ content with snapshot files.

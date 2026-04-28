@@ -74,9 +74,13 @@ export const duplicateCard = async (id: number, data: DuplicateCardRequest) => {
   return res.data
 }
 
-export const searchCards = async (query: string, limit = 20) => {
-  const res = await client.get<CardSearchResult[]>('/cards/search', {
-    params: { q: query, limit },
-  })
+export const searchCards = async (
+  query: string,
+  limit = 20,
+  boardId?: number,
+) => {
+  const params: Record<string, unknown> = { q: query, limit }
+  if (boardId !== undefined) params.board_id = boardId
+  const res = await client.get<CardSearchResult[]>('/cards/search', { params })
   return res.data
 }

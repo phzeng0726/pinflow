@@ -10,6 +10,14 @@ const card: PinnedCard = {
   description: '使用 React DnD 實現卡片在不同欄位間拖曳',
   columnId: 2,
   columnName: '進行中',
+  boardId: 1,
+  priority: null,
+  storyPoint: null,
+  startTime: null,
+  endTime: null,
+  tags: [],
+  checklistSummary: { totalCount: 0, completedCount: 0 },
+  dependencyCount: 0,
 }
 
 function renderCard(props: {
@@ -18,7 +26,7 @@ function renderCard(props: {
 }) {
   return render(
     <TooltipProvider>
-      <PinnedCardItem {...props} />
+      <PinnedCardItem {...props} onEdit={vi.fn()} />
     </TooltipProvider>,
   )
 }
@@ -30,18 +38,19 @@ describe('PinnedCardItem', () => {
     expect(screen.getByText('進行中')).toBeInTheDocument()
   })
 
-  it('truncates description over 100 chars', () => {
+  it('renders long description without crash', () => {
     const longDesc = 'a'.repeat(150)
     const longCard = { ...card, description: longDesc }
     renderCard({ card: longCard, onUnpin: vi.fn() })
-    const desc = screen.getByText(/^a+…$/)
-    expect(desc.textContent?.length).toBeLessThanOrEqual(102) // 100 chars + '…'
+    expect(screen.getByText(longDesc)).toBeInTheDocument()
   })
 
   it('calls onUnpin when unpin button clicked', async () => {
     const onUnpin = vi.fn()
     renderCard({ card, onUnpin })
-    const btn = screen.getByRole('button', { name: '取消釘選' })
+    const actionsBtn = screen.getByRole('button', { name: 'Actions' })
+    fireEvent.click(actionsBtn)
+    const btn = await screen.findByTestId('unpin-btn')
     fireEvent.click(btn)
     expect(onUnpin).toHaveBeenCalledWith(1)
   })

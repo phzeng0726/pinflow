@@ -1,7 +1,8 @@
 package model
 
 type Tag struct {
-	ID    uint   `json:"id"`
-	Name  string `json:"name"`
-	Color string `json:"color"`
+	ID      uint   `json:"id"`
+	BoardID uint   `json:"boardId"`
+	Name    string `json:"name"`
+	Color   string `json:"color"`
 }

@@ -13,6 +13,7 @@ const (
 
 type Dependency struct {
 	ID         uint           `json:"id"`
+	BoardID    uint           `json:"boardId"`
 	FromCardID uint           `json:"fromCardId"`
 	ToCardID   uint           `json:"toCardId"`
 	Type       DependencyType `json:"type"`

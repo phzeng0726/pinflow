@@ -18,6 +18,37 @@ func setupDepService(t *testing.T) (*service.Services, *repository.Repositories)
 	return services, repos
 }
 
+// createTwoCardsOnSameBoard creates a board with one column and two cards on it.
+func createTwoCardsOnSameBoard(t *testing.T, repos *repository.Repositories) (*model.Card, *model.Card) {
+	t.Helper()
+	board := &model.Board{Name: "Board"}
+	_ = repos.Board.Create(board)
+	col := &model.Column{BoardID: board.ID, Name: "Col", Position: 1}
+	_ = repos.Column.Create(col)
+	card1 := &model.Card{ColumnID: col.ID, Title: "Card 1"}
+	_ = repos.Card.Create(card1)
+	card2 := &model.Card{ColumnID: col.ID, Title: "Card 2"}
+	_ = repos.Card.Create(card2)
+	return card1, card2
+}
+
+// createThreeCardsOnSameBoard creates a board with one column and three cards.
+func createThreeCardsOnSameBoard(t *testing.T, repos *repository.Repositories) (*model.Card, *model.Card, *model.Card) {
+	t.Helper()
+	board := &model.Board{Name: "Board"}
+	_ = repos.Board.Create(board)
+	col := &model.Column{BoardID: board.ID, Name: "Col", Position: 1}
+	_ = repos.Column.Create(col)
+	card1 := &model.Card{ColumnID: col.ID, Title: "Card 1"}
+	_ = repos.Card.Create(card1)
+	card2 := &model.Card{ColumnID: col.ID, Title: "Card 2"}
+	_ = repos.Card.Create(card2)
+	card3 := &model.Card{ColumnID: col.ID, Title: "Card 3"}
+	_ = repos.Card.Create(card3)
+	return card1, card2, card3
+}
+
+// createCard still creates one card per board (used for cross-board tests).
 func createCard(t *testing.T, repos *repository.Repositories) *model.Card {
 	t.Helper()
 	board := &model.Board{Name: "Board"}
@@ -32,8 +63,7 @@ func createCard(t *testing.T, repos *repository.Repositories) *model.Card {
 func TestDepService_Create(t *testing.T) {
 	services, repos := setupDepService(t)
 
-	card1 := createCard(t, repos)
-	card2 := createCard(t, repos)
+	card1, card2 := createTwoCardsOnSameBoard(t, repos)
 
 	resp, err := services.Dependency.CreateForCard(card1.ID, dto.CreateDependencyRequest{
 		ToCardID: card2.ID,
@@ -56,9 +86,7 @@ func TestDepService_Create(t *testing.T) {
 func TestDepService_ListByCard_BothSides(t *testing.T) {
 	services, repos := setupDepService(t)
 
-	card1 := createCard(t, repos)
-	card2 := createCard(t, repos)
-	card3 := createCard(t, repos)
+	card1, card2, card3 := createThreeCardsOnSameBoard(t, repos)
 
 	// card1 blocks card2
 	_, _ = services.Dependency.CreateForCard(card1.ID, dto.CreateDependencyRequest{ToCardID: card2.ID, Type: model.DependencyTypeBlocks})
@@ -91,8 +119,7 @@ func TestDepService_SelfReference_Rejected(t *testing.T) {
 func TestDepService_Duplicate_Rejected(t *testing.T) {
 	services, repos := setupDepService(t)
 
-	card1 := createCard(t, repos)
-	card2 := createCard(t, repos)
+	card1, card2 := createTwoCardsOnSameBoard(t, repos)
 
 	_, _ = services.Dependency.CreateForCard(card1.ID, dto.CreateDependencyRequest{ToCardID: card2.ID, Type: model.DependencyTypeBlocks})
 	_, err := services.Dependency.CreateForCard(card1.ID, dto.CreateDependencyRequest{ToCardID: card2.ID, Type: model.DependencyTypeBlocks})
@@ -104,8 +131,7 @@ func TestDepService_Duplicate_Rejected(t *testing.T) {
 func TestDepService_RelatedTo_BidirectionalDuplicate_Rejected(t *testing.T) {
 	services, repos := setupDepService(t)
 
-	card1 := createCard(t, repos)
-	card2 := createCard(t, repos)
+	card1, card2 := createTwoCardsOnSameBoard(t, repos)
 
 	_, _ = services.Dependency.CreateForCard(card1.ID, dto.CreateDependencyRequest{ToCardID: card2.ID, Type: model.DependencyTypeRelatedTo})
 	_, err := services.Dependency.CreateForCard(card2.ID, dto.CreateDependencyRequest{ToCardID: card1.ID, Type: model.DependencyTypeRelatedTo})
@@ -117,8 +143,7 @@ func TestDepService_RelatedTo_BidirectionalDuplicate_Rejected(t *testing.T) {
 func TestDepService_DeleteCard_CleansUpDependencies(t *testing.T) {
 	services, repos := setupDepService(t)
 
-	card1 := createCard(t, repos)
-	card2 := createCard(t, repos)
+	card1, card2 := createTwoCardsOnSameBoard(t, repos)
 
 	_, _ = services.Dependency.CreateForCard(card1.ID, dto.CreateDependencyRequest{ToCardID: card2.ID, Type: model.DependencyTypeBlocks})
 

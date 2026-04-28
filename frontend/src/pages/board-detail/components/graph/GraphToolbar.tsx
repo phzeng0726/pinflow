@@ -4,12 +4,11 @@ import { useTranslation } from 'react-i18next'
 import { useGraphViewStore } from '@/stores/graphViewStore'
 
 interface GraphToolbarProps {
-  boardId: number
   filterOpen: boolean
   onToggleFilter: () => void
 }
 
-export function GraphToolbar({ boardId: _boardId, filterOpen, onToggleFilter }: GraphToolbarProps) {
+export function GraphToolbar({ filterOpen, onToggleFilter }: GraphToolbarProps) {
   const { t } = useTranslation()
   const layoutMode = useGraphViewStore((s) => s.layoutMode)
   const setLayoutMode = useGraphViewStore((s) => s.setLayoutMode)

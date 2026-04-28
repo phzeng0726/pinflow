@@ -26,8 +26,6 @@ interface ChecklistSectionProps {
 
 export function ChecklistSection({ boardId, cardId }: ChecklistSectionProps) {
   const { data: card } = useCardDetail(cardId)
-  if (!card) return null
-
   const { t } = useTranslation()
   const checklistSchema = useMemo(() => createChecklistSchema(t), [t])
   const containerRef = useRef<HTMLDivElement>(null)
@@ -50,11 +48,11 @@ export function ChecklistSection({ boardId, cardId }: ChecklistSectionProps) {
 
   const [showNewForm, setShowNewForm] = useState(false)
   const { createChecklist, moveChecklist, moveChecklistItem } =
-    useChecklistMutations(boardId, card.id)
+    useChecklistMutations(boardId, card?.id ?? 0)
 
   const sortedChecklists = useMemo(
-    () => [...card.checklists].sort((a, b) => a.position - b.position),
-    [card.checklists],
+    () => [...(card?.checklists ?? [])].sort((a, b) => a.position - b.position),
+    [card?.checklists],
   )
 
   const {
@@ -66,7 +64,7 @@ export function ChecklistSection({ boardId, cardId }: ChecklistSectionProps) {
     handleDragEnd,
     handleDragCancel,
   } = useChecklistDnd({
-    card,
+    card: card ?? null,
     sortedChecklists,
     moveChecklistMutate: moveChecklist.mutate,
     moveItemMutate: moveChecklistItem.mutate,
@@ -75,6 +73,8 @@ export function ChecklistSection({ boardId, cardId }: ChecklistSectionProps) {
   const { register, handleSubmit, reset } = useForm<ChecklistFormData>({
     resolver: zodResolver(checklistSchema),
   })
+
+  if (!card) return null
 
   const onSubmit = (data: ChecklistFormData) => {
     createChecklist.mutate(data.title, {

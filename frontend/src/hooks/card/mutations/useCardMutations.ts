@@ -1,4 +1,5 @@
 import type { EditCardForm, NewCardForm } from '@/lib/schemas'
+import type { Board } from '@/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import * as api from '@/lib/api'
@@ -103,16 +104,16 @@ export function useCardMutations(boardId?: number) {
   const remove = useMutation({
     mutationFn: (id: number) => api.deleteCard(id),
     onMutate: async (cardId) => {
-      if (boardId == null) return
+      if (boardId == null) return { previousBoard: undefined }
       await qc.cancelQueries({ queryKey: queryKeys.boards.detail(boardId) })
-      const previousBoard = qc.getQueryData(queryKeys.boards.detail(boardId))
-      qc.setQueryData(queryKeys.boards.detail(boardId), (old: any) => {
+      const previousBoard = qc.getQueryData<Board>(queryKeys.boards.detail(boardId))
+      qc.setQueryData(queryKeys.boards.detail(boardId), (old: Board | undefined) => {
         if (!old) return old
         return {
           ...old,
-          columns: old.columns.map((col: any) => ({
+          columns: old.columns.map((col) => ({
             ...col,
-            cards: col.cards?.filter((c: any) => c.id !== cardId) ?? [],
+            cards: col.cards?.filter((c) => c.id !== cardId) ?? [],
           })),
         }
       })
@@ -122,7 +123,7 @@ export function useCardMutations(boardId?: number) {
       await Promise.all([invalidateBoardDetail(), invalidatePinned(), invalidateSnapshots()])
       toast.success(t('toast.card.deleteSuccess'))
     },
-    onError: (_err, _cardId, context: any) => {
+    onError: (_err, _cardId, context: { previousBoard: Board | undefined } | undefined) => {
       if (boardId != null && context?.previousBoard != null) {
         qc.setQueryData(queryKeys.boards.detail(boardId), context.previousBoard)
       }

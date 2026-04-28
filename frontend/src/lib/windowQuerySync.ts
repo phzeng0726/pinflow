@@ -7,6 +7,9 @@ interface ElectronAPI {
   openCardDetail?: (boardId: number, cardId: number) => void
   broadcastSettings?: (settings: { theme?: string; locale?: string }) => void
   onSettings?: (cb: (settings: { theme?: string; locale?: string }) => void) => void
+  togglePinWindow?: () => void
+  hidePinWindow?: () => void
+  isElectron?: boolean
 }
 
 declare global {

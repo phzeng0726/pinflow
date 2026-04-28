@@ -37,10 +37,10 @@ type CardRepository interface {
 }
 
 type TagRepository interface {
-	CreateOrGet(name string, color string) (*model.Tag, error)
-	ListAll() ([]model.Tag, error)
+	CreateOrGet(boardID uint, name string, color string) (*model.Tag, error)
+	ListByBoard(boardID uint) ([]model.Tag, error)
 	FindByID(id uint) (*model.Tag, error)
-	FindByName(name string) (*model.Tag, error)
+	FindByName(boardID uint, name string) (*model.Tag, error)
 	Update(tag *model.Tag) error
 	Delete(id uint) error
 	AttachToCard(cardID, tagID uint) error

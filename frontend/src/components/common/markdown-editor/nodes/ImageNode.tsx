@@ -40,11 +40,8 @@ function ImageComponent({
   const [isSelected, setSelected, clearSelection] = useLexicalNodeSelection(nodeKey)
   const imageRef = useRef<HTMLSpanElement>(null)
   const isBlob = src.startsWith('blob:')
-  const [errored, setErrored] = useState(false)
-
-  useEffect(() => {
-    setErrored(false)
-  }, [src])
+  const [erroredSrc, setErroredSrc] = useState<string | null>(null)
+  const errored = erroredSrc === src
 
   useEffect(() => {
     return mergeRegister(
@@ -114,7 +111,7 @@ function ImageComponent({
         alt={altText}
         className="max-w-full rounded"
         draggable={false}
-        onError={() => !isBlob && setErrored(true)}
+        onError={() => !isBlob && setErroredSrc(src)}
       />
       {isBlob && (
         <span className="absolute inset-0 flex items-center justify-center rounded bg-black/30">

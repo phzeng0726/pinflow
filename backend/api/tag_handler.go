@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"pinflow/dto"
 	"pinflow/service"
+	"pinflow/store"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,42 +13,54 @@ type TagHandler struct {
 	services *service.Services
 }
 
-// CreateTag godoc
-// @Summary     Create or get a tag by name
-// @Tags        tags
-// @Accept      json
-// @Produce     json
-// @Param       body body dto.CreateTagRequest true "Tag data"
-// @Success     200 {object} dto.TagResponse
-// @Success     201 {object} dto.TagResponse
-// @Router      /tags [post]
-func (h *TagHandler) CreateTag(c *gin.Context) {
-	var req dto.CreateTagRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
-		return
-	}
-	tag, err := h.services.Tag.CreateOrGet(req.Name, req.Color)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, service.ToTagResponse(*tag))
-}
-
-// ListTags godoc
-// @Summary     List all tags
+// ListBoardTags godoc
+// @Summary     List all tags for a board
 // @Tags        tags
 // @Produce     json
+// @Param       id path int true "Board ID"
 // @Success     200 {array} dto.TagResponse
-// @Router      /tags [get]
-func (h *TagHandler) ListTags(c *gin.Context) {
-	tags, err := h.services.Tag.ListAll()
+// @Failure     404 {object} map[string]string
+// @Router      /boards/{id}/tags [get]
+func (h *TagHandler) ListBoardTags(c *gin.Context) {
+	boardID, err := parseUintParam(c, "id")
+	if err != nil {
+		return
+	}
+	tags, err := h.services.Tag.ListByBoard(boardID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, service.ToTagResponses(tags))
+}
+
+// CreateBoardTag godoc
+// @Summary     Create or get a tag for a board
+// @Tags        tags
+// @Accept      json
+// @Produce     json
+// @Param       id path int true "Board ID"
+// @Param       body body dto.CreateTagRequest true "Tag data"
+// @Success     200 {object} dto.TagResponse
+// @Failure     404 {object} map[string]string
+// @Failure     422 {object} map[string]string
+// @Router      /boards/{id}/tags [post]
+func (h *TagHandler) CreateBoardTag(c *gin.Context) {
+	boardID, err := parseUintParam(c, "id")
+	if err != nil {
+		return
+	}
+	var req dto.CreateTagRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+	tag, err := h.services.Tag.CreateOrGet(boardID, req.Name, req.Color)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, service.ToTagResponse(*tag))
 }
 
 // UpdateTag godoc
@@ -112,6 +125,7 @@ func (h *TagHandler) DeleteTag(c *gin.Context) {
 // @Param       body body dto.AttachTagRequest true "Tag ID"
 // @Success     200 {array} dto.TagResponse
 // @Failure     404 {object} map[string]string
+// @Failure     422 {object} map[string]string
 // @Router      /cards/{id}/tags [post]
 func (h *TagHandler) AttachTag(c *gin.Context) {
 	cardID, err := parseUintParam(c, "id")
@@ -124,6 +138,10 @@ func (h *TagHandler) AttachTag(c *gin.Context) {
 		return
 	}
 	if err := h.services.Tag.AttachToCard(cardID, req.TagID); err != nil {
+		if err == store.ErrCrossBoardTag {
+			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}

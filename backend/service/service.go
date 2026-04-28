@@ -38,8 +38,8 @@ type CardService interface {
 }
 
 type TagService interface {
-	CreateOrGet(name string, color string) (*model.Tag, error)
-	ListAll() ([]model.Tag, error)
+	CreateOrGet(boardID uint, name string, color string) (*model.Tag, error)
+	ListByBoard(boardID uint) ([]model.Tag, error)
 	UpdateTag(id uint, req dto.UpdateTagRequest) (*model.Tag, error)
 	DeleteTag(id uint) error
 	AttachToCard(cardID, tagID uint) error
@@ -111,7 +111,7 @@ func NewServices(deps Deps) *Services {
 		Board:      newBoardService(repos.Board),
 		Column:     newColumnService(repos.Board, repos.Column),
 		Card:       newCardService(repos.Card, repos.Column, repos.Board, repos.Tag, repos.Checklist, repos.ChecklistItem, repos.Dependency, imageSvc),
-		Tag:        newTagService(repos.Tag, repos.Card),
+		Tag:        newTagService(repos.Tag, repos.Card, deps.Store),
 		Checklist:  newChecklistService(repos.Checklist, repos.ChecklistItem, repos.Card),
 		Dependency: newDependencyService(repos.Dependency, repos.Card, repos.Column, repos.Board),
 		Comment:    newCommentService(repos.Comment, repos.Card, deps.Store, imageSvc),

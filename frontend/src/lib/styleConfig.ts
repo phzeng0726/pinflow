@@ -98,8 +98,10 @@ export const TAG_COLORS: { key: string; bg: string; ring: string }[] = [
   { key: 'emerald', bg: 'bg-emerald-500', ring: 'ring-emerald-500' },
   { key: 'cyan', bg: 'bg-cyan-500', ring: 'ring-cyan-500' },
   { key: 'blue', bg: 'bg-blue-500', ring: 'ring-blue-500' },
+  { key: 'indigo', bg: 'bg-indigo-500', ring: 'ring-indigo-500' },
   { key: 'violet', bg: 'bg-violet-500', ring: 'ring-violet-500' },
   { key: 'purple', bg: 'bg-purple-500', ring: 'ring-purple-500' },
+  { key: 'fuchsia', bg: 'bg-fuchsia-500', ring: 'ring-fuchsia-500' },
   { key: 'pink', bg: 'bg-pink-500', ring: 'ring-pink-500' },
 ]
 

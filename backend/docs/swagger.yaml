@@ -574,6 +574,8 @@ definitions:
     - DependencyTypeRelatedTo
   model.Tag:
     properties:
+      boardId:
+        type: integer
       color:
         type: string
       id:
@@ -935,6 +937,69 @@ paths:
       summary: Restore a board to a snapshot
       tags:
       - snapshots
+  /boards/{id}/tags:
+    get:
+      parameters:
+      - description: Board ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.TagResponse'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List all tags for a board
+      tags:
+      - tags
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Board ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Tag data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateTagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TagResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create or get a tag for a board
+      tags:
+      - tags
   /cards/{id}:
     delete:
       parameters:
@@ -1401,6 +1466,12 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       summary: Attach a tag to a card
       tags:
       - tags
@@ -1453,6 +1524,10 @@ paths:
       - description: Max results (default 20)
         in: query
         name: limit
+        type: integer
+      - description: Filter by board ID
+        in: query
+        name: board_id
         type: integer
       produces:
       - application/json
@@ -1903,44 +1978,6 @@ paths:
       summary: Update application settings
       tags:
       - settings
-  /tags:
-    get:
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/dto.TagResponse'
-            type: array
-      summary: List all tags
-      tags:
-      - tags
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Tag data
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/dto.CreateTagRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.TagResponse'
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/dto.TagResponse'
-      summary: Create or get a tag by name
-      tags:
-      - tags
   /tags/{id}:
     delete:
       parameters:

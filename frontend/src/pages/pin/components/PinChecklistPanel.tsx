@@ -11,7 +11,7 @@ import {
 import { useCardDetail } from '@/hooks/card/queries/useCardDetail'
 import { usePinChecklistToggle } from '@/hooks/checklist/mutations/usePinChecklistToggle'
 import { cn } from '@/lib/utils'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 interface PinChecklistPanelProps {
@@ -33,7 +33,7 @@ export function PinChecklistPanel({ cardId, boardId }: PinChecklistPanelProps) {
     return [...card.checklists]
       .sort((a, b) => a.position - b.position)
       .filter((cl) => (cl.items?.length ?? cl.totalCount ?? 0) > 0)
-  }, [card?.checklists])
+  }, [card])
 
   const defaultChecklistId = useMemo(() => {
     if (checklists.length === 0) return null
@@ -43,21 +43,12 @@ export function PinChecklistPanel({ cardId, boardId }: PinChecklistPanelProps) {
     return (withIncomplete ?? checklists[0]).id
   }, [checklists])
 
-  useEffect(() => {
-    if (!card) return
-    if (selectedChecklistId === null) {
-      setSelectedChecklistId(defaultChecklistId)
-      return
-    }
-    const exists = checklists.some((cl) => cl.id === selectedChecklistId)
-    if (!exists) {
-      setSelectedChecklistId(defaultChecklistId)
-    }
-  }, [card, checklists, defaultChecklistId, selectedChecklistId])
+  const isValidSelection =
+    selectedChecklistId !== null &&
+    checklists.some((cl) => cl.id === selectedChecklistId)
+  const effectiveChecklistId = isValidSelection ? selectedChecklistId : defaultChecklistId
 
-  const selectedChecklist = checklists.find(
-    (cl) => cl.id === selectedChecklistId,
-  )
+  const selectedChecklist = checklists.find((cl) => cl.id === effectiveChecklistId)
   const items = selectedChecklist?.items ?? []
 
   if (isLoading) {
@@ -72,7 +63,7 @@ export function PinChecklistPanel({ cardId, boardId }: PinChecklistPanelProps) {
     <div className="mt-2 space-y-2">
       {checklists.length > 1 && (
         <Select
-          value={selectedChecklistId?.toString() ?? ''}
+          value={effectiveChecklistId?.toString() ?? ''}
           onValueChange={(val) => setSelectedChecklistId(Number(val))}
         >
           <SelectTrigger className="h-7 text-xs">

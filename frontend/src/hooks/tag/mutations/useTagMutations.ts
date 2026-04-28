@@ -9,7 +9,7 @@ export function useTagMutations(boardId: number) {
   const { t } = useTranslation()
 
   const invalidateTagsAll = () =>
-    qc.invalidateQueries({ queryKey: queryKeys.tags.all() })
+    qc.invalidateQueries({ queryKey: queryKeys.tags.byBoard(boardId) })
   const invalidateBoardDetail = () =>
     qc.invalidateQueries({ queryKey: queryKeys.boards.detail(boardId) })
   const invalidateCardDetail = (id: number) =>
@@ -19,7 +19,7 @@ export function useTagMutations(boardId: number) {
 
   const create = useMutation({
     mutationFn: ({ name, color }: { name: string; color?: string }) =>
-      api.createTag(name, color),
+      api.createBoardTag(boardId, { name, color }),
     onSuccess: async () => {
       await invalidateTagsAll()
       toast.success(t('toast.tag.createSuccess'))

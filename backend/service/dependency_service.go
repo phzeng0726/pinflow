@@ -5,6 +5,7 @@ import (
 	"pinflow/dto"
 	"pinflow/model"
 	"pinflow/repository"
+	"pinflow/store"
 )
 
 type dependencyService struct {
@@ -65,14 +66,30 @@ func (s *dependencyService) buildResponse(dep model.Dependency) (*dto.Dependency
 
 func (s *dependencyService) CreateForCard(fromCardID uint, req dto.CreateDependencyRequest) (*dto.DependencyResponse, error) {
 	// Validate both cards exist
-	if _, err := s.cardRepo.FindByID(fromCardID); err != nil {
+	fromCard, err := s.cardRepo.FindByID(fromCardID)
+	if err != nil {
 		return nil, fmt.Errorf("from card %d not found", fromCardID)
 	}
-	if _, err := s.cardRepo.FindByID(req.ToCardID); err != nil {
+	toCard, err := s.cardRepo.FindByID(req.ToCardID)
+	if err != nil {
 		return nil, fmt.Errorf("to card %d not found", req.ToCardID)
 	}
 
+	// Verify both cards are on the same board
+	fromCol, err := s.columnRepo.FindByID(fromCard.ColumnID)
+	if err != nil {
+		return nil, fmt.Errorf("column for from card not found")
+	}
+	toCol, err := s.columnRepo.FindByID(toCard.ColumnID)
+	if err != nil {
+		return nil, fmt.Errorf("column for to card not found")
+	}
+	if fromCol.BoardID != toCol.BoardID {
+		return nil, store.ErrCrossBoardDependency
+	}
+
 	dep := &model.Dependency{
+		BoardID:    fromCol.BoardID,
 		FromCardID: fromCardID,
 		ToCardID:   req.ToCardID,
 		Type:       req.Type,

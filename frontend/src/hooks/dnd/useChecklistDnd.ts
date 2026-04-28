@@ -29,7 +29,7 @@ interface PendingChecklistUpdate {
 }
 
 interface UseChecklistDndParams {
-  card: Card
+  card: Card | null
   sortedChecklists: Checklist[]
   moveChecklistMutate: (args: { id: number; position: number }) => void
   moveItemMutate: (args: {
@@ -53,6 +53,7 @@ export function useChecklistDnd(params: UseChecklistDndParams) {
   )
 
   const setCardCache = (updater: (card: Card) => Card) => {
+    if (!card) return
     const key = queryKeys.cards.detail(card.id)
     const prev = qc.getQueryData<Card>(key)
     if (prev) qc.setQueryData<Card>(key, updater(prev))

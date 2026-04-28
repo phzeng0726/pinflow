@@ -25,5 +25,14 @@
     "autoPin": false,
     "createdAt": "2026-04-28T09:00:00Z",
     "updatedAt": "2026-04-28T09:00:00Z"
+  },
+  {
+    "id": 4,
+    "boardId": 1,
+    "name": "Important",
+    "position": 4,
+    "autoPin": true,
+    "createdAt": "2026-04-28T09:00:00Z",
+    "updatedAt": "2026-04-28T09:00:00Z"
   }
 ]

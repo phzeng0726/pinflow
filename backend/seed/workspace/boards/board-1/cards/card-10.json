@@ -1,0 +1,26 @@
+{
+  "id": 10,
+  "columnId": 4,
+  "title": "Fix Production Login Issue",
+  "description": "Users on Safari and Firefox are being redirected to a blank page after login. Root cause appears to be a cookie SameSite attribute misconfiguration. Requires immediate hotfix.",
+  "position": 1,
+  "isPinned": true,
+  "storyPoint": 2,
+  "priority": 3,
+  "startTime": "2026-04-28T00:00:00Z",
+  "endTime": "2026-04-29T00:00:00Z",
+  "tag_ids": [1, 5],
+  "checklists": [],
+  "comments": [
+    {
+      "id": 3,
+      "cardId": 10,
+      "text": "Reproduced on Safari 17.4 and Firefox 125. Chrome is unaffected. Likely related to the recent auth middleware update.",
+      "authorId": "system",
+      "createdAt": "2026-04-28T10:00:00Z",
+      "updatedAt": "2026-04-28T10:00:00Z"
+    }
+  ],
+  "createdAt": "2026-04-28T09:00:00Z",
+  "updatedAt": "2026-04-28T09:00:00Z"
+}

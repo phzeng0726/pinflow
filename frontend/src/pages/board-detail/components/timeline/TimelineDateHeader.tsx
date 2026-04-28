@@ -7,15 +7,11 @@ import {
   eachWeekOfInterval,
   format,
   getDaysInMonth,
-  isMonday,
   isSameMonth,
   isSameYear,
-  isToday,
   isWeekend,
   startOfDay,
   startOfMonth,
-  startOfWeek,
-  startOfYear,
 } from 'date-fns'
 
 const HEADER_HEIGHT = 56 // total px

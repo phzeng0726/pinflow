@@ -1,6 +1,3 @@
-import { useState } from 'react'
-import { format } from 'date-fns'
-import { CalendarIcon, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -9,6 +6,10 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
+import { format, startOfDay } from 'date-fns'
+import { CalendarIcon, X } from 'lucide-react'
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface DateTimePickerProps {
   value?: string | null
@@ -16,6 +17,7 @@ interface DateTimePickerProps {
   onClose?: () => void
   placeholder?: string
   disabled?: boolean
+  minDate?: Date
 }
 
 export function DateTimePicker({
@@ -24,8 +26,10 @@ export function DateTimePicker({
   onClose,
   placeholder = '選擇日期時間',
   disabled,
+  minDate,
 }: DateTimePickerProps) {
   const [open, setOpen] = useState(false)
+  const { t } = useTranslation()
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next)
@@ -60,6 +64,16 @@ export function DateTimePicker({
     onChange(newDate.toISOString())
   }
 
+  const handleSelectToday = () => {
+    const now = new Date()
+    now.setHours(hours, minutes, 0, 0)
+    onChange(now.toISOString())
+  }
+
+  const isTodayBeforeMin = minDate
+    ? startOfDay(new Date()) < startOfDay(minDate)
+    : false
+
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
@@ -80,38 +94,50 @@ export function DateTimePicker({
           mode="single"
           selected={parsedDate}
           onSelect={handleDateSelect}
+          disabled={minDate ? { before: minDate } : undefined}
           autoFocus
         />
         <div className="flex items-center gap-2 border-t p-3 dark:border-gray-700">
-          <input
-            type="number"
-            min={0}
-            max={23}
-            value={hours}
-            onChange={(e) => handleHoursChange(Number(e.target.value))}
-            className="w-14 rounded border px-2 py-1 text-center text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-            disabled={!parsedDate}
-          />
-          <span className="text-gray-500">:</span>
-          <input
-            type="number"
-            min={0}
-            max={59}
-            value={minutes}
-            onChange={(e) => handleMinutesChange(Number(e.target.value))}
-            className="w-14 rounded border px-2 py-1 text-center text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-            disabled={!parsedDate}
-          />
-          {value && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="ml-auto h-7 w-7"
-              onClick={() => onChange(null)}
-            >
-              <X className="h-3.5 w-3.5" />
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs text-primary hover:text-primary"
+            disabled={isTodayBeforeMin}
+            onClick={handleSelectToday}
+          >
+            {t('schedule.today')}
+          </Button>
+          <div className="ml-auto flex items-center gap-2">
+            <input
+              type="number"
+              min={0}
+              max={23}
+              value={hours}
+              onChange={(e) => handleHoursChange(Number(e.target.value))}
+              className="w-14 rounded border px-2 py-1 text-center text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+              disabled={!parsedDate}
+            />
+            <span className="text-gray-500">:</span>
+            <input
+              type="number"
+              min={0}
+              max={59}
+              value={minutes}
+              onChange={(e) => handleMinutesChange(Number(e.target.value))}
+              className="w-14 rounded border px-2 py-1 text-center text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+              disabled={!parsedDate}
+            />
+            {value && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => onChange(null)}
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
         </div>
       </PopoverContent>
     </Popover>

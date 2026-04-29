@@ -101,6 +101,35 @@ func (h *BoardHandler) UpdateBoard(c *gin.Context) {
 	c.JSON(http.StatusOK, board)
 }
 
+// MoveBoard godoc
+// @Summary     Move a board (update position)
+// @Tags        boards
+// @Accept      json
+// @Produce     json
+// @Param       id path int true "Board ID"
+// @Param       body body dto.MoveBoardRequest true "New position"
+// @Success     200 {object} model.Board
+// @Failure     404 {object} map[string]string
+// @Failure     422 {object} map[string]string
+// @Router      /boards/{id}/move [patch]
+func (h *BoardHandler) MoveBoard(c *gin.Context) {
+	id, err := parseUintParam(c, "id")
+	if err != nil {
+		return
+	}
+	var req dto.MoveBoardRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+	board, err := h.services.Board.MoveBoard(id, req.Position)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, board)
+}
+
 // DeleteBoard godoc
 // @Summary     Delete a board
 // @Tags        boards

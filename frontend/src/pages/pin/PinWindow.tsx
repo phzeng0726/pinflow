@@ -1,4 +1,4 @@
-import { Pin, X } from 'lucide-react'
+import { Minus, Pin, X } from 'lucide-react'
 import type React from 'react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -55,6 +55,13 @@ export function PinWindow() {
           className="flex items-center gap-1"
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
+          <button
+            type="button"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-white transition-colors hover:bg-white/20"
+            onClick={() => window.electronAPI?.minimizeWindow?.()}
+          >
+            <Minus className="h-3.5 w-3.5" />
+          </button>
           <button
             type="button"
             className="inline-flex h-6 w-6 items-center justify-center rounded-md text-white transition-colors hover:bg-white/20"

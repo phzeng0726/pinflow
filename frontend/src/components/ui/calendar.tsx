@@ -15,20 +15,20 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn('p-3', className)}
+      className={cn('p-3 relative', className)}
       classNames={{
         months: 'flex flex-col sm:flex-row gap-2',
         month: 'flex flex-col gap-4',
         month_caption: 'flex justify-center pt-1 relative items-center',
         caption_label: 'text-sm font-medium',
-        nav: 'flex items-center gap-1',
+        nav: 'absolute top-3 inset-x-3 z-10 flex items-center justify-between pointer-events-none',
         button_previous: cn(
           buttonVariants({ variant: 'outline' }),
-          'absolute left-1 size-7 bg-transparent p-0 opacity-50 hover:opacity-100',
+          'size-7 bg-transparent p-0 opacity-50 hover:opacity-100 pointer-events-auto',
         ),
         button_next: cn(
           buttonVariants({ variant: 'outline' }),
-          'absolute right-1 size-7 bg-transparent p-0 opacity-50 hover:opacity-100',
+          'size-7 bg-transparent p-0 opacity-50 hover:opacity-100 pointer-events-auto',
         ),
         month_grid: 'w-full border-collapse',
         weekdays: 'flex',
@@ -42,7 +42,8 @@ function Calendar({
         ),
         selected:
           'bg-primary text-primary-foreground rounded-md hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground',
-        today: 'bg-accent text-accent-foreground rounded-md',
+        today:
+          'rounded-md [&:not([aria-selected])]:ring-1 [&:not([aria-selected])]:ring-primary',
         outside: 'text-muted-foreground opacity-50',
         disabled: 'text-muted-foreground opacity-50',
         range_middle:

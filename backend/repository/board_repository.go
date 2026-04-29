@@ -31,6 +31,12 @@ func (r *boardRepository) FindAll() ([]model.Board, error) {
 		sort.Slice(cols, func(a, b int) bool { return cols[a].Position < cols[b].Position })
 		boards[i].Columns = cols
 	}
+	sort.Slice(boards, func(i, j int) bool {
+		if boards[i].Position != boards[j].Position {
+			return boards[i].Position < boards[j].Position
+		}
+		return boards[i].ID < boards[j].ID
+	})
 	return boards, nil
 }
 

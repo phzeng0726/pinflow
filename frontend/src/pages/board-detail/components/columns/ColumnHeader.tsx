@@ -31,7 +31,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
-import { getColumnColor } from '@/lib/styleConfig'
 import type { Column } from '@/types'
 
 interface ColumnHeaderProps {
@@ -53,8 +52,6 @@ export function ColumnHeader(props: ColumnHeaderProps) {
     resolver: zodResolver(editColumnSchema),
     defaultValues: { name: column.name },
   })
-
-  const colorClass = getColumnColor(column.id).bg
 
   const handleUpdateColumn = (form: EditColumnForm) => {
     updateColumn.mutate({ id: column.id, form })
@@ -97,7 +94,6 @@ export function ColumnHeader(props: ColumnHeaderProps) {
           {...dragHandleProps}
           className="flex min-w-0 flex-1 items-center gap-1.5 py-1"
         >
-          <span className={cn('h-2.5 w-2.5 shrink-0 rounded-full', colorClass)} />
           {editing ? (
             <form
               onSubmit={handleSubmit(handleUpdateColumn)}

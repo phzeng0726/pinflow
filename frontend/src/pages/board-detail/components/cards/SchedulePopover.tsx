@@ -64,6 +64,9 @@ export function SchedulePopover(props: SchedulePopoverProps) {
 
   const handleStartTimeChange = (iso: string | null) => {
     setStartTime(iso)
+    if (iso && !endTime) {
+      setEndTime(iso)
+    }
     if (iso && endTime && iso > endTime) {
       setError(t('schedule.endBeforeStart'))
     } else {
@@ -126,7 +129,11 @@ export function SchedulePopover(props: SchedulePopoverProps) {
               <Label className="mb-1 block text-xs text-gray-500 dark:text-gray-400">
                 {t('schedule.endTime')}
               </Label>
-              <DateTimePicker value={endTime} onChange={handleEndTimeChange} />
+              <DateTimePicker
+              value={endTime}
+              onChange={handleEndTimeChange}
+              minDate={startTime ? new Date(startTime) : undefined}
+            />
             </div>
             {error && <p className="text-xs text-red-500">{error}</p>}
           </div>

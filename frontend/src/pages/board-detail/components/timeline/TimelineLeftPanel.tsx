@@ -1,4 +1,4 @@
-import { getColumnColor, getPriorityConfig } from '@/lib/styleConfig'
+import { getPriorityConfig } from '@/lib/styleConfig'
 import { useTimelineStore } from '@/stores/timelineStore'
 import { useTranslation } from 'react-i18next'
 import type { TimelineRow } from './useTimelineData'
@@ -19,17 +19,12 @@ export function TimelineLeftPanel({ rows }: TimelineLeftPanelProps) {
     <div style={{ height: rows.length * ROW_HEIGHT }}>
       {rows.map((row, idx) => {
         if (row.kind === 'lane') {
-          const colorBg =
-            row.columnId !== null
-              ? getColumnColor(row.columnId).bg
-              : 'bg-gray-400'
           return (
             <div
               key={`lane-${row.columnId ?? 'no-dates'}-${idx}`}
               style={{ height: ROW_HEIGHT }}
               className="flex items-center gap-2 border-b border-t bg-gray-50 px-3 dark:border-gray-700 dark:bg-gray-800/60"
             >
-              <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${colorBg}`} />
               <span className="flex-1 truncate text-xs font-semibold text-gray-700 dark:text-gray-300">
                 {row.columnName === 'No dates' ? t('timeline.noDates') : row.columnName}
               </span>

@@ -88,6 +88,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
 
   const handleDialogOpenChange = (open: boolean) => {
     if (!open) {
+      handleSubmit(onSubmit)()
       onClose()
     }
   }

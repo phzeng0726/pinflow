@@ -100,7 +100,8 @@
     "startTime": "開始時間",
     "endTime": "結束時間",
     "endBeforeStart": "結束時間不能早於開始時間",
-    "clearAll": "清除全部"
+    "clearAll": "清除全部",
+    "today": "今天"
   },
   "storyPoint": {
     "title": "點數"

@@ -15,6 +15,7 @@ type BoardService interface {
 	GetAllBoards() ([]model.Board, error)
 	GetBoardByID(id uint) (*model.Board, error)
 	UpdateBoard(id uint, name string) (*model.Board, error)
+	MoveBoard(id uint, position float64) (*model.Board, error)
 	DeleteBoard(id uint) error
 }
 

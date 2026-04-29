@@ -112,7 +112,6 @@ function createPinWindow() {
     transparent: true,
     frame: false,
     resizable: true,
-    skipTaskbar: true,
     title: "PinFlow – Pins",
     icon: path.join(__dirname, "icons", "icon.ico"),
     webPreferences: {
@@ -124,7 +123,7 @@ function createPinWindow() {
 
   // TanStack Router with hash routing in file:// mode
   if (isDev) {
-    pinWindow.loadURL(FRONTEND_DEV_URL + "/pin");
+    pinWindow.loadURL(FRONTEND_DEV_URL + "/#/pin");
   } else {
     const indexPath = path.join(
       __dirname,
@@ -216,7 +215,7 @@ ipcMain.on("open-card-detail", (_event, { boardId, cardId }) => {
 
   const route = `/card-detail?boardId=${boardId}&cardId=${cardId}`;
   if (isDev) {
-    win.loadURL(FRONTEND_DEV_URL + route);
+    win.loadURL(FRONTEND_DEV_URL + "/#" + route);
   } else {
     const indexPath = path.join(
       __dirname,
@@ -229,6 +228,9 @@ ipcMain.on("open-card-detail", (_event, { boardId, cardId }) => {
   }
 });
 
+ipcMain.on("minimize-window", (event) => {
+  BrowserWindow.fromWebContents(event.sender)?.minimize();
+});
 ipcMain.on("toggle-pin-window", () => togglePinWindow());
 ipcMain.on("hide-pin-window", () => {
   if (pinWindow && pinWindow.isVisible()) {

@@ -112,7 +112,6 @@ function createPinWindow() {
     transparent: true,
     frame: false,
     resizable: true,
-    skipTaskbar: true,
     title: "PinFlow – Pins",
     icon: path.join(__dirname, "icons", "icon.ico"),
     webPreferences: {
@@ -229,6 +228,9 @@ ipcMain.on("open-card-detail", (_event, { boardId, cardId }) => {
   }
 });
 
+ipcMain.on("minimize-window", (event) => {
+  BrowserWindow.fromWebContents(event.sender)?.minimize();
+});
 ipcMain.on("toggle-pin-window", () => togglePinWindow());
 ipcMain.on("hide-pin-window", () => {
   if (pinWindow && pinWindow.isVisible()) {

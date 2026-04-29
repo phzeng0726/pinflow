@@ -9,6 +9,7 @@ interface ElectronAPI {
   onSettings?: (cb: (settings: { theme?: string; locale?: string }) => void) => void
   togglePinWindow?: () => void
   hidePinWindow?: () => void
+  minimizeWindow?: () => void
   isElectron?: boolean
 }
 

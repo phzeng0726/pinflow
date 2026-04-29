@@ -19,7 +19,14 @@ func (s *boardService) CreateBoard(name string) (*model.Board, error) {
 	if strings.TrimSpace(name) == "" {
 		return nil, errors.New("board name is required")
 	}
-	board := &model.Board{Name: strings.TrimSpace(name)}
+	existing, _ := s.repo.FindAll()
+	maxPos := 0.0
+	for _, b := range existing {
+		if b.Position > maxPos {
+			maxPos = b.Position
+		}
+	}
+	board := &model.Board{Name: strings.TrimSpace(name), Position: maxPos + 2}
 	if err := s.repo.Create(board); err != nil {
 		return nil, err
 	}
@@ -47,6 +54,18 @@ func (s *boardService) UpdateBoard(id uint, name string) (*model.Board, error) {
 		return nil, err
 	}
 	board.Name = strings.TrimSpace(name)
+	if err := s.repo.Update(board); err != nil {
+		return nil, err
+	}
+	return board, nil
+}
+
+func (s *boardService) MoveBoard(id uint, position float64) (*model.Board, error) {
+	board, err := s.repo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	board.Position = position
 	if err := s.repo.Update(board); err != nil {
 		return nil, err
 	}

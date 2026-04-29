@@ -100,7 +100,8 @@
     "startTime": "Start Time",
     "endTime": "End Time",
     "endBeforeStart": "End time cannot be earlier than start time",
-    "clearAll": "Clear All"
+    "clearAll": "Clear All",
+    "today": "Today"
   },
   "storyPoint": {
     "title": "Story Points"

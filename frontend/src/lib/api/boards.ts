@@ -22,6 +22,11 @@ export const updateBoard = async (id: number, form: NewOrEditBoardForm) => {
   return res.data
 }
 
+export const moveBoard = async (id: number, position: number) => {
+  const res = await client.patch<Board>(`/boards/${id}/move`, { position })
+  return res.data
+}
+
 export const deleteBoard = async (id: number) => {
   const res = await client.delete(`/boards/${id}`)
   return res.data

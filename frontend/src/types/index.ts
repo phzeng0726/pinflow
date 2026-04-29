@@ -1,6 +1,7 @@
 export interface Board {
   id: number
   name: string
+  position: number
   columns: Column[]
   createdAt: string
   updatedAt: string

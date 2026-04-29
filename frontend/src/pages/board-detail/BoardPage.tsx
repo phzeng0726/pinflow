@@ -20,7 +20,7 @@ import { useBoardDetail } from '@/hooks/board/queries/useBoardDetail'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { usePinnedCards } from '@/hooks/card/queries/usePinnedCards'
 import { useColumnMutations } from '@/hooks/column/mutations/useColumnMutations'
-import { useBoardDnd } from '@/hooks/dnd/useBoardDnd'
+import { useBoardDetailDnd } from '@/hooks/dnd/useBoardDetailDnd'
 import { cn } from '@/lib/utils'
 import { AddColumnForm } from '@/pages/board-detail/components/columns/AddColumnForm'
 import { ColumnView } from '@/pages/board-detail/components/columns/ColumnView'
@@ -85,7 +85,7 @@ export function BoardPage() {
     handleDragEnd,
     handleDragOver,
     handleDragCancel,
-  } = useBoardDnd({
+  } = useBoardDetailDnd({
     boardId: id,
     columns,
     moveColumnMutate: moveColumn.mutate,

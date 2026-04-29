@@ -1,4 +1,5 @@
 export const DND_TYPE = {
+  BOARD: 'board',
   CARD: 'card',
   COLUMN: 'column',
   CHECKLIST: 'checklist',

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useBoardDetail } from '@/hooks/board/queries/useBoardDetail'
 import { useBoardTags } from '@/hooks/tag/queries/useBoardTags'
 import { useGraphViewStore } from '@/stores/graphViewStore'
-import { getColumnColor, getTagColorClasses } from '@/lib/styleConfig'
+import { getTagColorClasses } from '@/lib/styleConfig'
 import type { DependencyType } from '@/types'
 
 const RELATION_TYPES: DependencyType[] = ['blocks', 'parent_of', 'related_to', 'duplicates']
@@ -107,19 +107,17 @@ export function GraphFilterPanel({ boardId }: GraphFilterPanelProps) {
           <div className="flex flex-wrap gap-1.5">
             {columns.map((col) => {
               const active = filters.columnIds.includes(col.id)
-              const colColor = getColumnColor(col.id)
               return (
                 <button
                   key={col.id}
                   onClick={() => toggleColumn(col.id)}
                   className={[
-                    'flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition-colors',
+                    'rounded-full border px-2 py-0.5 text-xs transition-colors',
                     active
                       ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
                       : 'border-gray-200 text-gray-600 hover:border-gray-400 dark:border-gray-600 dark:text-gray-300',
                   ].join(' ')}
                 >
-                  <span className={`h-2 w-2 rounded-full ${colColor.bg}`} />
                   {col.name}
                 </button>
               )

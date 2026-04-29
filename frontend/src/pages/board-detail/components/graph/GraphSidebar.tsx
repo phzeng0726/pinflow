@@ -1,5 +1,4 @@
 import { getCardUrgency } from '@/lib/dates'
-import { getColumnColor } from '@/lib/styleConfig'
 import { cn } from '@/lib/utils'
 import { useGraphViewStore } from '@/stores/graphViewStore'
 import type { Board, Card } from '@/types'
@@ -102,7 +101,6 @@ export function GraphSidebar({ board }: GraphSidebarProps) {
               {needsAttentionCards.map((card) => {
                 const isActive = focusedCardId === card.id
                 const col = board?.columns.find((c) => c.id === card.columnId)
-                const colColor = col ? getColumnColor(col.id) : null
                 const dueBadge = getDueBadge(card)
 
                 return (
@@ -125,14 +123,6 @@ export function GraphSidebar({ board }: GraphSidebarProps) {
                       {card.title}
                     </span>
                     <div className="mt-0.5 flex items-center gap-1">
-                      {colColor && (
-                        <span
-                          className={cn(
-                            'h-1.5 w-1.5 shrink-0 rounded-full',
-                            colColor.bg,
-                          )}
-                        />
-                      )}
                       <span className="line-clamp-1 flex-1 text-[10px] text-gray-400 dark:text-gray-500">
                         {col?.name} #{card.id}
                       </span>
@@ -180,7 +170,6 @@ export function GraphSidebar({ board }: GraphSidebarProps) {
             <ul className="space-y-1">
               {unlinked.map((card) => {
                 const col = board?.columns.find((c) => c.id === card.columnId)
-                const colColor = col ? getColumnColor(col.id) : null
                 const isActive = focusedCardId === card.id
 
                 return (
@@ -203,14 +192,6 @@ export function GraphSidebar({ board }: GraphSidebarProps) {
                       {card.title}
                     </span>
                     <div className="mt-0.5 flex items-center gap-1">
-                      {colColor && (
-                        <span
-                          className={cn(
-                            'h-1.5 w-1.5 shrink-0 rounded-full',
-                            colColor.bg,
-                          )}
-                        />
-                      )}
                       <span className="text-[10px] text-gray-400 dark:text-gray-500">
                         {col?.name} #{card.id}
                       </span>

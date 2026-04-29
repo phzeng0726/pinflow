@@ -5,7 +5,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { formatCardDate, getCardUrgency, getScheduleUrgencyClass } from '@/lib/dates'
-import { getColumnColor, getPriorityConfig, getTagColorClasses } from '@/lib/styleConfig'
+import { getPriorityConfig, getTagColorClasses } from '@/lib/styleConfig'
 import { cn } from '@/lib/utils'
 import { useTimelineStore } from '@/stores/timelineStore'
 import type { Card } from '@/types'
@@ -195,7 +195,7 @@ export function TimelineBar({
     )
   }
 
-  const colorClasses = columnId !== null ? getColumnColor(columnId).bg : 'bg-blue-500'
+  const colorClasses = 'bg-blue-500'
 
   return (
     <Tooltip delayDuration={300}>

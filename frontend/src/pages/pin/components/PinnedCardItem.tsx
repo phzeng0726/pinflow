@@ -7,7 +7,6 @@ import {
 } from '@/components/ui/popover'
 import { formatCardDate, getScheduleUrgencyClass } from '@/lib/dates'
 import {
-  getColumnColor,
   getPriorityConfig,
   getTagColorClasses,
 } from '@/lib/styleConfig'
@@ -51,8 +50,6 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
     totalCount: 0,
     completedCount: 0,
   }
-  const colorClass = getColumnColor(card.columnId).border
-
   const hasMetadata =
     card.storyPoint != null ||
     hasSchedule ||
@@ -62,10 +59,7 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
 
   return (
     <div
-      className={cn(
-        'group relative rounded-lg border-l-4 bg-white px-3 py-2 dark:bg-gray-800',
-        colorClass,
-      )}
+      className="group relative rounded-lg border-l-4 border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">

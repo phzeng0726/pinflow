@@ -37,6 +37,7 @@ func NewRouter(h *Handlers, fs *store.FileStore) *gin.Engine {
 			boards.GET("", h.Board.GetBoards)
 			boards.GET("/:id", h.Board.GetBoard)
 			boards.PUT("/:id", h.Board.UpdateBoard)
+			boards.PATCH("/:id/move", h.Board.MoveBoard)
 			boards.DELETE("/:id", h.Board.DeleteBoard)
 			boards.POST("/:id/columns", h.Column.CreateColumn)
 			boards.GET("/:id/dependencies", h.Dependency.ListBoardDependencies)

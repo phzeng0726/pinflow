@@ -253,6 +253,13 @@ definitions:
       url:
         type: string
     type: object
+  dto.MoveBoardRequest:
+    properties:
+      position:
+        type: number
+    required:
+    - position
+    type: object
   dto.MoveCardRequest:
     properties:
       columnId:
@@ -452,6 +459,8 @@ definitions:
         type: integer
       name:
         type: string
+      position:
+        type: number
       updated_at:
         type: string
     type: object
@@ -807,6 +816,44 @@ paths:
       summary: Serve a board image
       tags:
       - images
+  /boards/{id}/move:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Board ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New position
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MoveBoardRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Board'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Move a board (update position)
+      tags:
+      - boards
   /boards/{id}/snapshots:
     get:
       parameters:

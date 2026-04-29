@@ -44,9 +44,19 @@ export function useBoardMutations() {
     onError: () => toast.error(t('toast.board.deleteError')),
   })
 
+  const move = useMutation({
+    mutationFn: (props: { id: number; position: number }) =>
+      api.moveBoard(props.id, props.position),
+    onSuccess: async () => {
+      await invalidateBoardAll()
+    },
+    onError: () => toast.error(t('toast.board.updateError')),
+  })
+
   return {
     createBoard: create,
     updateBoard: update,
+    moveBoard: move,
     deleteBoard: remove,
   }
 }

@@ -135,7 +135,6 @@ export function TimelineBar({
   card,
   barProps,
   rowIndex,
-  columnId,
   matchesSearch = true,
 }: TimelineBarProps) {
   const setOpenedCardId = useTimelineStore((s) => s.setOpenedCardId)

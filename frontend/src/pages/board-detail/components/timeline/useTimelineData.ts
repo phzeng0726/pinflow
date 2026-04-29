@@ -1,6 +1,7 @@
 import { useTimelineStore } from '@/stores/timelineStore'
 import type { Board, Card, Dependency } from '@/types'
 import {
+  addDays,
   addMonths,
   addWeeks,
   differenceInDays,
@@ -38,6 +39,7 @@ export interface BarProps {
   left: number
   width: number
   hasSchedule: boolean
+  isEndDateOnly: boolean
 }
 
 export function useTimelineData(
@@ -69,25 +71,34 @@ export function useTimelineData(
           left: 0,
           width: 120,
           hasSchedule: false,
+          isEndDateOnly: false,
         }),
       }
     }
 
-    // Task 3.2: Date range calculation
+    // Date range calculation
     const allCards: Card[] = board.columns.flatMap((c) => c.cards ?? [])
     const scheduledCards = allCards.filter((c) => c.startTime && c.endTime)
+    const endOnlyCards = allCards.filter((c) => !c.startTime && c.endTime)
 
     let rangeStart: Date
     let rangeEnd: Date
 
-    if (scheduledCards.length === 0) {
+    if (scheduledCards.length === 0 && endOnlyCards.length === 0) {
       const today = startOfDay(new Date())
       rangeStart = subMonths(today, 1)
       rangeEnd = addMonths(today, 2)
     } else {
+      const today = startOfDay(new Date())
       const startDates = scheduledCards.map((c) => parseISO(c.startTime!))
-      const endDates = scheduledCards.map((c) => parseISO(c.endTime!))
-      const minStart = new Date(Math.min(...startDates.map((d) => d.getTime())))
+      const endDates = [
+        ...scheduledCards.map((c) => parseISO(c.endTime!)),
+        ...endOnlyCards.map((c) => parseISO(c.endTime!)),
+      ]
+      const minStart =
+        startDates.length > 0
+          ? new Date(Math.min(...startDates.map((d) => d.getTime())))
+          : today
       const maxEnd = new Date(Math.max(...endDates.map((d) => d.getTime())))
       rangeStart = subWeeks(startOfDay(minStart), 4)
       rangeEnd = addWeeks(startOfDay(maxEnd), 4)
@@ -98,17 +109,36 @@ export function useTimelineData(
     // Task 3.3: dayCount
     const dayCount = differenceInDays(rangeEnd, rangeStart)
 
-    // Task 3.4: getBarProps
     const getBarProps = (card: Card): BarProps => {
-      if (!card.startTime || !card.endTime) {
-        return { left: 0, width: 120, hasSchedule: false }
+      const today = startOfDay(new Date())
+
+      // Case 1: no dates
+      if (!card.startTime && !card.endTime) {
+        return { left: 0, width: 120, hasSchedule: false, isEndDateOnly: false }
       }
-      const start = parseISO(card.startTime)
-      const end = parseISO(card.endTime)
-      const left = differenceInDays(start, rangeStart) * dayWidth
-      const rawWidth = differenceInDays(end, start) * dayWidth
-      const width = Math.max(rawWidth, dayWidth)
-      return { left, width, hasSchedule: true }
+
+      // Case 2: start + end
+      if (card.startTime && card.endTime) {
+        const start = parseISO(card.startTime)
+        const end = parseISO(card.endTime)
+        const left = differenceInDays(start, rangeStart) * dayWidth
+        const rawWidth = differenceInDays(end, start) * dayWidth
+        const width = Math.max(rawWidth, dayWidth)
+        return { left, width, hasSchedule: true, isEndDateOnly: false }
+      }
+
+      // Case 3: end only — infer start as today or end-1 if overdue
+      if (!card.startTime && card.endTime) {
+        const end = parseISO(card.endTime)
+        const inferredStart = end < today ? addDays(end, -1) : today
+        const left = differenceInDays(inferredStart, rangeStart) * dayWidth
+        const rawWidth = differenceInDays(end, inferredStart) * dayWidth
+        const width = Math.max(rawWidth, dayWidth)
+        return { left, width, hasSchedule: true, isEndDateOnly: true }
+      }
+
+      // Case 4: start only — not handled this iteration, keep in No dates
+      return { left: 0, width: 120, hasSchedule: false, isEndDateOnly: false }
     }
 
     // Task 3.5: rows generation
@@ -118,7 +148,7 @@ export function useTimelineData(
     const query = searchQuery.toLowerCase()
     const matchesSearch = (card: Card) =>
       !query || card.title.toLowerCase().includes(query)
-    const isScheduled = (card: Card) => !!(card.startTime && card.endTime)
+    const isScheduled = (card: Card) => !!card.endTime
 
     const rows: TimelineRow[] = []
     const rowIndexMap = new Map<number, number>()

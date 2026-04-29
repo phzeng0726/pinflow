@@ -139,7 +139,7 @@ export function TimelineBar({
 }: TimelineBarProps) {
   const setOpenedCardId = useTimelineStore((s) => s.setOpenedCardId)
   const searchQuery = useTimelineStore((s) => s.searchQuery)
-  const { left, width, hasSchedule } = barProps
+  const { left, width, hasSchedule, isEndDateOnly } = barProps
 
   const top = rowIndex * ROW_HEIGHT + 8
   const barHeight = ROW_HEIGHT - 16
@@ -187,7 +187,57 @@ export function TimelineBar({
             </span>
           </div>
         </TooltipTrigger>
-        <TooltipContent side="top">
+        <TooltipContent
+          side="top"
+          className="border border-gray-200 bg-white text-gray-900 shadow-md dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+        >
+          <BarTooltipContent card={card} />
+        </TooltipContent>
+      </Tooltip>
+    )
+  }
+
+  if (isEndDateOnly) {
+    return (
+      <Tooltip delayDuration={300}>
+        <TooltipTrigger asChild>
+          <div
+            onClick={() => setOpenedCardId(card.id)}
+            style={{ top, height: barHeight, left, width, ...urgencyStyle }}
+            className={cn(
+              'absolute cursor-pointer select-none overflow-hidden rounded bg-blue-500 transition-opacity hover:opacity-90',
+              isSearchDimmed && 'opacity-[0.15]',
+            )}
+          >
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  'repeating-linear-gradient(135deg, transparent 4px, rgba(255,255,255,0.25) 4px 8px)',
+              }}
+            />
+            {hasChecklists && (
+              <div
+                className="absolute inset-y-0 left-0 bg-white/30"
+                style={{ width: `${completedRatio * 100}%` }}
+              />
+            )}
+            <div className="relative flex h-full items-center gap-1 px-2">
+              <span className="flex-1 truncate text-xs font-medium text-white drop-shadow-sm">
+                {card.title}
+              </span>
+              {hasChecklists && (
+                <span className="shrink-0 text-xs text-white/80">
+                  {completedItems}/{totalItems}
+                </span>
+              )}
+            </div>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent
+          side="top"
+          className="border border-gray-200 bg-white text-gray-900 shadow-md dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+        >
           <BarTooltipContent card={card} />
         </TooltipContent>
       </Tooltip>

@@ -54,6 +54,14 @@
     "linux": {
       "target": "AppImage",
       "icon": "electron/icons/icon.png"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "phzeng0726",
+      "repo": "pinflow"
     }
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.3"
   }
 }

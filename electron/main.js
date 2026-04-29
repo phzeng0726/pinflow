@@ -6,11 +6,13 @@ const {
   ipcMain,
   nativeImage,
   screen,
+  dialog,
 } = require("electron");
 const path = require("path");
 const { pathToFileURL } = require("url");
 const { spawn } = require("child_process");
 const http = require("http");
+const { autoUpdater } = require("electron-updater");
 
 const isDev = !!process.env.ELECTRON_DEV;
 const BACKEND_PORT = 34115;
@@ -262,6 +264,33 @@ ipcMain.on("broadcast-query-invalidation", (event, queryKey) => {
   });
 });
 
+// ── Auto Updater ──────────────────────────────────────────────────────────────
+
+function setupAutoUpdater() {
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on("update-downloaded", () => {
+    dialog
+      .showMessageBox({
+        type: "info",
+        title: "Update Ready",
+        message: "A new version has been downloaded. Restart now to apply the update.",
+        buttons: ["Restart Now", "Later"],
+        defaultId: 0,
+      })
+      .then(({ response }) => {
+        if (response === 0) autoUpdater.quitAndInstall();
+      });
+  });
+
+  autoUpdater.on("error", (err) => {
+    console.error("[updater]", err.message);
+  });
+
+  autoUpdater.checkForUpdatesAndNotify();
+}
+
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 
 const gotLock = app.requestSingleInstanceLock();
@@ -292,6 +321,7 @@ if (!gotLock) {
 
     createMainWindow();
     createTray();
+    if (!isDev) setupAutoUpdater();
   });
 
   app.on("window-all-closed", () => {

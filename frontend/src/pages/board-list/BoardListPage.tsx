@@ -175,7 +175,7 @@ export function BoardListPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8 dark:bg-gray-900">
+    <div className="relative min-h-screen bg-gray-50 p-8 dark:bg-gray-900">
       <div className="mx-auto max-w-4xl">
         <div className="mb-8 flex items-center justify-between">
           <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -295,6 +295,10 @@ export function BoardListPage() {
           </DragOverlay>
         </DndContext>
       </div>
+
+      <p className="absolute bottom-4 right-6 select-none text-xs text-gray-300 dark:text-gray-600">
+        v{__APP_VERSION__}
+      </p>
 
       <AlertDialog
         open={showDeleteConfirm !== null}

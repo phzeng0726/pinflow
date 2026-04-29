@@ -110,19 +110,22 @@ src/
         checklists/ → Checklist + cross-checklist DnD
         comments/   → Card comments
         graph/      → Dependency graph (@xyflow/react + dagre layout)
+        timeline/   → Timeline (Gantt-style) view
+        snapshots/  → Snapshot create/restore dialogs
     pin/            → PinWindow + PinnedCardItem/PinOverlay
   hooks/
     queryKeys.ts    → All query keys (single source of truth)
     <domain>/queries/   → One query hook per file
     <domain>/mutations/ → One mutation hook per domain
     board/useBoardDnd.ts → DnD logic with optimistic cache updates
-  stores/           → Zustand: themeStore, pinStore
+  stores/           → Zustand: themeStore, pinStore, localeStore, timelineStore, graphViewStore
   lib/api/          → Axios calls split by domain (re-exported via index.ts)
+  locales/          → i18n JSON files (en-US.json, zh-TW.json)
   routes/           → TanStack Router file-based; routeTree.gen.ts auto-generated
   types/            → TypeScript interfaces matching backend DTOs
 ```
 
-API domains: `boards` `cards` `columns` `tags` `checklists` `comments` `dependencies` `images`
+API domains: `boards` `cards` `columns` `tags` `checklists` `comments` `dependencies` `images` `snapshots`
 
 **Import convention:**
 
@@ -146,6 +149,9 @@ GET  /api/health
 /api/v1/boards/:id/columns              → POST
 /api/v1/boards/:id/dependencies         → GET
 /api/v1/boards/:id/images/:filename     → GET
+/api/v1/boards/:id/snapshots            → GET, POST
+/api/v1/boards/:id/snapshots/:sid/restore → POST
+/api/v1/boards/:id/snapshots/:sid       → DELETE
 /api/v1/columns/:id                     → PATCH, DELETE
 /api/v1/columns/:id/cards               → POST
 /api/v1/cards/pinned                    → GET (must be before /:id)

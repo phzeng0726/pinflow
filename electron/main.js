@@ -124,7 +124,7 @@ function createPinWindow() {
 
   // TanStack Router with hash routing in file:// mode
   if (isDev) {
-    pinWindow.loadURL(FRONTEND_DEV_URL + "/pin");
+    pinWindow.loadURL(FRONTEND_DEV_URL + "/#/pin");
   } else {
     const indexPath = path.join(
       __dirname,
@@ -216,7 +216,7 @@ ipcMain.on("open-card-detail", (_event, { boardId, cardId }) => {
 
   const route = `/card-detail?boardId=${boardId}&cardId=${cardId}`;
   if (isDev) {
-    win.loadURL(FRONTEND_DEV_URL + route);
+    win.loadURL(FRONTEND_DEV_URL + "/#" + route);
   } else {
     const indexPath = path.join(
       __dirname,

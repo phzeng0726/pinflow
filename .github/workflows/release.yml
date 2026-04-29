@@ -41,12 +41,15 @@ jobs:
           cache: 'pnpm'
 
       - name: Sync version into root package.json
-        shell: pwsh
+        shell: bash
         run: |
-          $version = "${{ steps.extract-version.outputs.VERSION }}"
-          $pkg = Get-Content package.json -Raw | ConvertFrom-Json
-          $pkg.version = $version
-          $pkg | ConvertTo-Json -Depth 10 | Set-Content package.json -Encoding utf8
+          VERSION="${{ steps.extract-version.outputs.VERSION }}"
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = process.argv[1];
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          " "$VERSION"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

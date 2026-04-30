@@ -4,7 +4,17 @@ import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { usePinnedCards } from '@/hooks/card/queries/usePinnedCards'
+import { usePinDnd } from '@/hooks/dnd/usePinDnd'
 import { usePinStore } from '@/stores/pinStore'
+import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
 import { PinnedCardItem } from './components/PinnedCardItem'
 
 export function PinWindow() {
@@ -12,6 +22,8 @@ export function PinWindow() {
   const { data: cards = [] } = usePinnedCards()
   const close = usePinStore((s) => s.close)
   const { togglePinFromPin: togglePin } = useCardMutations()
+  const { sensors, sortedCards, activeCard, handleDragStart, handleDragEnd, handleDragCancel } =
+    usePinDnd({ cards })
 
   useEffect(() => {
     const targets = [
@@ -77,20 +89,42 @@ export function PinWindow() {
 
       {/* Card list */}
       <div className="flex-1 space-y-2 overflow-y-auto p-2">
-        {cards.length === 0 ? (
+        {sortedCards.length === 0 ? (
           <div className="flex h-24 flex-col items-center justify-center text-gray-400 dark:text-gray-500">
             <Pin className="mb-1 h-6 w-6 opacity-30" />
             <p className="text-xs">{t('pin.noPinnedTasks')}</p>
           </div>
         ) : (
-          cards.map((card) => (
-            <PinnedCardItem
-              key={card.id}
-              card={card}
-              onUnpin={(id) => togglePin.mutate(id)}
-              onEdit={handleCardEdit}
-            />
-          ))
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
+          >
+            <SortableContext
+              items={sortedCards.map((c) => c.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {sortedCards.map((card) => (
+                <PinnedCardItem
+                  key={card.id}
+                  card={card}
+                  onUnpin={(id) => togglePin.mutate(id)}
+                  onEdit={handleCardEdit}
+                />
+              ))}
+            </SortableContext>
+            <DragOverlay>
+              {activeCard && (
+                <div className="rounded-lg border-l-4 border-gray-200 bg-white px-3 py-2 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                  <p className="text-sm font-semibold leading-snug text-gray-900 dark:text-gray-100">
+                    {activeCard.title}
+                  </p>
+                </div>
+              )}
+            </DragOverlay>
+          </DndContext>
         )}
       </div>
     </div>

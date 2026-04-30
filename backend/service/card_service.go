@@ -257,9 +257,13 @@ func (s *cardService) GetPinnedCards() ([]dto.PinnedCardResponse, error) {
 		}
 		colName := ""
 		var boardID uint
+		boardName := ""
 		if col, err := s.columnRepo.FindByID(c.ColumnID); err == nil {
 			colName = col.Name
 			boardID = col.BoardID
+			if board, err := s.boardRepo.FindByID(boardID); err == nil {
+				boardName = board.Name
+			}
 		}
 		tags := make([]dto.TagResponse, len(detail.Tags))
 		for i, t := range detail.Tags {
@@ -285,6 +289,7 @@ func (s *cardService) GetPinnedCards() ([]dto.PinnedCardResponse, error) {
 			Title:       c.Title,
 			Description: c.Description,
 			BoardID:     boardID,
+			BoardName:   boardName,
 			ColumnID:    c.ColumnID,
 			ColumnName:  colName,
 			Priority:    c.Priority,

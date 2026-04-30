@@ -9,6 +9,7 @@ export function useSnapshotMutations(boardId: number) {
   const { t } = useTranslation()
 
   const invalidate = () => qc.invalidateQueries({ queryKey: queryKeys.snapshots.byBoard(boardId) })
+  const invalidatePinned = () => qc.invalidateQueries({ queryKey: queryKeys.cards.pinned() })
 
   const create = useMutation({
     mutationFn: (name?: string) => api.createSnapshot(boardId, name),
@@ -24,6 +25,7 @@ export function useSnapshotMutations(boardId: number) {
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: queryKeys.boards.detail(boardId) })
       await invalidate()
+      await invalidatePinned()
       toast.success(t('toast.snapshot.restoreSuccess'))
     },
     onError: () => toast.error(t('toast.snapshot.restoreError')),

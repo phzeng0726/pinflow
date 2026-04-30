@@ -111,7 +111,7 @@ export function useCardMutations(boardId?: number) {
         if (!old) return old
         return {
           ...old,
-          columns: old.columns.map((col) => ({
+          columns: (old.columns ?? []).map((col) => ({
             ...col,
             cards: col.cards?.filter((c) => c.id !== cardId) ?? [],
           })),

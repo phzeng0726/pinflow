@@ -8,6 +8,36 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core'
 import { useState } from 'react'
+import type React from 'react'
+
+const INTERACTIVE_TAGS = new Set(['button', 'input', 'textarea', 'select', 'option', 'a'])
+
+function isInteractiveElement(el: Element | null): boolean {
+  let node: Element | null = el
+  while (node) {
+    if (INTERACTIVE_TAGS.has(node.tagName.toLowerCase())) return true
+    node = node.parentElement
+  }
+  return false
+}
+
+class SmartPointerSensor extends PointerSensor {
+  static activators = [
+    {
+      eventName: 'onPointerDown' as const,
+      handler: ({ nativeEvent }: React.PointerEvent) => {
+        if (
+          !nativeEvent.isPrimary ||
+          nativeEvent.button !== 0 ||
+          isInteractiveElement(nativeEvent.target as Element)
+        ) {
+          return false
+        }
+        return true
+      },
+    },
+  ]
+}
 
 const STORAGE_KEY = 'pinflow:pinOrder'
 
@@ -42,7 +72,7 @@ export function usePinDnd({ cards }: UsePinDndParams) {
   const [activeCard, setActiveCard] = useState<PinnedCard | null>(null)
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(SmartPointerSensor, { activationConstraint: { distance: 5 } }),
   )
 
   const sortedCards = sortByOrder(cards, pinOrder)

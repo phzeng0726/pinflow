@@ -8,12 +8,11 @@ import {
 import { useBoardDetail } from '@/hooks/board/queries/useBoardDetail'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { formatCardDate, getScheduleUrgencyClass } from '@/lib/dates'
-import {
-  getPriorityConfig,
-  getTagColorClasses,
-} from '@/lib/styleConfig'
+import { getPriorityConfig, getTagColorClasses } from '@/lib/styleConfig'
 import { cn } from '@/lib/utils'
 import type { PinnedCard } from '@/types'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import {
   Calendar,
   Check,
@@ -23,14 +22,11 @@ import {
   Ellipsis,
   Flag,
   Flame,
-  GripVertical,
   Link2,
   PinOff,
   SquarePen,
 } from 'lucide-react'
 import { useState } from 'react'
-import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 import { useTranslation } from 'react-i18next'
 import { PinChecklistPanel } from './PinChecklistPanel'
 
@@ -48,8 +44,14 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
   const [expanded, setExpanded] = useState(false)
   const { data: boardDetail } = useBoardDetail(card.boardId)
   const { moveCard } = useCardMutations(card.boardId)
-  const { setNodeRef, transform, transition, isDragging, attributes, listeners } =
-    useSortable({ id: card.id })
+  const {
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+    attributes,
+    listeners,
+  } = useSortable({ id: card.id })
 
   const tags = card.tags ?? []
   const hasSchedule = !!card.startTime || !!card.endTime
@@ -74,15 +76,17 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
         'group relative rounded-lg border-l-4 border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800',
+        'cursor-pointer active:cursor-grabbing',
         isDragging && 'opacity-50',
       )}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        onEdit(card)
+      }}
+      {...attributes}
+      {...listeners}
     >
       <div className="flex items-start justify-between gap-2">
-        <GripVertical
-          className="mt-0.5 h-4 w-4 shrink-0 cursor-grab text-gray-300 opacity-0 transition-opacity group-hover:opacity-100 dark:text-gray-600"
-          {...attributes}
-          {...listeners}
-        />
         <div className="min-w-0 flex-1">
           {tags.length > 0 && (
             <div className="mb-1 flex flex-wrap gap-1">
@@ -192,7 +196,10 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
               {card.boardName}
             </span>
             <span className="text-xs text-gray-400 dark:text-gray-500">/</span>
-            <Popover open={columnPopoverOpen} onOpenChange={setColumnPopoverOpen}>
+            <Popover
+              open={columnPopoverOpen}
+              onOpenChange={setColumnPopoverOpen}
+            >
               <PopoverTrigger asChild>
                 <button
                   type="button"
@@ -213,7 +220,11 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
                     onClick={() => {
                       setColumnPopoverOpen(false)
                       if (col.id !== card.columnId) {
-                        moveCard.mutate({ id: card.id, columnId: col.id, position: 0.5 })
+                        moveCard.mutate({
+                          id: card.id,
+                          columnId: col.id,
+                          position: 0.5,
+                        })
                       }
                     }}
                   >

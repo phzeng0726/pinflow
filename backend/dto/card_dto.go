@@ -36,6 +36,7 @@ type PinnedCardResponse struct {
 	Title            string           `json:"title"`
 	Description      string           `json:"description"`
 	BoardID          uint             `json:"boardId"`
+	BoardName        string           `json:"boardName"`
 	ColumnID         uint             `json:"columnId"`
 	ColumnName       string           `json:"columnName"`
 	Priority         *int             `json:"priority"`

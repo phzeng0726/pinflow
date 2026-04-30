@@ -157,7 +157,8 @@
     "pinnedTasks": "Pinned Tasks",
     "noPinnedTasks": "No pinned tasks",
     "unpin": "Unpin",
-    "noChecklistItems": "No items in this checklist"
+    "noChecklistItems": "No items in this checklist",
+    "moveToColumn": "Move to column"
   },
   "toolbar": {
     "h1": "Heading 1",

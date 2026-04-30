@@ -131,6 +131,7 @@ export interface PinnedCard {
   columnId: number
   columnName: string
   boardId: number
+  boardName: string
   priority: number | null
   storyPoint: number | null
   startTime: string | null

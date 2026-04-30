@@ -5,6 +5,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { useBoardDetail } from '@/hooks/board/queries/useBoardDetail'
+import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { formatCardDate, getScheduleUrgencyClass } from '@/lib/dates'
 import {
   getPriorityConfig,
@@ -14,6 +16,7 @@ import { cn } from '@/lib/utils'
 import type { PinnedCard } from '@/types'
 import {
   Calendar,
+  Check,
   CheckSquare,
   ChevronDown,
   ChevronUp,
@@ -37,8 +40,11 @@ interface PinnedCardItemProps {
 export function PinnedCardItem(props: PinnedCardItemProps) {
   const { card, onUnpin, onEdit } = props
   const [popoverOpen, setPopoverOpen] = useState(false)
+  const [columnPopoverOpen, setColumnPopoverOpen] = useState(false)
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
+  const { data: boardDetail } = useBoardDetail(card.boardId)
+  const { moveCard } = useCardMutations(card.boardId)
 
   const tags = card.tags ?? []
   const hasSchedule = !!card.startTime || !!card.endTime
@@ -166,9 +172,48 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
               </span>
             </div>
           )}
-          <span className="mt-2 inline-block rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-400">
-            {card.columnName}
-          </span>
+          <div className="mt-2 flex items-center gap-0.5">
+            <span className="text-xs text-gray-400 dark:text-gray-500">
+              {card.boardName}
+            </span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">/</span>
+            <Popover open={columnPopoverOpen} onOpenChange={setColumnPopoverOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
+                >
+                  {card.columnName}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-1" align="start">
+                <p className="mb-1 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-gray-400">
+                  {t('pin.moveToColumn')}
+                </p>
+                {boardDetail?.columns.map((col) => (
+                  <button
+                    key={col.id}
+                    type="button"
+                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                    onClick={() => {
+                      setColumnPopoverOpen(false)
+                      if (col.id !== card.columnId) {
+                        moveCard.mutate({ id: card.id, columnId: col.id, position: 0.5 })
+                      }
+                    }}
+                  >
+                    {col.id === card.columnId && (
+                      <Check className="h-3.5 w-3.5 shrink-0 text-green-500" />
+                    )}
+                    {col.id !== card.columnId && (
+                      <span className="h-3.5 w-3.5 shrink-0" />
+                    )}
+                    {col.name}
+                  </button>
+                ))}
+              </PopoverContent>
+            </Popover>
+          </div>
           {expanded && totalCount > 0 && (
             <PinChecklistPanel cardId={card.id} boardId={card.boardId} />
           )}

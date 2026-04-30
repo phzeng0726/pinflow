@@ -23,11 +23,14 @@ import {
   Ellipsis,
   Flag,
   Flame,
+  GripVertical,
   Link2,
   PinOff,
   SquarePen,
 } from 'lucide-react'
 import { useState } from 'react'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useTranslation } from 'react-i18next'
 import { PinChecklistPanel } from './PinChecklistPanel'
 
@@ -45,6 +48,8 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
   const [expanded, setExpanded] = useState(false)
   const { data: boardDetail } = useBoardDetail(card.boardId)
   const { moveCard } = useCardMutations(card.boardId)
+  const { setNodeRef, transform, transition, isDragging, attributes, listeners } =
+    useSortable({ id: card.id })
 
   const tags = card.tags ?? []
   const hasSchedule = !!card.startTime || !!card.endTime
@@ -65,9 +70,19 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
 
   return (
     <div
-      className="group relative rounded-lg border-l-4 border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={cn(
+        'group relative rounded-lg border-l-4 border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800',
+        isDragging && 'opacity-50',
+      )}
     >
       <div className="flex items-start justify-between gap-2">
+        <GripVertical
+          className="mt-0.5 h-4 w-4 shrink-0 cursor-grab text-gray-300 opacity-0 transition-opacity group-hover:opacity-100 dark:text-gray-600"
+          {...attributes}
+          {...listeners}
+        />
         <div className="min-w-0 flex-1">
           {tags.length > 0 && (
             <div className="mb-1 flex flex-wrap gap-1">

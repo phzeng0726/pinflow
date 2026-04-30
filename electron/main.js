@@ -285,9 +285,9 @@ function setupAutoUpdater() {
 
   autoUpdater.on("download-progress", (progress) => {
     const percent = Math.round(progress.percent);
-    log.info(`[updater] Downloading... ${percent}%`);
+    log.info(`[updater] Downloading... ${percent}% (total: ${progress.total})`);
     mainWindow?.setProgressBar(progress.percent / 100);
-    mainWindow?.webContents.send("updater:progress", { percent });
+    mainWindow?.webContents.send("updater:progress", { percent, total: progress.total });
   });
 
   autoUpdater.on("update-downloaded", () => {

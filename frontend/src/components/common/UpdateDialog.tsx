@@ -10,9 +10,12 @@ import {
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 
+const INSTALLER_MIN_BYTES = 1024 * 1024 // 1 MB — blockmap is always smaller
+
 type UpdateState =
   | { phase: 'idle' }
   | { phase: 'available'; version: string }
+  | { phase: 'preparing' }
   | { phase: 'downloading'; percent: number }
   | { phase: 'downloaded' }
   | { phase: 'error'; message: string }
@@ -28,9 +31,13 @@ export function UpdateDialog() {
     api.onUpdateAvailable?.(({ version }: { version: string }) =>
       setState({ phase: 'available', version }),
     )
-    api.onUpdateProgress?.(({ percent }: { percent: number }) =>
-      setState({ phase: 'downloading', percent }),
-    )
+    api.onUpdateProgress?.(({ percent, total }: { percent: number; total: number }) => {
+      if (total < INSTALLER_MIN_BYTES) {
+        setState({ phase: 'preparing' })
+      } else {
+        setState({ phase: 'downloading', percent })
+      }
+    })
     api.onUpdateDownloaded?.(() => setState({ phase: 'downloaded' }))
     api.onUpdateError?.(({ message }: { message: string }) =>
       setState({ phase: 'error', message }),
@@ -41,6 +48,7 @@ export function UpdateDialog() {
 
   if (state.phase === 'idle') return null
 
+  const isPreparing = state.phase === 'preparing'
   const isDownloading = state.phase === 'downloading'
   const isDownloaded = state.phase === 'downloaded'
   const isError = state.phase === 'error'
@@ -49,13 +57,13 @@ export function UpdateDialog() {
     <Dialog open onOpenChange={() => {}}>
       <DialogContent
         className="max-w-sm p-6"
-        onPointerDownOutside={(e) => isDownloading && e.preventDefault()}
-        onEscapeKeyDown={(e) => isDownloading && e.preventDefault()}
+        onPointerDownOutside={(e) => (isPreparing || isDownloading) && e.preventDefault()}
+        onEscapeKeyDown={(e) => (isPreparing || isDownloading) && e.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle>
             {state.phase === 'available' && t('updater.availableTitle')}
-            {isDownloading && t('updater.downloadingTitle')}
+            {(isPreparing || isDownloading) && t('updater.downloadingTitle')}
             {isDownloaded && t('updater.downloadedTitle')}
             {isError && t('updater.errorTitle')}
           </DialogTitle>
@@ -64,6 +72,12 @@ export function UpdateDialog() {
         <div className="py-2 text-sm text-muted-foreground">
           {state.phase === 'available' &&
             t('updater.availableDesc', { version: state.version })}
+          {isPreparing && (
+            <div className="space-y-3">
+              <p>{t('updater.preparingDesc')}</p>
+              <Progress value={null} className="animate-pulse" />
+            </div>
+          )}
           {isDownloading && (
             <div className="space-y-3">
               <p>{t('updater.downloadingDesc')}</p>

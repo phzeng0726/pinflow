@@ -326,6 +326,7 @@
     "later": "Later",
     "updateNow": "Update Now",
     "downloadingTitle": "Downloading Update",
+    "preparingDesc": "Preparing download...",
     "downloadingDesc": "Please do not close the app...",
     "downloadedTitle": "Update Ready",
     "downloadedDesc": "Restart to apply the new version.",

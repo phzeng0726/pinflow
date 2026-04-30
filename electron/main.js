@@ -13,6 +13,10 @@ const { pathToFileURL } = require("url");
 const { spawn } = require("child_process");
 const http = require("http");
 const { autoUpdater } = require("electron-updater");
+const log = require("electron-log");
+
+autoUpdater.logger = log;
+autoUpdater.logger.transports.file.level = "info";
 
 const isDev = !!process.env.ELECTRON_DEV;
 const BACKEND_PORT = 34115;
@@ -280,12 +284,30 @@ function setupAutoUpdater() {
         defaultId: 0,
       })
       .then(({ response }) => {
-        if (response === 0) autoUpdater.quitAndInstall();
+        if (response === 0) autoUpdater.quitAndInstall(true, true);
       });
   });
 
+  autoUpdater.on("update-available", (info) => {
+    log.info("[updater] Update available:", info.version);
+  });
+
+  autoUpdater.on("update-not-available", () => {
+    log.info("[updater] Already up to date.");
+  });
+
+  autoUpdater.on("download-progress", (progress) => {
+    log.info(`[updater] Downloading... ${Math.round(progress.percent)}%`);
+    mainWindow?.setProgressBar(progress.percent / 100);
+  });
+
   autoUpdater.on("error", (err) => {
-    console.error("[updater]", err.message);
+    log.error("[updater] Error:", err.message);
+    dialog.showMessageBox({
+      type: "error",
+      title: "Update Error",
+      message: `Failed to check for updates:\n${err.message}`,
+    });
   });
 
   autoUpdater.checkForUpdatesAndNotify();

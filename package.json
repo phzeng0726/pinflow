@@ -58,10 +58,12 @@
     "publish": {
       "provider": "github",
       "owner": "phzeng0726",
-      "repo": "pinflow"
+      "repo": "pinflow",
+      "releaseType": "release"
     }
   },
   "dependencies": {
+    "electron-log": "^5.4.3",
     "electron-updater": "^6.8.3"
   }
 }

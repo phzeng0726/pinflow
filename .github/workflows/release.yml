@@ -63,15 +63,7 @@ jobs:
         env:
           ELECTRON_BUILD: '1'
 
-      - name: Package Electron app
-        run: pnpm exec electron-builder --win --publish never
-
-      - name: Upload to GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            dist-electron/*.exe
-            dist-electron/*.exe.blockmap
-            dist-electron/latest.yml
-          generate_release_notes: true
-          draft: false
+      - name: Package and publish Electron app
+        run: pnpm exec electron-builder --win --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

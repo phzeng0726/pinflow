@@ -30,7 +30,7 @@ function sortByOrder(cards: PinnedCard[], order: number[]): PinnedCard[] {
     .filter((c) => orderMap.has(c.id))
     .sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!)
   const unknown = cards.filter((c) => !orderMap.has(c.id))
-  return [...known, ...unknown]
+  return [...unknown, ...known]
 }
 
 interface UsePinDndParams {

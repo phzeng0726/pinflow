@@ -205,7 +205,7 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
                 <p className="mb-1 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-gray-400">
                   {t('pin.moveToColumn')}
                 </p>
-                {boardDetail?.columns.map((col) => (
+                {(boardDetail?.columns ?? []).map((col) => (
                   <button
                     key={col.id}
                     type="button"

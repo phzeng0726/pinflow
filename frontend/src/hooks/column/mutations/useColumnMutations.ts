@@ -13,6 +13,8 @@ export function useColumnMutations(boardId: number) {
     qc.invalidateQueries({ queryKey: queryKeys.boards.detail(boardId) })
   const invalidateSnapshots = () =>
     qc.invalidateQueries({ queryKey: queryKeys.snapshots.byBoard(boardId) })
+  const invalidatePinned = () =>
+    qc.invalidateQueries({ queryKey: queryKeys.cards.pinned() })
 
   const create = useMutation({
     mutationFn: (form: NewColumnForm) => api.createColumn(boardId, form),
@@ -49,7 +51,7 @@ export function useColumnMutations(boardId: number) {
   const remove = useMutation({
     mutationFn: (id: number) => api.deleteColumn(id),
     onSuccess: async () => {
-      await Promise.all([invalidateBoardDetail(), invalidateSnapshots()])
+      await Promise.all([invalidateBoardDetail(), invalidateSnapshots(), invalidatePinned()])
       toast.success(t('toast.column.deleteSuccess'))
     },
     onError: () => toast.error(t('toast.column.deleteError')),

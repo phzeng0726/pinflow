@@ -13,6 +13,8 @@ export function useBoardMutations() {
     qc.invalidateQueries({ queryKey: queryKeys.boards.all() })
   const invalidateBoardDetail = (id: number) =>
     qc.invalidateQueries({ queryKey: queryKeys.boards.detail(id) })
+  const invalidatePinned = () =>
+    qc.invalidateQueries({ queryKey: queryKeys.cards.pinned() })
 
   const create = useMutation({
     mutationFn: (form: NewOrEditBoardForm) => api.createBoard(form),
@@ -38,7 +40,7 @@ export function useBoardMutations() {
   const remove = useMutation({
     mutationFn: (id: number) => api.deleteBoard(id),
     onSuccess: async () => {
-      await invalidateBoardAll()
+      await Promise.all([invalidateBoardAll(), invalidatePinned()])
       toast.success(t('toast.board.deleteSuccess'))
     },
     onError: () => toast.error(t('toast.board.deleteError')),

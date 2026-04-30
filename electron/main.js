@@ -271,25 +271,12 @@ ipcMain.on("broadcast-query-invalidation", (event, queryKey) => {
 // ── Auto Updater ──────────────────────────────────────────────────────────────
 
 function setupAutoUpdater() {
-  autoUpdater.autoDownload = true;
-  autoUpdater.autoInstallOnAppQuit = true;
-
-  autoUpdater.on("update-downloaded", () => {
-    dialog
-      .showMessageBox({
-        type: "info",
-        title: "Update Ready",
-        message: "A new version has been downloaded. Restart now to apply the update.",
-        buttons: ["Restart Now", "Later"],
-        defaultId: 0,
-      })
-      .then(({ response }) => {
-        if (response === 0) autoUpdater.quitAndInstall(true, true);
-      });
-  });
+  autoUpdater.autoDownload = false;
+  autoUpdater.autoInstallOnAppQuit = false;
 
   autoUpdater.on("update-available", (info) => {
     log.info("[updater] Update available:", info.version);
+    mainWindow?.webContents.send("updater:available", { version: info.version });
   });
 
   autoUpdater.on("update-not-available", () => {
@@ -297,21 +284,34 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on("download-progress", (progress) => {
-    log.info(`[updater] Downloading... ${Math.round(progress.percent)}%`);
+    const percent = Math.round(progress.percent);
+    log.info(`[updater] Downloading... ${percent}%`);
     mainWindow?.setProgressBar(progress.percent / 100);
+    mainWindow?.webContents.send("updater:progress", { percent });
+  });
+
+  autoUpdater.on("update-downloaded", () => {
+    log.info("[updater] Update downloaded.");
+    mainWindow?.setProgressBar(-1);
+    mainWindow?.webContents.send("updater:downloaded");
   });
 
   autoUpdater.on("error", (err) => {
     log.error("[updater] Error:", err.message);
-    dialog.showMessageBox({
-      type: "error",
-      title: "Update Error",
-      message: `Failed to check for updates:\n${err.message}`,
-    });
+    mainWindow?.setProgressBar(-1);
+    mainWindow?.webContents.send("updater:error", { message: err.message });
   });
 
-  autoUpdater.checkForUpdatesAndNotify();
+  autoUpdater.checkForUpdates();
 }
+
+ipcMain.on("updater:start-download", () => {
+  autoUpdater.downloadUpdate();
+});
+
+ipcMain.on("updater:install", () => {
+  autoUpdater.quitAndInstall(true, true);
+});
 
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 

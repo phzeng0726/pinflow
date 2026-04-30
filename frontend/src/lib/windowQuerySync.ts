@@ -11,6 +11,13 @@ interface ElectronAPI {
   hidePinWindow?: () => void
   minimizeWindow?: () => void
   isElectron?: boolean
+  onUpdateAvailable?: (cb: (info: { version: string }) => void) => void
+  onUpdateProgress?: (cb: (data: { percent: number }) => void) => void
+  onUpdateDownloaded?: (cb: () => void) => void
+  onUpdateError?: (cb: (data: { message: string }) => void) => void
+  startUpdateDownload?: () => void
+  installUpdate?: () => void
+  removeUpdateListeners?: () => void
 }
 
 declare global {

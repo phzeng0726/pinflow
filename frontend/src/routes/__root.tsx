@@ -4,6 +4,7 @@ import { Toaster } from 'sonner'
 import { useLocaleStore } from '@/stores/localeStore'
 import { useThemeStore } from '@/stores/themeStore'
 import { getSettings } from '@/lib/api'
+import { UpdateDialog } from '@/components/common/UpdateDialog'
 
 function Root() {
   const apply = useThemeStore((s) => s.apply)
@@ -32,6 +33,7 @@ function Root() {
     <>
       <Outlet />
       <Toaster richColors position="bottom-right" theme={theme} />
+      {window.electronAPI?.isElectron && <UpdateDialog />}
     </>
   )
 }

@@ -320,6 +320,19 @@
     "noDates": "No dates",
     "searchPlaceholder": "Search cards..."
   },
+  "updater": {
+    "availableTitle": "New Version Available",
+    "availableDesc": "PinFlow {{version}} is ready to download. Update now?",
+    "later": "Later",
+    "updateNow": "Update Now",
+    "downloadingTitle": "Downloading Update",
+    "downloadingDesc": "Please do not close the app...",
+    "downloadedTitle": "Update Ready",
+    "downloadedDesc": "Restart to apply the new version.",
+    "restartNow": "Restart Now",
+    "errorTitle": "Update Failed",
+    "close": "Close"
+  },
   "graphView": {
     "boardView": "Board",
     "graphView": "Graph",

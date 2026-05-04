@@ -68,15 +68,15 @@ export const DEPENDENCY_RELATIONS: DependencyRelationConfig[] = [
 export function resolveDependencyView(
   dep: Dependency,
   thisCardId: number,
-): { labelKey: string; otherCardId: number; otherCardTitle: string } {
+) {
   const isFrom = dep.fromCard.id === thisCardId
 
-  const labelKeyMap: Record<DependencyType, { asFrom: string; asTo: string }> = {
+  const labelKeyMap = {
     blocks: { asFrom: 'dependency.relation.blocks', asTo: 'dependency.relation.is_blocked_by' },
     parent_of: { asFrom: 'dependency.relation.is_parent_to', asTo: 'dependency.relation.is_child_to' },
     duplicates: { asFrom: 'dependency.relation.duplicates', asTo: 'dependency.relation.is_duplicated_by' },
     related_to: { asFrom: 'dependency.relation.is_related_to', asTo: 'dependency.relation.is_related_to' },
-  }
+  } as const
 
   const entry = labelKeyMap[dep.type]
   const labelKey = isFrom ? entry.asFrom : entry.asTo
@@ -114,7 +114,7 @@ export function getTagColorClasses(colorKey: string) {
 export const PRIORITIES: {
   value: number
   label: string
-  key: string
+  key: 'highest' | 'critical' | 'high' | 'medium' | 'low'
   activeClass: string
   textClass: string
 }[] = [

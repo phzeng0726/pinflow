@@ -58,7 +58,6 @@ export function GraphView({ boardId }: GraphViewProps) {
 
   const [filterOpen, setFilterOpen] = useState(false)
   const filterRef = useRef<HTMLDivElement>(null)
-  const lastClickRef = useRef<{ cardId: number; time: number } | null>(null)
 
   // Reset store on unmount
   useEffect(() => () => reset(), [reset])
@@ -104,25 +103,17 @@ export function GraphView({ boardId }: GraphViewProps) {
   const handleNodeClick = useCallback(
     (_: React.MouseEvent, node: RFNode) => {
       const cardId = Number(node.id)
-      const now = Date.now()
-      const lastClick = lastClickRef.current
-
-      // Check for double-click (within 300ms)
-      if (
-        lastClick &&
-        lastClick.cardId === cardId &&
-        now - lastClick.time < 300
-      ) {
-        setOpenedCardId(cardId)
-        lastClickRef.current = null
-        return
-      }
-
-      // Single click: toggle focus
       setFocusedCardId(focusedCardId === cardId ? null : cardId)
-      lastClickRef.current = { cardId, time: now }
     },
-    [focusedCardId, setFocusedCardId, setOpenedCardId],
+    [focusedCardId, setFocusedCardId],
+  )
+
+  const handleNodeContextMenu = useCallback(
+    (e: React.MouseEvent, node: RFNode) => {
+      e.preventDefault()
+      setOpenedCardId(Number(node.id))
+    },
+    [setOpenedCardId],
   )
 
   const handlePaneClick = useCallback(() => {
@@ -149,6 +140,7 @@ export function GraphView({ boardId }: GraphViewProps) {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onNodeClick={handleNodeClick}
+          onNodeContextMenu={handleNodeContextMenu}
           onPaneClick={handlePaneClick}
           fitView
           fitViewOptions={{

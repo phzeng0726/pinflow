@@ -88,7 +88,7 @@ export function CommentItem(props: CommentItemProps) {
           </div>
         </div>
       ) : (
-        <div className="prose prose-sm dark:prose-invert max-w-none text-sm">
+        <div className="markdown-editor-content markdown-preview text-sm">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {comment.text}
           </ReactMarkdown>

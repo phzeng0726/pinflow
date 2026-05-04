@@ -111,7 +111,7 @@ export function GraphSidebar({ board }: GraphSidebarProps) {
                         focusedCardId === card.id ? null : card.id,
                       )
                     }
-                    onDoubleClick={() => setOpenedCardId(card.id)}
+                    onContextMenu={(e) => { e.preventDefault(); setOpenedCardId(card.id) }}
                     className={cn(
                       'flex cursor-pointer flex-col rounded-md px-2.5 py-2 transition-colors',
                       isActive
@@ -180,7 +180,7 @@ export function GraphSidebar({ board }: GraphSidebarProps) {
                         focusedCardId === card.id ? null : card.id,
                       )
                     }
-                    onDoubleClick={() => setOpenedCardId(card.id)}
+                    onContextMenu={(e) => { e.preventDefault(); setOpenedCardId(card.id) }}
                     className={cn(
                       'flex cursor-pointer flex-col rounded-md px-2.5 py-2 transition-colors',
                       isActive

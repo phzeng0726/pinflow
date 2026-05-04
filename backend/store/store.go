@@ -167,7 +167,7 @@ func (s *FileStore) load() error {
 		}
 		s.settings = &settings
 	} else {
-		s.settings = &model.Settings{Theme: "light", Locale: "en-US"}
+		s.settings = &model.Settings{Theme: "dark", Locale: "en-US"}
 		if err := s.persistSettings(); err != nil {
 			return err
 		}

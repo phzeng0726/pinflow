@@ -194,7 +194,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                   </span>
                   <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
                     {dependencies.map((dep) => {
-                      const { label, otherCardTitle } = resolveDependencyView(
+                      const { labelKey, otherCardTitle } = resolveDependencyView(
                         dep,
                         card.id,
                       )
@@ -206,7 +206,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                           className="flex h-8 items-center gap-1 rounded border border-gray-300 bg-gray-100 px-2 py-0.5 text-xs dark:border-gray-600 dark:bg-gray-700"
                         >
                           <span className="text-gray-500 dark:text-gray-400">
-                            {label}:
+                            {t(labelKey)}:
                           </span>
                           <span>{otherCardTitle}</span>
                           <button
@@ -281,7 +281,8 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                   value={descriptionValue ?? ''}
                   onChange={handleDescriptionChange}
                   onBlur={handleBlur}
-                  placeholder={t('cardDetail.descPlaceholder')}
+                  placeholder={t('cardDetail.writePlaceholder')}
+                  editorPlaceholder={t('cardDetail.editorPlaceholder')}
                   cardId={card.id}
                 />
               </div>

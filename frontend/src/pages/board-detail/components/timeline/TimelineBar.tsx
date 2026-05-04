@@ -175,7 +175,7 @@ export function TimelineBar({
       <Tooltip delayDuration={300}>
         <TooltipTrigger asChild>
           <div
-            onClick={() => setOpenedCardId(card.id)}
+            onContextMenu={(e) => { e.preventDefault(); setOpenedCardId(card.id) }}
             style={{ top, height: barHeight, width: 120, left: 4, zIndex: 1 }}
             className={cn(
               'absolute cursor-pointer select-none overflow-hidden rounded border-2 border-dashed border-gray-400 bg-transparent transition-opacity hover:opacity-80 dark:border-gray-500',
@@ -202,7 +202,7 @@ export function TimelineBar({
       <Tooltip delayDuration={300}>
         <TooltipTrigger asChild>
           <div
-            onClick={() => setOpenedCardId(card.id)}
+            onContextMenu={(e) => { e.preventDefault(); setOpenedCardId(card.id) }}
             style={{ top, height: barHeight, left, width, ...urgencyStyle }}
             className={cn(
               'absolute cursor-pointer select-none overflow-hidden rounded bg-blue-500 transition-opacity hover:opacity-90',
@@ -250,7 +250,7 @@ export function TimelineBar({
     <Tooltip delayDuration={300}>
       <TooltipTrigger asChild>
         <div
-          onClick={() => setOpenedCardId(card.id)}
+          onContextMenu={(e) => { e.preventDefault(); setOpenedCardId(card.id) }}
           style={{ top, height: barHeight, left, width, ...urgencyStyle }}
           className={cn(
             'absolute cursor-pointer select-none overflow-hidden rounded transition-opacity hover:opacity-90',
@@ -276,7 +276,10 @@ export function TimelineBar({
           </div>
         </div>
       </TooltipTrigger>
-      <TooltipContent side="top">
+      <TooltipContent
+        side="top"
+        className="border border-gray-200 bg-white text-gray-900 shadow-md dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+      >
         <BarTooltipContent card={card} />
       </TooltipContent>
     </Tooltip>

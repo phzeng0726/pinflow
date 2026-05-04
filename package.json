@@ -1,7 +1,7 @@
 {
   "name": "pinflow",
   "version": "0.1.0",
-  "description": "Trello-style kanban with desktop pin overlay",
+  "description": "PinFlow — Kanban desktop app with always-on-top pin window, dependency graph, and file-based Git-syncable storage",
   "main": "electron/main.js",
   "author": "PinFlow",
   "license": "MIT",

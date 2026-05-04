@@ -2,7 +2,7 @@
 
 目前 `CardDetailDialog` 以縱向堆疊的方式呈現 `StoryPointSelector`（10 顆常駐按鈕）與 `TagSection`（Badge 列 + autocomplete input + 內嵌色選器），每次開啟卡片時版面擁擠、視覺噪音高。
 
-目標是改為仿 Trello 的「小標題 + 觸發鈕 → Popover」模式，使主畫面保持簡潔，所有操作收進 Popover。
+目標是改為「小標題 + 觸發鈕 → Popover」模式，使主畫面保持簡潔，所有操作收進 Popover。
 
 Tech stack：React 19、shadcn/ui（Radix Popover/Button/Input/Checkbox/Badge）、TanStack Query、Tailwind v3。
 
@@ -27,7 +27,7 @@ Tech stack：React 19、shadcn/ui（Radix Popover/Button/Input/Checkbox/Badge）
 **選項 A**：每個子畫面獨立開新 Popover（edit、create 各自 trigger）
 **選項 B（採用）**：單一 Popover，內部以 `view` state 切換畫面
 
-**理由**：Trello 的互動模式是在同一個 popover 視窗內穿梭，體驗一致；多層巢狀 Popover 在 Radix 中有 z-index 與 focus-trap 衝突，且 Popover 寬度/位置會跳動。單一 Popover + view-state 實作較簡單，行為可預期。
+**理由**：單一 Popover 搭配 view-state 切換，在同一個 popover 視窗內穿梭體驗一致；多層巢狀 Popover 在 Radix 中有 z-index 與 focus-trap 衝突，且 Popover 寬度/位置會跳動，實作較複雜。
 
 `view` 型別：
 ```ts

@@ -118,7 +118,7 @@ export function DependencyPopover(props: DependencyPopoverProps) {
                       : 'hover:bg-gray-100 dark:hover:bg-gray-700',
                   )}
                 >
-                  <span className="font-medium">{rel.label}</span>
+                  <span className="font-medium">{t(`dependency.relation.${rel.key}`)}</span>
                   <span
                     className={cn(
                       'leading-snug',
@@ -127,7 +127,7 @@ export function DependencyPopover(props: DependencyPopoverProps) {
                         : 'text-gray-500 dark:text-gray-400',
                     )}
                   >
-                    {rel.description}
+                    {t(`dependency.description.${rel.key}`)}
                   </span>
                 </button>
               )
@@ -201,7 +201,7 @@ export function DependencyPopover(props: DependencyPopoverProps) {
               </span>
               {' → '}
               <span className="text-blue-600 dark:text-blue-400">
-                {selectedRelationDef.label}
+                {t(`dependency.relation.${selectedRelationDef.key}`)}
               </span>
               {' → '}
               <span className="font-medium text-gray-700 dark:text-gray-300">

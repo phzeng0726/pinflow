@@ -78,6 +78,7 @@ export function CommentSection(props: CommentSectionProps) {
               onChange={setNewText}
               onBlur={handleEditorBlur}
               placeholder={t('comment.writePlaceholder')}
+              editorPlaceholder={t('comment.editorPlaceholder')}
               defaultEditing
               cardId={cardId}
             />

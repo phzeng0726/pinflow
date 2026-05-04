@@ -1,4 +1,8 @@
 {
+  "editor": {
+    "markdownMode": "Markdown",
+    "richMode": "Rich"
+  },
   "common": {
     "cancel": "Cancel",
     "save": "Save",
@@ -61,7 +65,8 @@
   "cardDetail": {
     "dialogTitle": "Card Detail",
     "description": "Description",
-    "descPlaceholder": "Add a description...",
+    "writePlaceholder": "Add a description...",
+    "editorPlaceholder": "# Heading\n**bold** _italic_ `code`\n- list item  [link](url)",
     "cardNumber": "Number",
     "storyPoints": "Story Points",
     "priority": "Priority",
@@ -73,7 +78,24 @@
     "title": "Add Dependency",
     "searchPlaceholder": "Search cards...",
     "noCards": "No cards found",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "relation": {
+      "blocks": "Blocks",
+      "is_blocked_by": "Is blocked by",
+      "is_parent_to": "Is parent to",
+      "is_child_to": "Is child to",
+      "duplicates": "Duplicates",
+      "is_related_to": "Is related to",
+      "is_duplicated_by": "Is duplicated by"
+    },
+    "description": {
+      "blocks": "Must be resolved before the other",
+      "is_blocked_by": "Waiting on the other",
+      "is_parent_to": "Parent of the other",
+      "is_child_to": "A subtask of the other",
+      "duplicates": "Same as the other",
+      "is_related_to": "Related to the other"
+    }
   },
   "duplicate": {
     "title": "Duplicate Card",
@@ -93,7 +115,12 @@
     "createCard": "Create Card"
   },
   "priority": {
-    "title": "Priority"
+    "title": "Priority",
+    "highest": "Highest",
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
   },
   "schedule": {
     "title": "Schedule",
@@ -146,6 +173,7 @@
   "comment": {
     "title": "Comments",
     "writePlaceholder": "Write a comment...",
+    "editorPlaceholder": "# Heading\n**bold** _italic_ `code`\n- list item  [link](url)",
     "save": "Save",
     "edit": "Edit",
     "delete": "Delete",

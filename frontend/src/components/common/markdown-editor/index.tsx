@@ -1,24 +1,26 @@
+import { cn } from '@/lib/utils'
 import { CodeHighlightNode, CodeNode } from '@lexical/code'
+import { HorizontalRuleNode } from '@lexical/extension'
 import { LinkNode } from '@lexical/link'
-import { ListNode, ListItemNode } from '@lexical/list'
+import { ListItemNode, ListNode } from '@lexical/list'
 import { $convertFromMarkdownString } from '@lexical/markdown'
+import { CheckListPlugin } from '@lexical/react/LexicalCheckListPlugin'
 import { LexicalComposer } from '@lexical/react/LexicalComposer'
 import { ContentEditable } from '@lexical/react/LexicalContentEditable'
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary'
-import { CheckListPlugin } from '@lexical/react/LexicalCheckListPlugin'
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin'
-import { HorizontalRuleNode } from '@lexical/extension'
 import { LinkPlugin } from '@lexical/react/LexicalLinkPlugin'
 import { ListPlugin } from '@lexical/react/LexicalListPlugin'
 import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin'
 import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin'
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin'
 import { HeadingNode, QuoteNode } from '@lexical/rich-text'
-import { cn } from '@/lib/utils'
 import { $createParagraphNode, $createTextNode, $getRoot } from 'lexical'
-import { useCallback, useRef, useState, type MutableRefObject } from 'react'
+import { useCallback, useRef, useState, type RefObject } from 'react'
+import { useTranslation } from 'react-i18next'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { ImageNode } from './nodes/ImageNode'
 import {
   AutoFocusPlugin,
   ImagePlugin,
@@ -29,7 +31,6 @@ import {
   SourcePlugin,
   ToolbarPlugin,
 } from './plugins'
-import { ImageNode } from './nodes/ImageNode'
 import { EDITOR_TRANSFORMERS } from './transformers'
 
 interface MarkdownEditorProps {
@@ -37,6 +38,7 @@ interface MarkdownEditorProps {
   onChange: (markdown: string) => void
   onBlur: () => void
   placeholder?: string
+  editorPlaceholder?: string
   defaultEditing?: boolean
   cardId?: number
 }
@@ -90,9 +92,12 @@ export function MarkdownEditor({
   onChange,
   onBlur,
   placeholder,
+  editorPlaceholder,
   defaultEditing = false,
   cardId,
 }: MarkdownEditorProps) {
+  const activeEditorPlaceholder = editorPlaceholder ?? placeholder
+  const { t } = useTranslation()
   const [isEditing, setIsEditing] = useState(defaultEditing)
   const [editorMode, setEditorMode] = useState<'source' | 'rich'>('source')
   const [lineCount, setLineCount] = useState(() => value.split('\n').length)
@@ -107,7 +112,7 @@ export function MarkdownEditor({
    * 圖片上傳按鈕開啟 OS 檔案選擇器時設為 true，
    * 讓 OnBlurPlugin 略過這段期間的 blur 事件，防止編輯器被關閉。
    */
-  const suppressBlurRef = useRef(false) as MutableRefObject<boolean>
+  const suppressBlurRef = useRef(false) as RefObject<boolean>
 
   const handleSwitchToView = useCallback(() => setIsEditing(false), [])
 
@@ -131,7 +136,9 @@ export function MarkdownEditor({
         {value ? (
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
         ) : (
-          <span className="text-gray-400 dark:text-gray-500">{placeholder}</span>
+          <span className="text-gray-400 dark:text-gray-500">
+            {placeholder}
+          </span>
         )}
       </div>
     )
@@ -182,7 +189,7 @@ export function MarkdownEditor({
                 : 'text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700/50',
             )}
           >
-            Source
+            {t('editor.markdownMode')}
           </button>
           <button
             type="button"
@@ -197,7 +204,7 @@ export function MarkdownEditor({
                 : 'text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700/50',
             )}
           >
-            Rich
+            {t('editor.richMode')}
           </button>
         </div>
       </div>
@@ -205,7 +212,10 @@ export function MarkdownEditor({
       {/* Source 編輯器 */}
       {editorMode === 'source' && (
         <LexicalComposer initialConfig={sourceInitialConfig}>
-          <div className="overflow-hidden rounded-md border border-gray-300 focus-within:ring-1 focus-within:ring-ring dark:border-gray-500" data-lexical-editor-container>
+          <div
+            className="overflow-hidden rounded-md border border-gray-300 focus-within:ring-1 focus-within:ring-ring dark:border-gray-500"
+            data-lexical-editor-container
+          >
             <div className="flex">
               {/* 行號欄 */}
               <div
@@ -226,10 +236,10 @@ export function MarkdownEditor({
                   contentEditable={
                     <ContentEditable
                       className="markdown-source-editor min-h-[120px] py-2 pl-3 pr-4 font-mono text-sm outline-none"
-                      aria-placeholder={placeholder ?? ''}
+                      aria-placeholder={activeEditorPlaceholder ?? ''}
                       placeholder={
-                        <div className="pointer-events-none absolute left-3 top-2 select-none font-mono text-sm text-gray-400 dark:text-gray-500">
-                          {placeholder}
+                        <div className="pointer-events-none absolute left-3 top-2 select-none whitespace-pre-line font-mono text-sm text-gray-400 dark:text-gray-500">
+                          {activeEditorPlaceholder}
                         </div>
                       }
                     />
@@ -241,7 +251,11 @@ export function MarkdownEditor({
           </div>
           <HistoryPlugin />
           <SourcePlugin onChange={onChange} setLineCount={setLineCount} />
-          <OnBlurPlugin onBlur={onBlur} onSwitchToView={handleSwitchToView} suppressBlurRef={suppressBlurRef} />
+          <OnBlurPlugin
+            onBlur={onBlur}
+            onSwitchToView={handleSwitchToView}
+            suppressBlurRef={suppressBlurRef}
+          />
           <AutoFocusPlugin />
           <SourceImagePastePlugin cardId={cardId} />
         </LexicalComposer>
@@ -250,8 +264,15 @@ export function MarkdownEditor({
       {/* Rich 編輯器 */}
       {editorMode === 'rich' && (
         <LexicalComposer initialConfig={richInitialConfig}>
-          <div className="overflow-hidden rounded-md border border-gray-300 focus-within:ring-1 focus-within:ring-ring dark:border-gray-500" data-lexical-editor-container>
-            <ToolbarPlugin cardId={cardId} suppressBlurRef={suppressBlurRef} onChange={onChange} />
+          <div
+            className="overflow-hidden rounded-md border border-gray-300 focus-within:ring-1 focus-within:ring-ring dark:border-gray-500"
+            data-lexical-editor-container
+          >
+            <ToolbarPlugin
+              cardId={cardId}
+              suppressBlurRef={suppressBlurRef}
+              onChange={onChange}
+            />
             <div className="relative">
               <RichTextPlugin
                 contentEditable={
@@ -271,7 +292,11 @@ export function MarkdownEditor({
           </div>
           <HistoryPlugin />
           <OnChangePlugin onChange={onChange} lastExportRef={lastExportRef} />
-          <OnBlurPlugin onBlur={onBlur} onSwitchToView={handleSwitchToView} suppressBlurRef={suppressBlurRef} />
+          <OnBlurPlugin
+            onBlur={onBlur}
+            onSwitchToView={handleSwitchToView}
+            suppressBlurRef={suppressBlurRef}
+          />
           <InitialValuePlugin value={value} lastExportRef={lastExportRef} />
           <AutoFocusPlugin />
           <ImagePlugin cardId={cardId} onChange={onChange} />

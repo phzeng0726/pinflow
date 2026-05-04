@@ -57,7 +57,7 @@ export function PriorityPopover(props: PriorityPopoverProps) {
             hasValue && activePriority?.activeClass,
           )}
         >
-          {hasValue ? activePriority?.label : <Flag className="h-3.5 w-3.5" />}
+          {hasValue ? t(`priority.${activePriority!.key}`) : <Flag className="h-3.5 w-3.5" />}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-44 p-0" align="start">
@@ -90,7 +90,7 @@ export function PriorityPopover(props: PriorityPopoverProps) {
                   )}
                 >
                   <span className="mr-2 font-bold">P{p.value}</span>
-                  {p.label}
+                  {t(`priority.${p.key}`)}
                 </button>
               )
             })}

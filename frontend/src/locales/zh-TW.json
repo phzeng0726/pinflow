@@ -1,4 +1,8 @@
 {
+  "editor": {
+    "markdownMode": "Markdown",
+    "richMode": "富文本"
+  },
   "common": {
     "cancel": "取消",
     "save": "儲存",
@@ -61,7 +65,8 @@
   "cardDetail": {
     "dialogTitle": "卡片詳情",
     "description": "描述",
-    "descPlaceholder": "新增描述...",
+    "writePlaceholder": "新增描述...",
+    "editorPlaceholder": "# 標題\n**粗體** _斜體_ `程式碼`\n- 清單項目  [連結](url)",
     "cardNumber": "編號",
     "storyPoints": "點數",
     "priority": "優先度",
@@ -73,7 +78,24 @@
     "title": "新增依賴關係",
     "searchPlaceholder": "搜尋卡片...",
     "noCards": "找不到卡片",
-    "confirm": "確認"
+    "confirm": "確認",
+    "relation": {
+      "blocks": "阻擋",
+      "is_blocked_by": "被阻擋",
+      "is_parent_to": "為父任務",
+      "is_child_to": "為子任務",
+      "duplicates": "重複",
+      "is_related_to": "相關",
+      "is_duplicated_by": "被複製"
+    },
+    "description": {
+      "blocks": "必須先解決此任務",
+      "is_blocked_by": "等待對方解決",
+      "is_parent_to": "為對方的父任務",
+      "is_child_to": "為對方的子任務",
+      "duplicates": "與對方相同",
+      "is_related_to": "與對方相關"
+    }
   },
   "duplicate": {
     "title": "複製卡片",
@@ -93,7 +115,12 @@
     "createCard": "創建卡片"
   },
   "priority": {
-    "title": "優先度"
+    "title": "優先度",
+    "highest": "最高",
+    "critical": "緊急",
+    "high": "高",
+    "medium": "中",
+    "low": "低"
   },
   "schedule": {
     "title": "時程",
@@ -146,6 +173,7 @@
   "comment": {
     "title": "留言",
     "writePlaceholder": "新增留言...",
+    "editorPlaceholder": "# 標題\n**粗體** _斜體_ `程式碼`\n- 清單項目  [連結](url)",
     "save": "儲存",
     "edit": "編輯",
     "delete": "刪除",

@@ -68,21 +68,21 @@ export const DEPENDENCY_RELATIONS: DependencyRelationConfig[] = [
 export function resolveDependencyView(
   dep: Dependency,
   thisCardId: number,
-): { label: string; otherCardId: number; otherCardTitle: string } {
+): { labelKey: string; otherCardId: number; otherCardTitle: string } {
   const isFrom = dep.fromCard.id === thisCardId
 
-  const labelMap: Record<DependencyType, { asFrom: string; asTo: string }> = {
-    blocks: { asFrom: 'Blocks', asTo: 'Is blocked by' },
-    parent_of: { asFrom: 'Is parent to', asTo: 'Is child to' },
-    duplicates: { asFrom: 'Duplicates', asTo: 'Is duplicated by' },
-    related_to: { asFrom: 'Is related to', asTo: 'Is related to' },
+  const labelKeyMap: Record<DependencyType, { asFrom: string; asTo: string }> = {
+    blocks: { asFrom: 'dependency.relation.blocks', asTo: 'dependency.relation.is_blocked_by' },
+    parent_of: { asFrom: 'dependency.relation.is_parent_to', asTo: 'dependency.relation.is_child_to' },
+    duplicates: { asFrom: 'dependency.relation.duplicates', asTo: 'dependency.relation.is_duplicated_by' },
+    related_to: { asFrom: 'dependency.relation.is_related_to', asTo: 'dependency.relation.is_related_to' },
   }
 
-  const entry = labelMap[dep.type]
-  const label = isFrom ? entry.asFrom : entry.asTo
+  const entry = labelKeyMap[dep.type]
+  const labelKey = isFrom ? entry.asFrom : entry.asTo
   const other = isFrom ? dep.toCard : dep.fromCard
 
-  return { label, otherCardId: other.id, otherCardTitle: other.title }
+  return { labelKey, otherCardId: other.id, otherCardTitle: other.title }
 }
 
 // ── Tag Colors ────────────────────────────────────────────────────────────────
@@ -114,12 +114,14 @@ export function getTagColorClasses(colorKey: string) {
 export const PRIORITIES: {
   value: number
   label: string
+  key: string
   activeClass: string
   textClass: string
 }[] = [
   {
     value: 1,
     label: 'Highest',
+    key: 'highest',
     activeClass:
       'bg-red-500 text-white hover:bg-red-600 dark:bg-red-500 dark:hover:bg-red-600',
     textClass: 'text-red-500',
@@ -127,6 +129,7 @@ export const PRIORITIES: {
   {
     value: 2,
     label: 'Critical',
+    key: 'critical',
     activeClass:
       'bg-orange-500 text-white hover:bg-orange-600 dark:bg-orange-500 dark:hover:bg-orange-600',
     textClass: 'text-orange-500',
@@ -134,6 +137,7 @@ export const PRIORITIES: {
   {
     value: 3,
     label: 'High',
+    key: 'high',
     activeClass:
       'bg-yellow-400 text-white hover:bg-yellow-500 dark:bg-yellow-400 dark:hover:bg-yellow-500',
     textClass: 'text-yellow-500',
@@ -141,6 +145,7 @@ export const PRIORITIES: {
   {
     value: 4,
     label: 'Medium',
+    key: 'medium',
     activeClass:
       'bg-green-500 text-white hover:bg-green-600 dark:bg-green-500 dark:hover:bg-green-600',
     textClass: 'text-green-500',
@@ -148,6 +153,7 @@ export const PRIORITIES: {
   {
     value: 5,
     label: 'Low',
+    key: 'low',
     activeClass:
       'bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-500 dark:hover:bg-blue-600',
     textClass: 'text-blue-500',

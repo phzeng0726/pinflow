@@ -27,7 +27,7 @@ export function OnChangePlugin({
       ({ editorState, dirtyElements, dirtyLeaves }) => {
         if (dirtyElements.size === 0 && dirtyLeaves.size === 0) return
         editorState.read(() => {
-          const md = $convertToMarkdownString(EDITOR_TRANSFORMERS)
+          const md = $convertToMarkdownString(EDITOR_TRANSFORMERS).trimEnd()
           lastExportRef.current = md
           onChangeRef.current(md)
         })

@@ -10,6 +10,7 @@ import { useLocaleStore } from '@/stores/localeStore'
 import type { Comment } from '@/types'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { preserveLineBreaks } from '@/components/common/markdown-editor/utils'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -90,7 +91,7 @@ export function CommentItem(props: CommentItemProps) {
       ) : (
         <div className="markdown-editor-content markdown-preview text-sm">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {comment.text}
+            {preserveLineBreaks(comment.text)}
           </ReactMarkdown>
         </div>
       )}

@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils'
 import { AddColumnForm } from '@/pages/board-detail/components/columns/AddColumnForm'
 import { ColumnView } from '@/pages/board-detail/components/columns/ColumnView'
 import { GraphView } from '@/pages/board-detail/components/graph'
+import { ArchiveDrawer } from '@/pages/board-detail/components/archive/ArchiveDrawer'
 import { SnapshotDialog } from '@/pages/board-detail/components/snapshots/SnapshotDialog'
 import { TimelineView } from '@/pages/board-detail/components/timeline'
 import { useThemeStore } from '@/stores/themeStore'
@@ -36,6 +37,7 @@ import {
 } from '@dnd-kit/sortable'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import {
+  Archive,
   ArrowLeft,
   CalendarRange,
   Clock,
@@ -65,6 +67,7 @@ export function BoardPage() {
   const [pinPopoverOpen, setPinPopoverOpen] = useState(false)
   const [pendingUnpinCard, setPendingUnpinCard] = useState<Card | null>(null)
   const [snapshotOpen, setSnapshotOpen] = useState(false)
+  const [archiveOpen, setArchiveOpen] = useState(false)
 
   const pinPopoverRef = useRef<HTMLDivElement>(null)
 
@@ -166,6 +169,19 @@ export function BoardPage() {
           <p className="text-xs text-gray-400 dark:text-gray-500">PinFlow</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setArchiveOpen(true)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                <Archive className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('archive.title')}</TooltipContent>
+          </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -410,6 +426,12 @@ export function BoardPage() {
         boardId={id}
         open={snapshotOpen}
         onClose={() => setSnapshotOpen(false)}
+      />
+
+      <ArchiveDrawer
+        boardId={id}
+        open={archiveOpen}
+        onOpenChange={setArchiveOpen}
       />
     </div>
   )

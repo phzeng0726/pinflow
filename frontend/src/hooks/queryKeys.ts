@@ -26,4 +26,8 @@ export const queryKeys = {
   snapshots: {
     byBoard: (boardId: number) => ['snapshots', 'board', boardId] as const,
   },
+  archive: {
+    cards: (boardId: number) => ['archive', 'cards', boardId] as const,
+    columns: (boardId: number) => ['archive', 'columns', boardId] as const,
+  },
 }

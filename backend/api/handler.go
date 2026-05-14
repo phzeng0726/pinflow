@@ -14,6 +14,7 @@ type Handlers struct {
 	Image         *ImageHandler
 	Settings      *SettingsHandler
 	Snapshot      *SnapshotHandler
+	Archive       *ArchiveHandler
 }
 
 func NewHandlers(services *service.Services) *Handlers {
@@ -29,5 +30,6 @@ func NewHandlers(services *service.Services) *Handlers {
 		Image:         &ImageHandler{services: services},
 		Settings:      &SettingsHandler{services: services},
 		Snapshot:      &SnapshotHandler{services: services},
+		Archive:       &ArchiveHandler{services: services},
 	}
 }

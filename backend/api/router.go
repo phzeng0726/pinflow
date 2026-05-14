@@ -48,6 +48,8 @@ func NewRouter(h *Handlers, fs *store.FileStore) *gin.Engine {
 			boards.DELETE("/:id/snapshots/:sid", h.Snapshot.DeleteSnapshot)
 			boards.GET("/:id/tags", h.Tag.ListBoardTags)
 			boards.POST("/:id/tags", h.Tag.CreateBoardTag)
+			boards.GET("/:id/archive/cards", h.Archive.GetArchivedCards)
+			boards.GET("/:id/archive/columns", h.Archive.GetArchivedColumns)
 		}
 
 		columns := v1.Group("/columns")
@@ -55,6 +57,10 @@ func NewRouter(h *Handlers, fs *store.FileStore) *gin.Engine {
 			columns.PATCH("/:id", h.Column.UpdateColumn)
 			columns.DELETE("/:id", h.Column.DeleteColumn)
 			columns.POST("/:id/cards", h.Card.CreateCard)
+			columns.PATCH("/:id/archive", h.Archive.ArchiveColumn)
+			columns.PATCH("/:id/archive-cards", h.Archive.ArchiveAllCardsInColumn)
+			columns.PATCH("/:id/restore", h.Archive.RestoreColumn)
+			columns.DELETE("/:id/archive", h.Archive.DeleteArchivedColumn)
 		}
 
 		cards := v1.Group("/cards")
@@ -66,7 +72,10 @@ func NewRouter(h *Handlers, fs *store.FileStore) *gin.Engine {
 			cards.PATCH("/:id/move", h.Card.MoveCard)
 			cards.PATCH("/:id/pin", h.Card.TogglePin)
 			cards.PATCH("/:id/schedule", h.Card.UpdateSchedule)
+			cards.PATCH("/:id/archive", h.Archive.ArchiveCard)
+			cards.PATCH("/:id/restore", h.Archive.RestoreCard)
 			cards.DELETE("/:id", h.Card.DeleteCard)
+			cards.DELETE("/:id/archive", h.Archive.DeleteArchivedCard)
 			cards.POST("/:id/duplicate", h.Card.DuplicateCard)
 			cards.POST("/:id/tags", h.Tag.AttachTag)
 			cards.DELETE("/:id/tags/:tagId", h.Tag.DetachTag)

@@ -26,6 +26,8 @@ export function useSnapshotMutations(boardId: number) {
       await qc.invalidateQueries({ queryKey: queryKeys.boards.detail(boardId) })
       await invalidate()
       await invalidatePinned()
+      await qc.invalidateQueries({ queryKey: queryKeys.archive.cards(boardId) })
+      await qc.invalidateQueries({ queryKey: queryKeys.archive.columns(boardId) })
       toast.success(t('toast.snapshot.restoreSuccess'))
     },
     onError: () => toast.error(t('toast.snapshot.restoreError')),

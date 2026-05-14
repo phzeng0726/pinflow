@@ -9,6 +9,7 @@ type Column struct {
 	Position  float64   `json:"position"`
 	AutoPin   bool      `json:"autoPin"`
 	Cards     []Card    `json:"cards,omitempty"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ArchivedAt *time.Time `json:"archivedAt"`
+	CreatedAt  time.Time  `json:"createdAt"`
+	UpdatedAt  time.Time  `json:"updatedAt"`
 }

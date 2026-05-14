@@ -57,6 +57,7 @@
     "unpin": "Unpin",
     "pin": "Pin",
     "duplicate": "Duplicate Card",
+    "archive": "Archive",
     "delete": "Delete",
     "deleteTitle": "Delete Card",
     "deleteDesc": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
@@ -156,7 +157,9 @@
     "rename": "Rename",
     "disableAutoPin": "Disable auto-pin",
     "enableAutoPin": "Enable auto-pin",
-    "deleteColumn": "Delete Column"
+    "deleteColumn": "Delete Column",
+    "archiveColumn": "Archive Column",
+    "archiveAllCards": "Archive All Cards"
   },
   "checklist": {
     "title": "Checklist",
@@ -298,7 +301,31 @@
       "restoreError": "Failed to restore snapshot",
       "deleteSuccess": "Snapshot deleted",
       "deleteError": "Failed to delete snapshot"
+    },
+    "archive": {
+      "cardArchived": "Card archived",
+      "cardRestored": "Card restored",
+      "cardDeleted": "Card permanently deleted",
+      "columnArchived": "Column archived",
+      "allCardsArchived": "All cards archived",
+      "columnRestored": "Column restored",
+      "columnDeleted": "Column permanently deleted"
     }
+  },
+  "archive": {
+    "title": "Archive",
+    "cards": "Cards",
+    "columns": "Columns",
+    "emptyCards": "No archived cards",
+    "emptyColumns": "No archived columns",
+    "restore": "Restore",
+    "deleteForever": "Delete Forever",
+    "columnArchived": "Column archived",
+    "confirmDelete": "This action cannot be undone.",
+    "confirmDeleteCard": "This card will be permanently deleted.",
+    "confirmDeleteColumn": "This column and all its cards will be permanently deleted.",
+    "cardCount_one": "{{count}} card",
+    "cardCount_other": "{{count}} cards"
   },
   "snapshot": {
     "dialogTitle": "Board Snapshots",

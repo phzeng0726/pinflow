@@ -1,7 +1,8 @@
 import { useColumnMutations } from '@/hooks/column/mutations/useColumnMutations'
+import { useArchiveColumn, useArchiveAllCardsInColumn } from '@/hooks/archive/mutations/useArchiveMutations'
 import { type EditColumnForm, editColumnSchema } from '@/lib/schemas'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Check, MoreHorizontal, Pencil, Pin, Trash2, X } from 'lucide-react'
+import { Archive, Check, MoreHorizontal, Pencil, Pin, Trash2, X } from 'lucide-react'
 import type { HTMLAttributes } from 'react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -47,6 +48,8 @@ export function ColumnHeader(props: ColumnHeaderProps) {
   const [editing, setEditing] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const { updateColumn, deleteColumn } = useColumnMutations(boardId)
+  const archiveColumn = useArchiveColumn(boardId)
+  const archiveAllCardsInColumn = useArchiveAllCardsInColumn(boardId)
 
   const { register, handleSubmit, reset } = useForm<EditColumnForm>({
     resolver: zodResolver(editColumnSchema),
@@ -76,6 +79,14 @@ export function ColumnHeader(props: ColumnHeaderProps) {
   }
 
   const handleSelectAutoPin = () => handleUpdateColumn({ autoPin: !column.autoPin })
+
+  const handleSelectArchiveColumn = () => {
+    archiveColumn.mutate(column.id)
+  }
+
+  const handleSelectArchiveAllCards = () => {
+    archiveAllCardsInColumn.mutate(column.id)
+  }
 
   const handleSelectDelete = (e: Event) => {
     e.preventDefault()
@@ -156,6 +167,14 @@ export function ColumnHeader(props: ColumnHeaderProps) {
                   )}
                 />
                 {column.autoPin ? t('column.disableAutoPin') : t('column.enableAutoPin')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleSelectArchiveColumn}>
+                <Archive className="h-3.5 w-3.5" />
+                {t('column.archiveColumn')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleSelectArchiveAllCards}>
+                <Archive className="h-3.5 w-3.5" />
+                {t('column.archiveAllCards')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem

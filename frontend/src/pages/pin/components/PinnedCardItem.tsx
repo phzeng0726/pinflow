@@ -117,7 +117,7 @@ export function PinnedCardItem(props: PinnedCardItemProps) {
             {card.title}
           </p>
           {card.description && (
-            <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-gray-500 dark:text-gray-400">
+            <p className="mt-0.5 line-clamp-2 whitespace-pre-line text-xs leading-snug text-gray-500 dark:text-gray-400">
               {card.description}
             </p>
           )}

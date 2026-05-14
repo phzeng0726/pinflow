@@ -234,7 +234,7 @@ export function CardItem(props: CardItemProps) {
                 {card.title}
               </p>
               {card.description && (
-                <p className="mt-1 line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-1 line-clamp-2 whitespace-pre-line text-xs text-gray-500 dark:text-gray-400">
                   {card.description}
                 </p>
               )}

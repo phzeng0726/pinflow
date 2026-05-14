@@ -10,13 +10,10 @@ import { useDependencyMutations } from '@/hooks/dependency/mutations/useDependen
 import { useDependencies } from '@/hooks/dependency/queries/useDependencies'
 import { useTagMutations } from '@/hooks/tag/mutations/useTagMutations'
 import { type EditCardForm, createEditCardSchema } from '@/lib/schemas'
+import { getTagColorClasses, resolveDependencyView } from '@/lib/styleConfig'
 import { cn } from '@/lib/utils'
 import { ChecklistSection } from '@/pages/board-detail/components/checklists/ChecklistSection'
 import { CommentSection } from '@/pages/board-detail/components/comments/CommentSection'
-import {
-  getTagColorClasses,
-  resolveDependencyView,
-} from '@/lib/styleConfig'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Label } from '@radix-ui/react-label'
 import { Notebook, X } from 'lucide-react'
@@ -106,7 +103,10 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <LoadingSpinner variant="inline" className="h-6 w-6 animate-spin text-gray-400" />
+        <LoadingSpinner
+          variant="inline"
+          className="h-6 w-6 animate-spin text-gray-400"
+        />
       </div>
     )
   }
@@ -125,9 +125,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
             className="w-full border-transparent bg-transparent px-1 text-xl font-semibold shadow-none focus-visible:ring-1"
           />
           {errors.title && (
-            <p className="mt-1 text-xs text-red-500">
-              {errors.title.message}
-            </p>
+            <p className="mt-1 text-xs text-red-500">{errors.title.message}</p>
           )}
         </div>
         {!standalone && (
@@ -194,10 +192,8 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
                   </span>
                   <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
                     {dependencies.map((dep) => {
-                      const { labelKey, otherCardTitle } = resolveDependencyView(
-                        dep,
-                        card.id,
-                      )
+                      const { labelKey, otherCardTitle } =
+                        resolveDependencyView(dep, card.id)
                       const handleDeleteDep = () => deleteDep.mutate(dep.id)
                       return (
                         <Badge
@@ -273,8 +269,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
               {/* Description */}
               <div className="space-y-2">
                 <Label className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  <Notebook className="h-4 w-4" />{' '}
-                  {t('cardDetail.description')}
+                  <Notebook className="h-4 w-4" /> {t('cardDetail.description')}
                 </Label>
 
                 <MarkdownEditor
@@ -292,7 +287,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
         </div>
 
         {/* 右側 CommentSection */}
-        <div className="flex w-80 flex-col border-l dark:border-gray-700">
+        <div className="flex w-96 flex-col border-l dark:border-gray-700">
           <CommentSection
             cardId={card.id}
             boardId={boardId}
@@ -315,7 +310,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
   return (
     <Dialog open={true} onOpenChange={handleDialogOpenChange}>
       <DialogContent
-        className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden p-0"
+        className="flex max-h-[90vh] max-w-5xl flex-col overflow-hidden p-0"
         onOpenAutoFocus={handleOpenAutoFocus}
       >
         <DialogTitle className="sr-only">

@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { ImageNode } from './nodes/ImageNode'
+import { preserveLineBreaks } from './utils'
 import {
   AutoFocusPlugin,
   ImagePlugin,
@@ -66,13 +67,13 @@ const RICH_THEME = {
   text: {
     bold: 'font-bold',
     italic: 'italic',
-    code: 'rounded bg-gray-100 px-1 py-0.5 font-mono text-[0.875em] dark:bg-gray-700 dark:text-gray-200',
+    code: 'rounded bg-gray-200 px-1 py-0.5 font-mono text-[0.875em] text-gray-800 dark:bg-gray-700 dark:text-gray-300',
     underline: 'underline',
     strikethrough: 'line-through',
   },
   quote:
     'my-2 border-l-4 border-gray-300 pl-4 text-gray-600 dark:border-gray-600 dark:text-gray-400',
-  code: 'block my-2 overflow-x-auto rounded-md bg-gray-100 px-3 py-2 font-mono text-sm dark:bg-gray-800 dark:text-gray-200',
+  code: 'block my-2 overflow-x-auto rounded border border-gray-300 bg-gray-100 px-3 py-2 font-mono text-sm text-gray-800 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300',
   list: {
     ul: 'my-1 list-disc pl-6',
     ol: 'my-1 list-decimal pl-6',
@@ -134,7 +135,9 @@ export function MarkdownEditor({
         onClick={() => setIsEditing(true)}
       >
         {value ? (
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {preserveLineBreaks(value)}
+          </ReactMarkdown>
         ) : (
           <span className="text-gray-400 dark:text-gray-500">
             {placeholder}

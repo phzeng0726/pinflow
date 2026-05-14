@@ -32,6 +32,7 @@ export function SourcePlugin({
           .getChildren()
           .map((node) => node.getTextContent())
           .join('\n')
+          .trimEnd()
         onChangeRef.current(text)
         setLineCount(text.split('\n').length)
       })

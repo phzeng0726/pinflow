@@ -50,6 +50,7 @@ type CardFile struct {
 	TagIDs      []uint            `json:"tag_ids"`
 	Checklists  []model.Checklist `json:"checklists"`
 	Comments    []model.Comment   `json:"comments"`
+	ArchivedAt  *time.Time        `json:"archivedAt"`
 	CreatedAt   time.Time         `json:"createdAt"`
 	UpdatedAt   time.Time         `json:"updatedAt"`
 }
@@ -472,6 +473,9 @@ func (s *FileStore) GetColumnsByBoard(boardID uint) []model.Column {
 	result := make([]model.Column, 0, len(ids))
 	for _, id := range ids {
 		if c, ok := s.columns[id]; ok {
+			if c.ArchivedAt != nil {
+				continue
+			}
 			cp := *c
 			cp.Cards = nil
 			result = append(result, cp)
@@ -563,6 +567,9 @@ func (s *FileStore) GetCardsByColumn(columnID uint) []CardFile {
 	result := make([]CardFile, 0, len(ids))
 	for _, id := range ids {
 		if c, ok := s.cards[id]; ok {
+			if c.ArchivedAt != nil {
+				continue
+			}
 			result = append(result, *copyCard(c))
 		}
 	}
@@ -579,6 +586,9 @@ func (s *FileStore) SearchCards(query string, limit int) []CardFile {
 	lower := strings.ToLower(strings.TrimSpace(query))
 	var result []CardFile
 	for _, c := range s.cards {
+		if c.ArchivedAt != nil {
+			continue
+		}
 		if lower == "" || strings.Contains(strings.ToLower(c.Title), lower) {
 			result = append(result, *copyCard(c))
 		}
@@ -613,7 +623,7 @@ func (s *FileStore) GetPinnedCards() []CardFile {
 
 	var result []CardFile
 	for _, c := range s.cards {
-		if c.IsPinned {
+		if c.IsPinned && c.ArchivedAt == nil {
 			result = append(result, *copyCard(c))
 		}
 	}
@@ -621,6 +631,64 @@ func (s *FileStore) GetPinnedCards() []CardFile {
 		return result[i].UpdatedAt.After(result[j].UpdatedAt)
 	})
 	return result
+}
+
+func (s *FileStore) GetArchivedCardsByBoard(boardID uint) []CardFile {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var result []CardFile
+	for _, colID := range s.columnsByBoard[boardID] {
+		for _, cardID := range s.cardsByColumn[colID] {
+			if c, ok := s.cards[cardID]; ok && c.ArchivedAt != nil {
+				result = append(result, *copyCard(c))
+			}
+		}
+	}
+	return result
+}
+
+func (s *FileStore) GetArchivedColumnsByBoard(boardID uint) []model.Column {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	ids := s.columnsByBoard[boardID]
+	var result []model.Column
+	for _, id := range ids {
+		if c, ok := s.columns[id]; ok && c.ArchivedAt != nil {
+			cp := *c
+			cp.Cards = nil
+			result = append(result, cp)
+		}
+	}
+	return result
+}
+
+func (s *FileStore) GetAllCardsByColumn(columnID uint) []CardFile {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	ids := s.cardsByColumn[columnID]
+	result := make([]CardFile, 0, len(ids))
+	for _, id := range ids {
+		if c, ok := s.cards[id]; ok {
+			result = append(result, *copyCard(c))
+		}
+	}
+	return result
+}
+
+func (s *FileStore) GetColumnIncludingArchived(id uint) (*model.Column, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	c, ok := s.columns[id]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	cp := *c
+	cp.Cards = nil
+	return &cp, nil
 }
 
 func (s *FileStore) UpdateCard(c *CardFile) error {
@@ -1567,6 +1635,10 @@ func initCardSlices(c *CardFile) {
 
 func copyCard(c *CardFile) *CardFile {
 	cp := *c
+	if c.ArchivedAt != nil {
+		t := *c.ArchivedAt
+		cp.ArchivedAt = &t
+	}
 	cp.TagIDs = make([]uint, len(c.TagIDs))
 	copy(cp.TagIDs, c.TagIDs)
 	cp.Checklists = make([]model.Checklist, len(c.Checklists))

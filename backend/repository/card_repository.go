@@ -156,6 +156,7 @@ func (r *cardRepository) FindPinned() ([]model.Card, error) {
 			Priority:    cf.Priority,
 			StartTime:   cf.StartTime,
 			EndTime:     cf.EndTime,
+			ArchivedAt:  cf.ArchivedAt,
 			CreatedAt:   cf.CreatedAt,
 			UpdatedAt:   cf.UpdatedAt,
 		})
@@ -187,4 +188,50 @@ func (r *cardRepository) Search(query string, limit int) ([]model.Card, error) {
 
 func (r *cardRepository) Delete(id uint) error {
 	return r.s.DeleteCard(id)
+}
+
+func (r *cardRepository) ArchiveCard(id uint) error {
+	cf, err := r.s.GetCard(id)
+	if err != nil {
+		return err
+	}
+	now := time.Now()
+	cf.ArchivedAt = &now
+	cf.IsPinned = false
+	cf.UpdatedAt = now
+	return r.s.UpdateCard(cf)
+}
+
+func (r *cardRepository) RestoreCard(id uint, position float64) error {
+	cf, err := r.s.GetCard(id)
+	if err != nil {
+		return err
+	}
+	cf.ArchivedAt = nil
+	cf.Position = position
+	cf.UpdatedAt = time.Now()
+	return r.s.UpdateCard(cf)
+}
+
+func (r *cardRepository) FindArchivedByBoardID(boardID uint) ([]model.Card, error) {
+	cfs := r.s.GetArchivedCardsByBoard(boardID)
+	cards := make([]model.Card, 0, len(cfs))
+	for _, cf := range cfs {
+		cards = append(cards, model.Card{
+			ID:          cf.ID,
+			ColumnID:    cf.ColumnID,
+			Title:       cf.Title,
+			Description: cf.Description,
+			Position:    cf.Position,
+			IsPinned:    cf.IsPinned,
+			StoryPoint:  cf.StoryPoint,
+			Priority:    cf.Priority,
+			StartTime:   cf.StartTime,
+			EndTime:     cf.EndTime,
+			ArchivedAt:  cf.ArchivedAt,
+			CreatedAt:   cf.CreatedAt,
+			UpdatedAt:   cf.UpdatedAt,
+		})
+	}
+	return cards, nil
 }

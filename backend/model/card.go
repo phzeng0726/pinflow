@@ -17,6 +17,7 @@ type Card struct {
 	Checklists      []Checklist `json:"checklists"`
 	Comments        []Comment   `json:"comments"`
 	DependencyCount int         `json:"dependencyCount"`
+	ArchivedAt      *time.Time  `json:"archivedAt"`
 	CreatedAt       time.Time   `json:"createdAt"`
 	UpdatedAt       time.Time   `json:"updatedAt"`
 }

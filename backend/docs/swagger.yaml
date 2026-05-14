@@ -1,5 +1,31 @@
 basePath: /api/v1
 definitions:
+  dto.ArchivedCardResponse:
+    properties:
+      archivedAt:
+        type: string
+      columnArchived:
+        type: boolean
+      columnId:
+        type: integer
+      columnName:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+    type: object
+  dto.ArchivedColumnResponse:
+    properties:
+      archivedAt:
+        type: string
+      cardCount:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
   dto.AttachTagRequest:
     properties:
       tag_id:
@@ -284,6 +310,8 @@ definitions:
     properties:
       boardId:
         type: integer
+      boardName:
+        type: string
       checklistSummary:
         $ref: '#/definitions/dto.ChecklistSummary'
       columnId:
@@ -466,6 +494,8 @@ definitions:
     type: object
   model.Card:
     properties:
+      archivedAt:
+        type: string
       checklists:
         items:
           $ref: '#/definitions/model.Checklist'
@@ -535,6 +565,8 @@ definitions:
     type: object
   model.Column:
     properties:
+      archivedAt:
+        type: string
       autoPin:
         type: boolean
       boardId:
@@ -719,6 +751,58 @@ paths:
       summary: Update a board
       tags:
       - boards
+  /boards/{id}/archive/cards:
+    get:
+      parameters:
+      - description: Board ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.ArchivedCardResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List archived cards for a board
+      tags:
+      - archive
+  /boards/{id}/archive/columns:
+    get:
+      parameters:
+      - description: Board ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.ArchivedColumnResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List archived columns for a board
+      tags:
+      - archive
   /boards/{id}/columns:
     post:
       consumes:
@@ -1133,6 +1217,61 @@ paths:
       summary: Update a card's title, description, story points, priority, and schedule
       tags:
       - cards
+  /cards/{id}/archive:
+    delete:
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Permanently delete an archived card
+      tags:
+      - archive
+    patch:
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Archive a card
+      tags:
+      - archive
   /cards/{id}/checklists:
     get:
       parameters:
@@ -1438,6 +1577,34 @@ paths:
       summary: Toggle pin status of a card
       tags:
       - cards
+  /cards/{id}/restore:
+    patch:
+      parameters:
+      - description: Card ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Restore an archived card
+      tags:
+      - archive
   /cards/{id}/schedule:
     patch:
       consumes:
@@ -1872,6 +2039,89 @@ paths:
       summary: Update a column (rename, autoPin, position)
       tags:
       - columns
+  /columns/{id}/archive:
+    delete:
+      parameters:
+      - description: Column ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Permanently delete an archived column
+      tags:
+      - archive
+    patch:
+      parameters:
+      - description: Column ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Archive a column
+      tags:
+      - archive
+  /columns/{id}/archive-cards:
+    patch:
+      parameters:
+      - description: Column ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Archive all cards in a column
+      tags:
+      - archive
   /columns/{id}/cards:
     post:
       consumes:
@@ -1910,6 +2160,34 @@ paths:
       summary: Create a card in a column
       tags:
       - cards
+  /columns/{id}/restore:
+    patch:
+      parameters:
+      - description: Column ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Restore an archived column
+      tags:
+      - archive
   /comments/{id}:
     delete:
       parameters:

@@ -50,3 +50,29 @@ func (r *columnRepository) Update(column *model.Column) error {
 func (r *columnRepository) Delete(id uint) error {
 	return r.s.DeleteColumn(id)
 }
+
+func (r *columnRepository) ArchiveColumn(id uint) error {
+	col, err := r.s.GetColumnIncludingArchived(id)
+	if err != nil {
+		return err
+	}
+	now := time.Now()
+	col.ArchivedAt = &now
+	col.UpdatedAt = now
+	return r.s.UpdateColumn(col)
+}
+
+func (r *columnRepository) RestoreColumn(id uint, position float64) error {
+	col, err := r.s.GetColumnIncludingArchived(id)
+	if err != nil {
+		return err
+	}
+	col.ArchivedAt = nil
+	col.Position = position
+	col.UpdatedAt = time.Now()
+	return r.s.UpdateColumn(col)
+}
+
+func (r *columnRepository) FindArchivedByBoardID(boardID uint) ([]model.Column, error) {
+	return r.s.GetArchivedColumnsByBoard(boardID), nil
+}

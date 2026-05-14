@@ -16,6 +16,7 @@ export interface Column {
   cards?: Card[]
   createdAt: string
   updatedAt: string
+  archivedAt: string | null
 }
 
 export interface Tag {
@@ -89,6 +90,7 @@ export interface Card {
   comments: Comment[]
   createdAt: string
   updatedAt: string
+  archivedAt: string | null
 }
 
 export interface Comment {
@@ -108,6 +110,22 @@ export interface DuplicateCardRequest {
   copyChecklists: boolean
   copySchedule: boolean
   pin: boolean
+}
+
+export interface ArchivedCard {
+  id: number
+  title: string
+  columnId: number
+  columnName: string
+  columnArchived: boolean
+  archivedAt: string
+}
+
+export interface ArchivedColumn {
+  id: number
+  name: string
+  cardCount: number
+  archivedAt: string
 }
 
 export interface Settings {

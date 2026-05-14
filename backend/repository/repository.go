@@ -20,6 +20,9 @@ type ColumnRepository interface {
 	MaxPositionByBoard(boardID uint) (float64, error)
 	Update(column *model.Column) error
 	Delete(id uint) error
+	ArchiveColumn(id uint) error
+	RestoreColumn(id uint, position float64) error
+	FindArchivedByBoardID(boardID uint) ([]model.Column, error)
 }
 
 type CardRepository interface {
@@ -34,6 +37,9 @@ type CardRepository interface {
 	FindPinned() ([]model.Card, error)
 	Search(query string, limit int) ([]model.Card, error)
 	Delete(id uint) error
+	ArchiveCard(id uint) error
+	RestoreCard(id uint, position float64) error
+	FindArchivedByBoardID(boardID uint) ([]model.Card, error)
 }
 
 type TagRepository interface {

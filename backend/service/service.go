@@ -74,6 +74,18 @@ type CommentService interface {
 	DeleteComment(id uint) error
 }
 
+type ArchiveService interface {
+	ArchiveCard(id uint) error
+	ArchiveColumn(id uint) error
+	ArchiveAllCardsInColumn(columnID uint) error
+	RestoreCard(id uint) error
+	RestoreColumn(id uint) error
+	DeleteArchivedCard(id uint) error
+	DeleteArchivedColumn(id uint) error
+	GetArchivedCards(boardID uint) ([]dto.ArchivedCardResponse, error)
+	GetArchivedColumns(boardID uint) ([]dto.ArchivedColumnResponse, error)
+}
+
 type SettingsService interface {
 	GetSettings() (*model.Settings, error)
 	UpdateSettings(theme, locale *string) (*model.Settings, error)
@@ -103,6 +115,7 @@ type Services struct {
 	Image      ImageService
 	Settings   SettingsService
 	Snapshot   SnapshotService
+	Archive    ArchiveService
 }
 
 func NewServices(deps Deps) *Services {
@@ -119,5 +132,6 @@ func NewServices(deps Deps) *Services {
 		Image:      imageSvc,
 		Settings:   newSettingsService(repos.Settings),
 		Snapshot:   newSnapshotService(repos.Snapshot, deps.Store),
+		Archive:    newArchiveService(repos.Card, repos.Column, deps.Store, imageSvc),
 	}
 }

@@ -17,8 +17,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
+import { useArchiveCard } from '@/hooks/archive/mutations/useArchiveMutations'
 import type { Card } from '@/types'
-import { Copy, Pin, PinOff, Trash2 } from 'lucide-react'
+import { Archive, Copy, Pin, PinOff, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DuplicateCardDialog } from './DuplicateCardDialog'
@@ -34,6 +35,7 @@ export function CardContextMenu(props: CardContextMenuProps) {
   const { card, boardId, open, onOpenChange } = props
 
   const { togglePin, deleteCard } = useCardMutations(boardId)
+  const archiveCard = useArchiveCard(boardId)
   const { t } = useTranslation()
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -58,6 +60,11 @@ export function CardContextMenu(props: CardContextMenuProps) {
 
   const handleSelectDuplicate = () => {
     setShowDuplicate(true)
+    onOpenChange(false)
+  }
+
+  const handleSelectArchive = () => {
+    archiveCard.mutate(card.id)
     onOpenChange(false)
   }
 
@@ -112,6 +119,9 @@ export function CardContextMenu(props: CardContextMenuProps) {
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={handleSelectDuplicate}>
             <Copy className="h-3.5 w-3.5" /> {t('cardMenu.duplicate')}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={handleSelectArchive}>
+            <Archive className="h-3.5 w-3.5" /> {t('cardMenu.archive')}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem

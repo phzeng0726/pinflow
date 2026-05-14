@@ -75,6 +75,15 @@ var mutationRules = []mutationRule{
 	// Dependency operations
 	{http.MethodPost, "/api/v1/cards/:id/dependencies", "create_dependency", modeDebounce, boardIDFromCard},
 	{http.MethodDelete, "/api/v1/dependencies/:id", "delete_dependency", modeSync, boardIDFromDependency},
+
+	// Archive operations
+	{http.MethodPatch, "/api/v1/cards/:id/archive", "archive_card", modeDebounce, boardIDFromCard},
+	{http.MethodPatch, "/api/v1/cards/:id/restore", "restore_card", modeDebounce, boardIDFromCard},
+	{http.MethodDelete, "/api/v1/cards/:id/archive", "delete_archived_card", modeSync, boardIDFromCard},
+	{http.MethodPatch, "/api/v1/columns/:id/archive", "archive_column", modeDebounce, boardIDFromColumn},
+	{http.MethodPatch, "/api/v1/columns/:id/archive-cards", "archive_column_cards", modeDebounce, boardIDFromColumn},
+	{http.MethodPatch, "/api/v1/columns/:id/restore", "restore_column", modeDebounce, boardIDFromColumn},
+	{http.MethodDelete, "/api/v1/columns/:id/archive", "delete_archived_column", modeSync, boardIDFromColumn},
 }
 
 // Snapshot returns a Gin middleware that auto-triggers board snapshots based on mutation rules.

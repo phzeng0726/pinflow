@@ -10,7 +10,7 @@ const {
 } = require("electron");
 const path = require("path");
 const { pathToFileURL } = require("url");
-const { spawn } = require("child_process");
+const { spawn, execSync } = require("child_process");
 const http = require("http");
 const { autoUpdater } = require("electron-updater");
 const log = require("electron-log");
@@ -29,11 +29,33 @@ let backendProcess = null;
 
 // ── Backend ──────────────────────────────────────────────────────────────────
 
+function killStaleBackend() {
+  if (process.platform !== "win32") return;
+  try {
+    const out = execSync(
+      `wmic process where "name='pinflow-backend.exe'" get ProcessId /format:list`,
+      { encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"] },
+    );
+    const pids = out.match(/ProcessId=(\d+)/g);
+    if (pids) {
+      for (const m of pids) {
+        const pid = m.split("=")[1];
+        execSync(`taskkill /PID ${pid} /T /F`, { stdio: "ignore" });
+      }
+      log.info("[backend] killed stale pinflow-backend.exe");
+    }
+  } catch {
+    // no stale process or command failed — safe to proceed
+  }
+}
+
 function startBackend() {
   if (isDev) {
     // In dev mode the user runs `go run .` manually, nothing to spawn.
     return;
   }
+
+  killStaleBackend();
 
   const exe = path.join(process.resourcesPath, "pinflow-backend.exe");
   const workspacePath = path.join(app.getPath("userData"), "workspace");
@@ -356,7 +378,16 @@ if (!gotLock) {
 
   app.on("will-quit", () => {
     if (backendProcess) {
-      backendProcess.kill();
+      const pid = backendProcess.pid;
+      try {
+        if (process.platform === "win32") {
+          execSync(`taskkill /PID ${pid} /T /F`, { stdio: "ignore" });
+        } else {
+          backendProcess.kill();
+        }
+      } catch {
+        // already exited
+      }
       backendProcess = null;
     }
   });

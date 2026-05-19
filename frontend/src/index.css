@@ -188,10 +188,13 @@
     @apply list-none pl-2;
   }
   .markdown-preview .task-list-item {
-    @apply flex items-start gap-1.5 py-0.5;
+    @apply flex items-center gap-2 rounded px-1.5 py-1 text-gray-700 dark:text-gray-300;
+  }
+  .markdown-preview .task-list-item:has(input:checked) {
+    @apply text-gray-400 line-through dark:text-gray-500;
   }
   .markdown-preview .task-list-item input[type='checkbox'] {
-    @apply mt-0.5 shrink-0 accent-gray-500;
+    @apply h-3.5 w-3.5 shrink-0 cursor-pointer rounded-sm accent-blue-500 dark:accent-blue-400;
   }
   .markdown-preview img,
   .markdown-editor-content img {

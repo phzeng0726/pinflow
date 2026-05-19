@@ -117,6 +117,20 @@ export function MarkdownEditor({
 
   const handleSwitchToView = useCallback(() => setIsEditing(false), [])
 
+  const handleCheckboxToggle = useCallback(
+    (checkboxIndex: number) => {
+      let index = 0
+      const newValue = value.replace(/- \[([ xX])\]/g, (match, state) => {
+        if (index++ === checkboxIndex) {
+          return state === ' ' ? '- [x]' : '- [ ]'
+        }
+        return match
+      })
+      onChange(newValue)
+    },
+    [value, onChange],
+  )
+
   const switchMode = useCallback(
     (mode: 'source' | 'rich') => {
       if (mode === 'source') setLineCount(value.split('\n').length)
@@ -128,14 +142,44 @@ export function MarkdownEditor({
   )
 
   // ── View 模式 ──────────────────────────────────────────────────
+  const viewRef = useRef<HTMLDivElement>(null)
+
   if (!isEditing) {
     return (
       <div
+        ref={viewRef}
         className="markdown-editor-content markdown-preview min-h-[120px] cursor-text rounded-md border border-transparent px-3 py-2 text-sm transition-colors hover:border-gray-200 hover:bg-gray-50 dark:hover:border-gray-700 dark:hover:bg-gray-800/30"
         onClick={() => setIsEditing(true)}
       >
         {value ? (
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              input: ({ type, checked, disabled, node, ...props }) => {
+                if (type === 'checkbox') {
+                  return (
+                    <input
+                      type="checkbox"
+                      checked={checked ?? false}
+                      onChange={(e) => {
+                        const container = viewRef.current
+                        if (!container) return
+                        const all = container.querySelectorAll(
+                          'input[type="checkbox"]',
+                        )
+                        const idx = Array.from(all).indexOf(
+                          e.target as HTMLInputElement,
+                        )
+                        if (idx >= 0) handleCheckboxToggle(idx)
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )
+                }
+                return <input type={type} checked={checked} {...props} />
+              },
+            }}
+          >
             {preserveLineBreaks(value)}
           </ReactMarkdown>
         ) : (

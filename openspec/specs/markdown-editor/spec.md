@@ -173,7 +173,7 @@ The editor SHALL support inserting a horizontal rule via toolbar button and `---
 
 ### Requirement: MarkdownEditor provides Source and Rich edit modes
 
-The editor SHALL provide two edit sub-modes accessible via a toggle in the top-right corner of the editor container. The default mode SHALL be **Source** (plain-text Markdown with line numbers). Switching to **Rich** mode SHALL display a Lexical WYSIWYG editor with the fixed toolbar. The mode toggle SHALL use `onMouseDown` + `preventDefault()` to prevent triggering the editor blur / view-mode switch. In Source mode, long lines SHALL wrap to the next visual line rather than extending the editor horizontally.
+The editor SHALL provide two edit sub-modes accessible via a toggle in the top-right corner of the editor container. The default mode SHALL be **Source** (plain-text Markdown with line numbers). Switching to **Rich** mode SHALL display a Lexical WYSIWYG editor with the fixed toolbar. The mode toggle SHALL use `onMouseDown` + `preventDefault()` to prevent triggering the editor blur / view-mode switch. In Source mode, long lines SHALL wrap to the next visual line rather than extending the editor horizontally. Both modes SHALL intercept the Tab key for indentation instead of allowing default browser focus navigation.
 
 #### Scenario: Default mode is Source
 
@@ -204,6 +204,11 @@ The editor SHALL provide two edit sub-modes accessible via a toggle in the top-r
 
 - **WHEN** the user inputs text with leading spaces or tabs (e.g., code fence indentation) in Source mode
 - **THEN** the leading whitespace SHALL be preserved and displayed correctly after line wrapping
+
+#### Scenario: Tab key triggers indentation instead of focus change
+
+- **WHEN** the user presses Tab while editing in either Source or Rich mode
+- **THEN** the editor SHALL perform an indentation action and SHALL NOT lose focus
 
 ### Requirement: MarkdownEditor exports Markdown on change and blur
 

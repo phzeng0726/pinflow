@@ -14,6 +14,7 @@ import { ListPlugin } from '@lexical/react/LexicalListPlugin'
 import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin'
 import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin'
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin'
+import { TabIndentationPlugin } from '@lexical/react/LexicalTabIndentationPlugin'
 import { HeadingNode, QuoteNode } from '@lexical/rich-text'
 import { $createParagraphNode, $createTextNode, $getRoot } from 'lexical'
 import { useCallback, useRef, useState, type RefObject } from 'react'
@@ -30,6 +31,7 @@ import {
   OnChangePlugin,
   SourceImagePastePlugin,
   SourcePlugin,
+  SourceTabPlugin,
   ToolbarPlugin,
 } from './plugins'
 import { EDITOR_TRANSFORMERS } from './transformers'
@@ -305,6 +307,7 @@ export function MarkdownEditor({
           />
           <AutoFocusPlugin />
           <SourceImagePastePlugin cardId={cardId} />
+          <SourceTabPlugin />
         </LexicalComposer>
       )}
 
@@ -350,6 +353,7 @@ export function MarkdownEditor({
           <MarkdownShortcutPlugin transformers={EDITOR_TRANSFORMERS} />
           <ListPlugin />
           <CheckListPlugin />
+          <TabIndentationPlugin />
           <LinkPlugin />
         </LexicalComposer>
       )}

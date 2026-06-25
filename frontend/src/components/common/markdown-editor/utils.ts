@@ -1,6 +1,6 @@
 export function preserveLineBreaks(text: string): string {
   const hardBreak = '  '
-  const blankLine = ' ' + hardBreak
+  const blankLine = String.fromCharCode(160) + hardBreak
   const lines = text.split('\n')
   return lines
     .map((line, i) => {

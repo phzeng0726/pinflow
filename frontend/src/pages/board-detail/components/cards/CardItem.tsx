@@ -230,7 +230,7 @@ export function CardItem(props: CardItemProps) {
                   )}
                 </div>
               )}
-              <p className="text-sm font-medium leading-snug text-gray-900 dark:text-gray-100">
+              <p className="break-all text-sm font-medium leading-snug text-gray-900 dark:text-gray-100">
                 {card.title}
               </p>
               {card.description && (

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -43,6 +44,16 @@ export function SyncStatusIndicator() {
   const status = useSyncStatus(authenticated)
   const source = useWorkspaceSource(authenticated)
 
+  const handleLogin = async () => {
+    try {
+      await login()
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : t('sync.actionFailed'),
+      )
+    }
+  }
+
   if (!authenticated) {
     return (
       <Button
@@ -50,7 +61,7 @@ export function SyncStatusIndicator() {
         size="icon"
         title={t('sync.login')}
         disabled={authLoading}
-        onClick={() => void login()}
+        onClick={() => void handleLogin()}
       >
         {authLoading ? (
           <LoaderCircle className="size-4 animate-spin" />

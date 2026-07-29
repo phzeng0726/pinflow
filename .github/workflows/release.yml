@@ -56,7 +56,23 @@ jobs:
 
       - name: Build Go backend
         working-directory: backend
-        run: go build -o ../electron/resources/pinflow-backend.exe .
+        shell: pwsh
+        env:
+          PINFLOW_SUPABASE_URL: ${{ secrets.PINFLOW_SUPABASE_URL }}
+          PINFLOW_SUPABASE_ANON_KEY: ${{ secrets.PINFLOW_SUPABASE_ANON_KEY }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:PINFLOW_SUPABASE_URL)) {
+            throw "Missing GitHub Actions secret: PINFLOW_SUPABASE_URL"
+          }
+          if ([string]::IsNullOrWhiteSpace($env:PINFLOW_SUPABASE_ANON_KEY)) {
+            throw "Missing GitHub Actions secret: PINFLOW_SUPABASE_ANON_KEY"
+          }
+
+          $ldflags = @(
+            "-X pinflow/sync.defaultSupabaseURL=$env:PINFLOW_SUPABASE_URL"
+            "-X pinflow/sync.defaultSupabaseAnonKey=$env:PINFLOW_SUPABASE_ANON_KEY"
+          ) -join " "
+          go build -ldflags $ldflags -o ../electron/resources/pinflow-backend.exe .
 
       - name: Build frontend
         run: pnpm --filter frontend build

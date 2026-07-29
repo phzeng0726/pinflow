@@ -34,11 +34,18 @@ const mocks = vi.hoisted(() => ({
   openSourceDialog: vi.fn(),
   invalidateQueries: vi.fn(),
   removeQueries: vi.fn(),
+  toastError: vi.fn(),
 }))
 
 vi.mock('@/lib/api', () => ({
   setSyncEnabled: vi.fn(),
   triggerSync: vi.fn(),
+}))
+
+vi.mock('sonner', () => ({
+  toast: {
+    error: mocks.toastError,
+  },
 }))
 
 vi.mock('@tanstack/react-query', async (importOriginal) => {
@@ -81,6 +88,8 @@ vi.mock('@/stores/authStore', () => ({
 describe('SyncStatusIndicator', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.authState.login.mockReset()
+    mocks.authState.logout.mockReset()
     mocks.authState.isAuthenticated = true
     mocks.authState.email = 'user@example.com'
     mocks.authState.isLoading = false
@@ -89,6 +98,21 @@ describe('SyncStatusIndicator', () => {
     mocks.syncStatus.data.error = undefined
     mocks.sourceState.data.pending = false
     mocks.sourceState.data.cloudHasData = false
+  })
+
+  it('shows the Electron authentication error when sign-in cannot start', async () => {
+    const user = userEvent.setup()
+    mocks.authState.isAuthenticated = false
+    mocks.authState.login.mockRejectedValue(
+      new Error('Supabase is not configured'),
+    )
+    render(<SyncStatusIndicator />)
+
+    await user.click(screen.getByTitle('sync.login'))
+
+    expect(mocks.toastError).toHaveBeenCalledWith(
+      'Supabase is not configured',
+    )
   })
 
   it('shows account and enables sync before the initial full sync', async () => {

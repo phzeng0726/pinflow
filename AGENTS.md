@@ -18,7 +18,7 @@ This file provides guidance to coding agents when working with code in this repo
 
 | Layer    | Path        | Tech                                                                  |
 | -------- | ----------- | --------------------------------------------------------------------- |
-| Backend  | `backend/`  | Go, Gin, file-based JSON storage, Swagger                             |
+| Backend  | `backend/`  | Go, Gin, file-based JSON storage, Supabase cloud sync, Swagger        |
 | Frontend | `frontend/` | React 19, Vite, Tailwind v3, TanStack Query+Router, Zustand, @dnd-kit |
 | Electron | `electron/` | Wraps frontend SPA + spawns Go backend, NSIS Windows target           |
 
@@ -101,17 +101,19 @@ pinflow-workspace/
 ### Backend Layers
 
 ```text
-store/       FileStore: in-memory data and JSON persistence
-model/       Data structs
-repository/  Repository container and file-based implementations
-service/     Service container and business logic
-dto/         Request and response types for JSON binding
-api/         Handler container, Gin handlers, and router
-seed/        Embedded example workspace JSON
-tests/       Repository, service, and handler tests
+store/          FileStore: in-memory data and JSON persistence
+model/          Data structs (Board, Column, Card, Tag, Checklist, ChecklistItem, Comment, Dependency, Image, Snapshot, Settings)
+repository/     Repository container and file-based implementations
+service/        Service container and business logic
+dto/            Request and response types for JSON binding
+api/            Handler container, Gin handlers, and router
+api/middleware/ Snapshot middleware
+sync/           Supabase cloud sync (auth, client, config, manager)
+seed/           Embedded example workspace JSON
+tests/          Repository, service, and handler tests
 ```
 
-Model types include Board, Column, Card, Tag, Checklist, ChecklistItem, Comment, Dependency, and Image.
+Model types include Board, Column, Card, Tag, Checklist, ChecklistItem, Comment, Dependency, Image, Snapshot, and Settings.
 
 Import paths use module name `pinflow`. Gin v1.12.0 requires Go 1.25 or newer.
 
@@ -120,6 +122,7 @@ Key decisions:
 - Auto-pin logic is in `CardService.MoveCard` and `CardService.CreateCard`, which check `Column.AutoPin`.
 - `FileStore` uses `sync.RWMutex`.
 - Example workspace data is seeded on first launch when no boards exist.
+- Supabase cloud sync runs in `sync/Manager` with pull/push and workspace replace.
 
 ### Frontend Architecture
 
@@ -129,6 +132,7 @@ src/
     board-list/     BoardListPage
     board-detail/   BoardPage and components/
       components/
+        archive/    Archive drawer for cards and columns
         cards/      Card items and card detail dialog
         columns/    Column components
         checklists/ Checklist and cross-checklist DnD
@@ -137,6 +141,9 @@ src/
         timeline/   Gantt-style timeline view
         snapshots/  Snapshot create and restore dialogs
     pin/            PinWindow, PinnedCardItem, and PinOverlay
+  components/
+    common/         SyncStatusIndicator, WorkspaceSourceDialog, LoadingSpinner, etc.
+    ui/             shadcn/ui primitives
   hooks/
     queryKeys.ts    Single source of truth for query keys
     <domain>/queries/
@@ -144,6 +151,7 @@ src/
     board/useBoardDnd.ts
   stores/
   lib/api/
+  lib/supabase.ts   Supabase client instance
   locales/
   routes/
   types/
@@ -152,13 +160,13 @@ src/
 - Query hooks use one hook per file.
 - Mutation hooks use one hook per domain.
 - `board/useBoardDnd.ts` contains DnD logic with optimistic cache updates.
-- Zustand stores include `themeStore`, `pinStore`, `localeStore`, `timelineStore`, and `graphViewStore`.
+- Zustand stores include `themeStore`, `pinStore`, `localeStore`, `timelineStore`, `graphViewStore`, `authStore`, and `workspaceSourceStore`.
 - Axios API calls are split by domain in `lib/api/` and re-exported through `index.ts`.
 - Locales are stored in `en-US.json` and `zh-TW.json`.
 - TanStack Router uses file-based routes; `routeTree.gen.ts` is generated.
 - TypeScript interfaces in `types/` match backend DTOs.
 
-API domains: `boards`, `cards`, `columns`, `tags`, `checklists`, `comments`, `dependencies`, `images`, and `snapshots`.
+API domains: `boards`, `cards`, `columns`, `tags`, `checklists`, `comments`, `dependencies`, `images`, `snapshots`, `auth`, `sync`, `archive`, and `settings`.
 
 Import conventions:
 
@@ -180,21 +188,38 @@ Key decisions:
 
 ```text
 GET  /api/health
+/api/v1/auth/config                        GET
+/api/v1/auth/session                       GET, POST, DELETE
+/api/v1/sync/status                        GET
+/api/v1/sync/trigger                       POST
+/api/v1/sync/enable                        PATCH
+/api/v1/sync/pull                          POST
+/api/v1/sync/has-cloud-data                GET
+/api/v1/sync/source                        GET, POST
 /api/v1/boards                             CRUD
+/api/v1/boards/:id/move                    PATCH
 /api/v1/boards/:id/columns                 POST
 /api/v1/boards/:id/dependencies            GET
 /api/v1/boards/:id/images/:filename        GET
 /api/v1/boards/:id/snapshots               GET, POST
 /api/v1/boards/:id/snapshots/:sid/restore  POST
 /api/v1/boards/:id/snapshots/:sid          DELETE
+/api/v1/boards/:id/tags                    GET, POST
+/api/v1/boards/:id/archive/cards           GET
+/api/v1/boards/:id/archive/columns         GET
 /api/v1/columns/:id                        PATCH, DELETE
 /api/v1/columns/:id/cards                  POST
+/api/v1/columns/:id/archive                PATCH, DELETE
+/api/v1/columns/:id/archive-cards          PATCH
+/api/v1/columns/:id/restore                PATCH
 /api/v1/cards/pinned                       GET (must be before /:id)
 /api/v1/cards/search                       GET
 /api/v1/cards/:id                          GET, PATCH, DELETE
 /api/v1/cards/:id/move                     PATCH
 /api/v1/cards/:id/pin                      PATCH
 /api/v1/cards/:id/schedule                 PATCH
+/api/v1/cards/:id/archive                  PATCH, DELETE
+/api/v1/cards/:id/restore                  PATCH
 /api/v1/cards/:id/tags                     POST, DELETE /:tagId
 /api/v1/cards/:id/duplicate                POST
 /api/v1/cards/:id/checklists               GET, POST
@@ -202,13 +227,13 @@ GET  /api/health
 /api/v1/cards/:id/comments                 POST
 /api/v1/cards/:id/images                   POST
 /api/v1/dependencies/:id                   DELETE
-/api/v1/tags                               GET, POST
 /api/v1/tags/:id                           PATCH, DELETE
 /api/v1/checklists/:id                     PATCH, DELETE
 /api/v1/checklists/:id/items               POST, PUT (sync)
 /api/v1/checklist-items/:id                PATCH, DELETE
 /api/v1/checklist-items/:id/move           PATCH
 /api/v1/comments/:id                       PATCH, DELETE
+/api/v1/settings                           GET, PUT
 ```
 
 ### Adding a New Endpoint

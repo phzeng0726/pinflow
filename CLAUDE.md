@@ -18,7 +18,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 | Layer    | Path        | Tech                                                                  |
 | -------- | ----------- | --------------------------------------------------------------------- |
-| Backend  | `backend/`  | Go, Gin, file-based JSON storage, Swagger                             |
+| Backend  | `backend/`  | Go, Gin, file-based JSON storage, Supabase cloud sync, Swagger        |
 | Frontend | `frontend/` | React 19, Vite, Tailwind v3, TanStack Query+Router, Zustand, @dnd-kit |
 | Electron | `electron/` | Wraps frontend SPA + spawns Go backend, NSIS Windows target           |
 
@@ -83,19 +83,21 @@ pinflow-workspace/
 ### Backend Layers
 
 ```
-store/      → FileStore: in-memory data + JSON file persistence
-model/      → Data structs (Board, Column, Card, Tag, Checklist, ChecklistItem, Comment, Dependency, Image)
-repository/ → Repositories container (repository.go) + file-based implementations
-service/    → Services container (service.go) + business logic; auto-pin logic lives here
-dto/        → Request/Response types for JSON binding
-api/        → Handlers container (handler.go) + Gin handlers + router.go
-seed/       → Embedded example workspace JSON; seeds on first launch if no boards exist
-tests/      → All tests (repository, service, handler layers)
+store/          → FileStore: in-memory data + JSON file persistence
+model/          → Data structs (Board, Column, Card, Tag, Checklist, ChecklistItem, Comment, Dependency, Image, Snapshot, Settings)
+repository/     → Repositories container (repository.go) + file-based implementations
+service/        → Services container (service.go) + business logic; auto-pin logic lives here
+dto/            → Request/Response types for JSON binding
+api/            → Handlers container (handler.go) + Gin handlers + router.go
+api/middleware/ → Snapshot middleware
+sync/           → Supabase cloud sync (auth, client, config, manager)
+seed/           → Embedded example workspace JSON; seeds on first launch if no boards exist
+tests/          → All tests (repository, service, handler layers)
 ```
 
 Import paths use module name `pinflow`. Gin v1.12.0 requires go 1.25+.
 
-**Key decisions:** Auto-pin: `CardService.MoveCard` and `CreateCard` check `Column.AutoPin`. FileStore uses `sync.RWMutex`.
+**Key decisions:** Auto-pin: `CardService.MoveCard` and `CreateCard` check `Column.AutoPin`. FileStore uses `sync.RWMutex`. Supabase cloud sync runs in `sync/Manager` with pull/push and workspace replace.
 
 ### Frontend Architecture
 
@@ -105,6 +107,7 @@ src/
     board-list/     → BoardListPage
     board-detail/   → BoardPage + components/
       components/
+        archive/    → Archive drawer for cards and columns
         cards/      → Card items, card detail dialog
         columns/    → Column components
         checklists/ → Checklist + cross-checklist DnD
@@ -113,19 +116,23 @@ src/
         timeline/   → Timeline (Gantt-style) view
         snapshots/  → Snapshot create/restore dialogs
     pin/            → PinWindow + PinnedCardItem/PinOverlay
+  components/
+    common/         → SyncStatusIndicator, WorkspaceSourceDialog, LoadingSpinner, etc.
+    ui/             → shadcn/ui primitives
   hooks/
     queryKeys.ts    → All query keys (single source of truth)
     <domain>/queries/   → One query hook per file
     <domain>/mutations/ → One mutation hook per domain
     board/useBoardDnd.ts → DnD logic with optimistic cache updates
-  stores/           → Zustand: themeStore, pinStore, localeStore, timelineStore, graphViewStore
+  stores/           → Zustand: themeStore, pinStore, localeStore, timelineStore, graphViewStore, authStore, workspaceSourceStore
   lib/api/          → Axios calls split by domain (re-exported via index.ts)
+  lib/supabase.ts   → Supabase client instance
   locales/          → i18n JSON files (en-US.json, zh-TW.json)
   routes/           → TanStack Router file-based; routeTree.gen.ts auto-generated
   types/            → TypeScript interfaces matching backend DTOs
 ```
 
-API domains: `boards` `cards` `columns` `tags` `checklists` `comments` `dependencies` `images` `snapshots`
+API domains: `boards` `cards` `columns` `tags` `checklists` `comments` `dependencies` `images` `snapshots` `auth` `sync` `archive` `settings`
 
 **Import convention:**
 
@@ -145,35 +152,52 @@ API domains: `boards` `cards` `columns` `tags` `checklists` `comments` `dependen
 
 ```
 GET  /api/health
-/api/v1/boards                          → CRUD
-/api/v1/boards/:id/columns              → POST
-/api/v1/boards/:id/dependencies         → GET
-/api/v1/boards/:id/images/:filename     → GET
-/api/v1/boards/:id/snapshots            → GET, POST
+/api/v1/auth/config                       → GET
+/api/v1/auth/session                      → GET, POST, DELETE
+/api/v1/sync/status                       → GET
+/api/v1/sync/trigger                      → POST
+/api/v1/sync/enable                       → PATCH
+/api/v1/sync/pull                         → POST
+/api/v1/sync/has-cloud-data               → GET
+/api/v1/sync/source                       → GET, POST
+/api/v1/boards                            → CRUD
+/api/v1/boards/:id/move                   → PATCH
+/api/v1/boards/:id/columns                → POST
+/api/v1/boards/:id/dependencies           → GET
+/api/v1/boards/:id/images/:filename       → GET
+/api/v1/boards/:id/snapshots              → GET, POST
 /api/v1/boards/:id/snapshots/:sid/restore → POST
-/api/v1/boards/:id/snapshots/:sid       → DELETE
-/api/v1/columns/:id                     → PATCH, DELETE
-/api/v1/columns/:id/cards               → POST
-/api/v1/cards/pinned                    → GET (must be before /:id)
-/api/v1/cards/search                    → GET
-/api/v1/cards/:id                       → GET, PATCH, DELETE
-/api/v1/cards/:id/move                  → PATCH
-/api/v1/cards/:id/pin                   → PATCH
-/api/v1/cards/:id/schedule              → PATCH
-/api/v1/cards/:id/tags                  → POST, DELETE /:tagId
-/api/v1/cards/:id/duplicate             → POST
-/api/v1/cards/:id/checklists            → GET, POST
-/api/v1/cards/:id/dependencies          → GET, POST
-/api/v1/cards/:id/comments              → POST
-/api/v1/cards/:id/images                → POST
-/api/v1/dependencies/:id                → DELETE
-/api/v1/tags                            → GET, POST
-/api/v1/tags/:id                        → PATCH, DELETE
-/api/v1/checklists/:id                  → PATCH, DELETE
-/api/v1/checklists/:id/items            → POST, PUT (sync)
-/api/v1/checklist-items/:id             → PATCH, DELETE
-/api/v1/checklist-items/:id/move        → PATCH
-/api/v1/comments/:id                    → PATCH, DELETE
+/api/v1/boards/:id/snapshots/:sid         → DELETE
+/api/v1/boards/:id/tags                   → GET, POST
+/api/v1/boards/:id/archive/cards          → GET
+/api/v1/boards/:id/archive/columns        → GET
+/api/v1/columns/:id                       → PATCH, DELETE
+/api/v1/columns/:id/cards                 → POST
+/api/v1/columns/:id/archive               → PATCH, DELETE
+/api/v1/columns/:id/archive-cards         → PATCH
+/api/v1/columns/:id/restore               → PATCH
+/api/v1/cards/pinned                      → GET (must be before /:id)
+/api/v1/cards/search                      → GET
+/api/v1/cards/:id                         → GET, PATCH, DELETE
+/api/v1/cards/:id/move                    → PATCH
+/api/v1/cards/:id/pin                     → PATCH
+/api/v1/cards/:id/schedule                → PATCH
+/api/v1/cards/:id/archive                 → PATCH, DELETE
+/api/v1/cards/:id/restore                 → PATCH
+/api/v1/cards/:id/tags                    → POST, DELETE /:tagId
+/api/v1/cards/:id/duplicate               → POST
+/api/v1/cards/:id/checklists              → GET, POST
+/api/v1/cards/:id/dependencies            → GET, POST
+/api/v1/cards/:id/comments                → POST
+/api/v1/cards/:id/images                  → POST
+/api/v1/dependencies/:id                  → DELETE
+/api/v1/tags/:id                          → PATCH, DELETE
+/api/v1/checklists/:id                    → PATCH, DELETE
+/api/v1/checklists/:id/items              → POST, PUT (sync)
+/api/v1/checklist-items/:id               → PATCH, DELETE
+/api/v1/checklist-items/:id/move          → PATCH
+/api/v1/comments/:id                      → PATCH, DELETE
+/api/v1/settings                          → GET, PUT
 ```
 
 ### Adding a New Endpoint

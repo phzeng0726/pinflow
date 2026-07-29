@@ -2,7 +2,7 @@
 
 任務不只是管理，還要時刻可見。PinFlow 是一套桌面 Kanban 應用，核心特色是「釘選（Pin）」——把任何卡片懸浮顯示在螢幕最上層，讓進行中的任務始終在視野內，不需切換視窗。
 
-搭配卡片依賴關係圖、甘特式時間軸、多語系介面與 Git 可同步的檔案式儲存，PinFlow 為個人與小團隊打造流暢的桌面工作流程。
+搭配卡片依賴關係圖、甘特式時間軸、封存管理、Supabase 雲端同步、多語系介面與 Git 可同步的檔案式儲存，PinFlow 為個人與小團隊打造流暢的桌面工作流程。
 
 ## 功能
 
@@ -20,6 +20,8 @@
 - **看板排序**：支援拖曳重新排列看板列表的顯示順序
 - **多語系介面**：支援繁體中文與 English，可即時切換
 - **範例資料**：首次啟動時自動填入 Example Board，包含四個欄位（Todo、In Progress、Done、Important），其中 **Important 欄位預設啟用「自動釘選」**，新增或移入的卡片會自動釘選至懸浮視窗；Seed 資料涵蓋卡片、標籤、Checklist、留言、依賴與時程，讓使用者立即體驗完整功能
+- **封存管理**：封存卡片或欄位，減少看板雜亂，需要時可隨時還原
+- **雲端同步**：透過 Supabase 將工作區資料同步至雲端，支援多裝置存取
 - **桌面版自動更新**：啟動時自動檢查並下載新版本，重啟後完成安裝（electron-updater）
 - **Swagger UI**：內建 API 文件
 
@@ -27,7 +29,7 @@
 
 | 層級     | 技術                                                                                                                              |
 | -------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Backend  | Go 1.25 · Gin · 檔案式 JSON 儲存 · Swagger                                                                                        |
+| Backend  | Go 1.25 · Gin · 檔案式 JSON 儲存 · Supabase cloud sync · Swagger                                                                  |
 | Frontend | React 19 · TypeScript · Vite · Tailwind v3 · TanStack Query/Router · Zustand · @dnd-kit · Lexical · @xyflow/react · shadcn/ui · i18next |
 | Desktop  | Electron 36 (Windows)                                                                                                             |
 | 部署     | Docker Compose                                                                                                                    |
@@ -266,20 +268,23 @@ Release 頁面會附帶下列檔案，可直接提供使用者下載安裝：
 pinflow/
 ├── backend/          # Go API server
 │   ├── api/          # Handlers 容器（handler.go）+ Gin handlers + router.go
+│   ├── api/middleware/ # Snapshot middleware
 │   ├── service/      # Services 容器（service.go）+ 業務邏輯
 │   ├── repository/   # Repositories 容器（repository.go）+ 檔案式實作
 │   ├── store/        # FileStore（記憶體 + JSON 持久化）
 │   ├── model/        # 資料模型
 │   ├── dto/          # 請求/回應 DTO
+│   ├── sync/         # Supabase 雲端同步（auth, client, config, manager）
 │   ├── seed/         # 首次啟動範例工作區資料（embed）
 │   ├── docs/         # Swagger 自動生成文件
 │   └── tests/        # 單元 + 整合測試
 ├── frontend/         # React SPA
 │   └── src/
 │       ├── pages/    # board-list/ · board-detail/ · pin/
-│       ├── hooks/    # TanStack Query hooks（board/ card/ checklist/ comment/ dependency/ tag/）
-│       ├── stores/   # Zustand（themeStore、pinStore）
-│       ├── lib/      # API client（boards · cards · columns · tags · checklists · comments · dependencies · images）
+│       ├── components/ # common/（SyncStatusIndicator 等）· ui/（shadcn/ui）
+│       ├── hooks/    # TanStack Query hooks（board/ card/ checklist/ comment/ dependency/ tag/ archive/ sync/ settings/ snapshot/）
+│       ├── stores/   # Zustand（themeStore、pinStore、authStore、workspaceSourceStore 等）
+│       ├── lib/      # API client（boards · cards · columns · tags · checklists · comments · dependencies · images · auth · sync · archive · settings）
 │       └── routes/   # TanStack Router 路由
 ├── electron/         # Electron 主程序
 │   ├── main.js       # 主程序（生命週期、視窗、系統列）
@@ -306,19 +311,41 @@ pinflow/
 | 方法             | 路徑                                    | 說明                     |
 | ---------------- | --------------------------------------- | ------------------------ |
 | GET              | `/api/health`                           | 健康檢查                 |
+| GET              | `/api/v1/auth/config`                   | 取得驗證設定             |
+| GET/POST/DELETE  | `/api/v1/auth/session`                  | 管理驗證 Session         |
+| GET              | `/api/v1/sync/status`                   | 取得同步狀態             |
+| POST             | `/api/v1/sync/trigger`                  | 觸發同步                 |
+| PATCH            | `/api/v1/sync/enable`                   | 啟用/停用同步            |
+| POST             | `/api/v1/sync/pull`                     | 從雲端拉取資料           |
+| GET              | `/api/v1/sync/has-cloud-data`           | 檢查是否有雲端資料       |
+| GET/POST         | `/api/v1/sync/source`                   | 取得/設定資料來源        |
 | GET/POST         | `/api/v1/boards`                        | 列出/建立看板            |
 | GET/PUT/DELETE   | `/api/v1/boards/:id`                    | 取得/更新/刪除看板       |
+| PATCH            | `/api/v1/boards/:id/move`               | 移動看板（排序）         |
 | POST             | `/api/v1/boards/:id/columns`            | 新增欄位                 |
 | GET              | `/api/v1/boards/:id/dependencies`       | 看板所有依賴關係         |
 | GET              | `/api/v1/boards/:id/images/:filename`   | 讀取圖片                 |
+| GET/POST         | `/api/v1/boards/:id/snapshots`          | 列出/建立快照            |
+| POST             | `/api/v1/boards/:id/snapshots/:sid/restore` | 還原快照             |
+| DELETE           | `/api/v1/boards/:id/snapshots/:sid`     | 刪除快照                 |
+| GET/POST         | `/api/v1/boards/:id/tags`               | 列出/建立看板標籤        |
+| GET              | `/api/v1/boards/:id/archive/cards`      | 取得封存卡片             |
+| GET              | `/api/v1/boards/:id/archive/columns`    | 取得封存欄位             |
 | PATCH/DELETE     | `/api/v1/columns/:id`                   | 更新/刪除欄位            |
 | POST             | `/api/v1/columns/:id/cards`             | 新增卡片                 |
+| PATCH            | `/api/v1/columns/:id/archive`           | 封存欄位                 |
+| PATCH            | `/api/v1/columns/:id/archive-cards`     | 封存欄位內所有卡片       |
+| PATCH            | `/api/v1/columns/:id/restore`           | 還原封存欄位             |
+| DELETE           | `/api/v1/columns/:id/archive`           | 刪除封存欄位             |
 | GET              | `/api/v1/cards/pinned`                  | 取得所有釘選卡片         |
 | GET              | `/api/v1/cards/search`                  | 跨欄搜尋卡片             |
 | GET/PATCH/DELETE | `/api/v1/cards/:id`                     | 取得/更新/刪除卡片       |
 | PATCH            | `/api/v1/cards/:id/move`                | 移動卡片（換欄/排序）    |
 | PATCH            | `/api/v1/cards/:id/pin`                 | 切換釘選狀態             |
 | PATCH            | `/api/v1/cards/:id/schedule`            | 更新截止日期             |
+| PATCH            | `/api/v1/cards/:id/archive`             | 封存卡片                 |
+| PATCH            | `/api/v1/cards/:id/restore`             | 還原封存卡片             |
+| DELETE           | `/api/v1/cards/:id/archive`             | 刪除封存卡片             |
 | POST             | `/api/v1/cards/:id/duplicate`           | 複製卡片                 |
 | POST/DELETE      | `/api/v1/cards/:id/tags`                | 附加/移除卡片標籤        |
 | GET/POST         | `/api/v1/cards/:id/checklists`          | 列出/新增 Checklist      |
@@ -326,7 +353,6 @@ pinflow/
 | POST             | `/api/v1/cards/:id/comments`            | 新增留言                 |
 | POST             | `/api/v1/cards/:id/images`              | 上傳圖片                 |
 | DELETE           | `/api/v1/dependencies/:id`              | 刪除依賴關係             |
-| GET/POST         | `/api/v1/tags`                          | 列出/建立標籤            |
 | PATCH/DELETE     | `/api/v1/tags/:id`                      | 更新/刪除標籤            |
 | PATCH/DELETE     | `/api/v1/checklists/:id`                | 更新/刪除 Checklist      |
 | POST             | `/api/v1/checklists/:id/items`          | 新增檢查項目             |
@@ -334,5 +360,6 @@ pinflow/
 | PATCH/DELETE     | `/api/v1/checklist-items/:id`           | 更新/刪除檢查項目        |
 | PATCH            | `/api/v1/checklist-items/:id/move`      | 移動檢查項目             |
 | PATCH/DELETE     | `/api/v1/comments/:id`                  | 更新/刪除留言            |
+| GET/PUT          | `/api/v1/settings`                      | 取得/更新設定            |
 
 完整 API 文件請見 Swagger UI：`http://localhost:34115/swagger/index.html`

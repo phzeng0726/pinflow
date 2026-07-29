@@ -1,6 +1,10 @@
 # 預設 shell（Windows 用 Git Bash / WSL 會比較穩）
 SHELL := /bin/bash
 
+-include .env
+export PINFLOW_SUPABASE_URL
+export PINFLOW_SUPABASE_ANON_KEY
+
 .PHONY: backend frontend electron dev package
 
 # --- Backend ---

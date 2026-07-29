@@ -129,6 +129,152 @@ func (s *FileStore) BasePath() string {
 	return s.basePath
 }
 
+func (s *FileStore) SetWriteNotifier(ch chan<- string) {
+	setWriteNotifier(ch, s.basePath)
+}
+
+func (s *FileStore) SetSyncEnabled(enabled bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.settings.SyncEnabled = enabled
+	_ = s.persistSettings()
+}
+
+func (s *FileStore) ReloadAll() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.resetLocked()
+	return s.load()
+}
+
+func (s *FileStore) resetLocked() {
+	s.boards = make(map[uint]*model.Board)
+	s.columns = make(map[uint]*model.Column)
+	s.cards = make(map[uint]*CardFile)
+	s.tags = make(map[uint]*model.Tag)
+	s.dependencies = make(map[uint]*model.Dependency)
+	s.boardManifests = make(map[uint]*BoardManifest)
+	s.tagsByBoard = make(map[uint]map[uint]*model.Tag)
+	s.depsByBoard = make(map[uint]map[uint]*model.Dependency)
+	s.columnsByBoard = make(map[uint][]uint)
+	s.cardsByColumn = make(map[uint][]uint)
+	s.checklistToCard = make(map[uint]uint)
+	s.itemToChecklist = make(map[uint]uint)
+	s.commentToCard = make(map[uint]uint)
+}
+
+// ReplaceJSONFiles replaces all JSON files managed by the workspace and reloads
+// the in-memory store. Paths must be relative to the workspace root.
+func (s *FileStore) ReplaceJSONFiles(files map[string][]byte) error {
+	normalized, err := normalizeWorkspaceJSONFiles(files)
+	if err != nil {
+		return err
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	backup, err := readWorkspaceJSONFiles(s.basePath)
+	if err != nil {
+		return fmt.Errorf("backup workspace JSON: %w", err)
+	}
+	if err := replaceWorkspaceJSONFiles(s.basePath, normalized); err != nil {
+		restoreErr := replaceWorkspaceJSONFiles(s.basePath, backup)
+		s.resetLocked()
+		reloadErr := s.load()
+		if restoreErr != nil {
+			return fmt.Errorf("replace workspace JSON: %w; restore failed: %v", err, restoreErr)
+		}
+		if reloadErr != nil {
+			return fmt.Errorf("replace workspace JSON: %w; reload restored workspace: %v", err, reloadErr)
+		}
+		return fmt.Errorf("replace workspace JSON: %w", err)
+	}
+
+	s.resetLocked()
+	if err := s.load(); err != nil {
+		restoreErr := replaceWorkspaceJSONFiles(s.basePath, backup)
+		s.resetLocked()
+		reloadErr := s.load()
+		if restoreErr != nil {
+			return fmt.Errorf("reload replacement workspace: %w; restore failed: %v", err, restoreErr)
+		}
+		if reloadErr != nil {
+			return fmt.Errorf("reload replacement workspace: %w; reload restored workspace: %v", err, reloadErr)
+		}
+		return fmt.Errorf("reload replacement workspace: %w", err)
+	}
+	return nil
+}
+
+func (s *FileStore) ReadJSONFiles() (map[string][]byte, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return readWorkspaceJSONFiles(s.basePath)
+}
+
+func normalizeWorkspaceJSONFiles(files map[string][]byte) (map[string][]byte, error) {
+	normalized := make(map[string][]byte, len(files))
+	for path, data := range files {
+		clean := filepath.Clean(filepath.FromSlash(path))
+		if clean == "." || filepath.IsAbs(clean) || clean == ".." ||
+			strings.HasPrefix(clean, ".."+string(filepath.Separator)) ||
+			filepath.Ext(clean) != ".json" {
+			return nil, fmt.Errorf("invalid workspace JSON path %q", path)
+		}
+		if _, exists := normalized[clean]; exists {
+			return nil, fmt.Errorf("duplicate workspace JSON path %q", path)
+		}
+		normalized[clean] = data
+	}
+	return normalized, nil
+}
+
+func readWorkspaceJSONFiles(basePath string) (map[string][]byte, error) {
+	files := make(map[string][]byte)
+	err := filepath.Walk(basePath, func(path string, info os.FileInfo, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if info.IsDir() || filepath.Ext(path) != ".json" {
+			return nil
+		}
+		rel, err := filepath.Rel(basePath, path)
+		if err != nil {
+			return err
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		files[rel] = data
+		return nil
+	})
+	return files, err
+}
+
+func replaceWorkspaceJSONFiles(basePath string, files map[string][]byte) error {
+	existing, err := readWorkspaceJSONFiles(basePath)
+	if err != nil {
+		return err
+	}
+	for rel := range existing {
+		if err := os.Remove(filepath.Join(basePath, rel)); err != nil && !os.IsNotExist(err) {
+			return err
+		}
+	}
+	for rel, data := range files {
+		target := filepath.Join(basePath, rel)
+		if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+			return err
+		}
+		if err := os.WriteFile(target, data, 0644); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // WorkspaceID returns the unique identifier for this workspace.
 func (s *FileStore) WorkspaceID() string {
 	s.mu.RLock()
@@ -168,7 +314,7 @@ func (s *FileStore) load() error {
 		}
 		s.settings = &settings
 	} else {
-		s.settings = &model.Settings{Theme: "dark", Locale: "en-US"}
+		s.settings = &model.Settings{Theme: "dark", Locale: "en-US", SyncEnabled: false}
 		if err := s.persistSettings(); err != nil {
 			return err
 		}
@@ -404,6 +550,12 @@ func (s *FileStore) DeleteBoard(id uint) error {
 		return ErrNotFound
 	}
 
+	path := s.boardDir(id)
+	deletedPaths, err := jsonPathsUnder(path)
+	if err != nil {
+		return err
+	}
+
 	for _, colID := range s.columnsByBoard[id] {
 		for _, cardID := range s.cardsByColumn[colID] {
 			if card, ok := s.cards[cardID]; ok {
@@ -435,7 +587,13 @@ func (s *FileStore) DeleteBoard(id uint) error {
 
 	delete(s.boardManifests, id)
 
-	return os.RemoveAll(s.boardDir(id))
+	if err := os.RemoveAll(path); err != nil {
+		return err
+	}
+	for _, deletedPath := range deletedPaths {
+		s.notifyDelete(deletedPath)
+	}
+	return nil
 }
 
 // ============================================================
@@ -515,7 +673,9 @@ func (s *FileStore) DeleteColumn(id uint) error {
 	for _, cardID := range s.cardsByColumn[id] {
 		if card, ok := s.cards[cardID]; ok {
 			s.clearChecklistIndex(card)
-			os.Remove(s.cardPath(boardID, cardID))
+			path := s.cardPath(boardID, cardID)
+			s.notifyDelete(path)
+			os.Remove(path)
 		}
 		delete(s.cards, cardID)
 	}
@@ -712,7 +872,11 @@ func (s *FileStore) UpdateCard(c *CardFile) error {
 		s.cardsByColumn[old.ColumnID] = removeFromSlice(s.cardsByColumn[old.ColumnID], c.ID)
 		s.cardsByColumn[c.ColumnID] = append(s.cardsByColumn[c.ColumnID], c.ID)
 		if oldCol.BoardID != newCol.BoardID {
-			os.Remove(s.cardPath(oldCol.BoardID, c.ID))
+			oldPath := s.cardPath(oldCol.BoardID, c.ID)
+			if err := os.Remove(oldPath); err != nil && !os.IsNotExist(err) {
+				return err
+			}
+			s.notifyDelete(oldPath)
 		}
 	}
 
@@ -735,7 +899,9 @@ func (s *FileStore) DeleteCard(id uint) error {
 	s.cleanDependenciesByCard(id)
 
 	if col := s.columns[card.ColumnID]; col != nil {
-		os.Remove(s.cardPath(col.BoardID, id))
+		path := s.cardPath(col.BoardID, id)
+		s.notifyDelete(path)
+		os.Remove(path)
 	}
 	s.clearChecklistIndex(card)
 	s.cardsByColumn[card.ColumnID] = removeFromSlice(s.cardsByColumn[card.ColumnID], id)
@@ -1559,6 +1725,39 @@ func (s *FileStore) UpdateSettings(theme, locale *string) *model.Settings {
 
 func (s *FileStore) persistSettings() error {
 	return writeJSON(filepath.Join(s.basePath, "settings.json"), s.settings)
+}
+
+func (s *FileStore) notifyDelete(path string) {
+	rel, err := filepath.Rel(s.basePath, path)
+	if err != nil {
+		return
+	}
+	notifier.RLock()
+	ch := notifier.ch
+	notifier.RUnlock()
+	if ch != nil {
+		select {
+		case ch <- "delete:" + filepath.ToSlash(rel):
+		default:
+		}
+	}
+}
+
+func jsonPathsUnder(basePath string) ([]string, error) {
+	paths := make([]string, 0)
+	err := filepath.Walk(basePath, func(path string, info os.FileInfo, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if !info.IsDir() && filepath.Ext(path) == ".json" {
+			paths = append(paths, path)
+		}
+		return nil
+	})
+	if os.IsNotExist(err) {
+		return paths, nil
+	}
+	return paths, err
 }
 
 // persistTags is kept for backward compat but is a no-op (use persistTagsForBoard).

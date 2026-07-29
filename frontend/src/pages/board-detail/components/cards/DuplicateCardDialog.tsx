@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useMemo } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -47,7 +47,6 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
     register,
     handleSubmit,
     control,
-    watch,
     setValue,
     formState: { errors },
   } = useForm<DuplicateCardFormData>({
@@ -64,8 +63,8 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
     },
   })
 
-  const selectedBoardId = watch('selectedBoardId')
-  const selectedColumnId = watch('selectedColumnId')
+  const selectedBoardId = useWatch({ control, name: 'selectedBoardId' })
+  const selectedColumnId = useWatch({ control, name: 'selectedColumnId' })
 
   const { data: selectedBoard } = useBoardDetail(selectedBoardId)
   const columns = selectedBoard?.columns ?? []
@@ -76,7 +75,7 @@ export function DuplicateCardDialog(props: DuplicateCardDialogProps) {
 
   useEffect(() => {
     setValue('pin', isAutoPin || card.isPinned)
-  }, [selectedColumnId, isAutoPin, setValue])
+  }, [card.isPinned, isAutoPin, selectedColumnId, setValue])
 
   const handleBoardChange = (newBoardId: number) => {
     setValue('selectedBoardId', newBoardId)

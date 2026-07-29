@@ -1,0 +1,30 @@
+{
+  "id": 11,
+  "columnId": 4,
+  "title": "Renew SSL Certificate",
+  "description": "The production SSL certificate expires in 3 days. Renew and redeploy before expiry to avoid service interruption. Update the cert in both the load balancer and the backend config.",
+  "position": 2,
+  "isPinned": true,
+  "storyPoint": 1,
+  "priority": 3,
+  "startTime": "2026-04-28T00:00:00Z",
+  "endTime": "2026-04-30T00:00:00Z",
+  "tag_ids": [5],
+  "checklists": [
+    {
+      "id": 3,
+      "cardId": 11,
+      "title": "Renewal Steps",
+      "position": 1,
+      "items": [
+        {"id": 9, "checklistId": 3, "text": "Generate new CSR", "completed": true, "position": 1},
+        {"id": 10, "checklistId": 3, "text": "Submit CSR to CA", "completed": true, "position": 2},
+        {"id": 11, "checklistId": 3, "text": "Deploy cert to load balancer", "completed": false, "position": 3},
+        {"id": 12, "checklistId": 3, "text": "Verify HTTPS on all endpoints", "completed": false, "position": 4}
+      ]
+    }
+  ],
+  "comments": [],
+  "createdAt": "2026-04-28T09:00:00Z",
+  "updatedAt": "2026-04-28T09:00:00Z"
+}

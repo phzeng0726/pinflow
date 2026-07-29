@@ -46,7 +46,7 @@ func setupRouterWithImages(t *testing.T) (interface {
 
 	repos := repository.NewRepositories(fs)
 	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
-	handlers := api.NewHandlers(services)
+	handlers := setupTestHandlers(services, fs)
 	r := api.NewRouter(handlers, fs)
 	return r, basePath
 }

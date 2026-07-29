@@ -3,5 +3,7 @@ packages:
   - backend
   - electron
 
-onlyBuiltDependencies:
-  - electron
+allowBuilds:
+  electron: true
+  electron-winstaller: true
+  esbuild: false

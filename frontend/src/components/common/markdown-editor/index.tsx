@@ -157,12 +157,13 @@ export function MarkdownEditor({
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
-              input: ({ type, checked, disabled, node, ...props }) => {
+              input: ({ type, checked, node: _node, ...props }) => {
                 if (type === 'checkbox') {
                   return (
                     <input
                       type="checkbox"
                       checked={checked ?? false}
+                      {...props}
                       onChange={(e) => {
                         const container = viewRef.current
                         if (!container) return

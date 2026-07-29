@@ -1,0 +1,17 @@
+{
+  "id": 8,
+  "columnId": 3,
+  "title": "Initial Project Scaffolding",
+  "description": "Set up the monorepo structure with backend (Go/Gin), frontend (React/Vite), and Electron wrapper. Established coding conventions, linting rules, and commit message format.",
+  "position": 3,
+  "isPinned": false,
+  "storyPoint": 1,
+  "priority": null,
+  "startTime": "2026-04-01T00:00:00Z",
+  "endTime": "2026-04-05T00:00:00Z",
+  "tag_ids": [2],
+  "checklists": [],
+  "comments": [],
+  "createdAt": "2026-04-01T09:00:00Z",
+  "updatedAt": "2026-04-05T09:00:00Z"
+}

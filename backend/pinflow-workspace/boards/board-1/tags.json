@@ -1,0 +1,7 @@
+[
+  {"id": 1, "boardId": 1, "name": "Bug", "color": "red"},
+  {"id": 2, "boardId": 1, "name": "Feature", "color": "blue"},
+  {"id": 3, "boardId": 1, "name": "Enhancement", "color": "emerald"},
+  {"id": 4, "boardId": 1, "name": "Docs", "color": "cyan"},
+  {"id": 5, "boardId": 1, "name": "Urgent", "color": "orange"}
+]

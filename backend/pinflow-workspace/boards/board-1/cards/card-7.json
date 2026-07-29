@@ -1,0 +1,17 @@
+{
+  "id": 7,
+  "columnId": 3,
+  "title": "Fix Memory Leak in Background Scheduler",
+  "description": "Goroutine was not released after job cancellation, causing memory to grow ~2MB/hour under normal load. Fixed by using context cancellation and a proper cleanup hook.",
+  "position": 2,
+  "isPinned": false,
+  "storyPoint": 3,
+  "priority": 1,
+  "startTime": "2026-04-15T00:00:00Z",
+  "endTime": "2026-04-20T00:00:00Z",
+  "tag_ids": [1, 5],
+  "checklists": [],
+  "comments": [],
+  "createdAt": "2026-04-15T09:00:00Z",
+  "updatedAt": "2026-04-20T09:00:00Z"
+}

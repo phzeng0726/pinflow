@@ -1,0 +1,17 @@
+{
+  "id": 12,
+  "columnId": 4,
+  "title": "Investigate API Response Slowdown",
+  "description": "P95 latency on /api/v1/cards jumped from 120ms to 850ms since yesterday's deployment. Suspected N+1 query in the card listing handler. Profile and optimize before next release.",
+  "position": 3,
+  "isPinned": true,
+  "storyPoint": 3,
+  "priority": 2,
+  "startTime": "2026-04-28T00:00:00Z",
+  "endTime": "2026-05-02T00:00:00Z",
+  "tag_ids": [1, 3],
+  "checklists": [],
+  "comments": [],
+  "createdAt": "2026-04-28T09:00:00Z",
+  "updatedAt": "2026-04-28T09:00:00Z"
+}

@@ -18,7 +18,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Label } from '@radix-ui/react-label'
 import { Notebook, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { DependencyPopover } from './DependencyPopover'
 import { PriorityPopover } from './PriorityPopover'
@@ -49,7 +49,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors },
   } = useForm<EditCardForm>({
     resolver: zodResolver(editCardSchema),
@@ -76,7 +76,7 @@ export function CardDetailDialog(props: CardDetailDialogProps) {
     })
   }
 
-  const descriptionValue = watch('description')
+  const descriptionValue = useWatch({ control, name: 'description' })
 
   // 封裝一個 blur 處理函數
   const handleBlur = () => {

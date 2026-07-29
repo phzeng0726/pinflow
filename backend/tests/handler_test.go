@@ -11,16 +11,24 @@ import (
 	_ "pinflow/docs"
 	"pinflow/repository"
 	"pinflow/service"
+	"pinflow/store"
+	pinflowsync "pinflow/sync"
 
 	"github.com/gin-gonic/gin"
 )
+
+func setupTestHandlers(services *service.Services, fs *store.FileStore) *api.Handlers {
+	auth := &pinflowsync.AuthManager{}
+	manager := pinflowsync.NewManager(fs, auth, make(chan string, 1))
+	return api.NewHandlers(services, auth, manager, fs)
+}
 
 func setupRouter(t *testing.T) *gin.Engine {
 	t.Helper()
 	fs := setupTestStore(t)
 	repos := repository.NewRepositories(fs)
 	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
-	handlers := api.NewHandlers(services)
+	handlers := setupTestHandlers(services, fs)
 	return api.NewRouter(handlers, fs)
 }
 

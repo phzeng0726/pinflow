@@ -31,6 +31,24 @@ func NewRouter(h *Handlers, fs *store.FileStore) *gin.Engine {
 	v1 := r.Group("/api/v1")
 	v1.Use(middleware.Snapshot(h.Snapshot.services.Snapshot, fs))
 	{
+		auth := v1.Group("/auth")
+		{
+			auth.GET("/config", h.Auth.GetConfig)
+			auth.POST("/session", h.Auth.CreateSession)
+			auth.GET("/session", h.Auth.GetSession)
+			auth.DELETE("/session", h.Auth.DeleteSession)
+		}
+		syncGroup := v1.Group("/sync")
+		{
+			syncGroup.GET("/status", h.Sync.GetStatus)
+			syncGroup.POST("/trigger", h.Sync.Trigger)
+			syncGroup.PATCH("/enable", h.Sync.Enable)
+			syncGroup.POST("/pull", h.Sync.Pull)
+			syncGroup.GET("/has-cloud-data", h.Sync.HasCloudData)
+			syncGroup.GET("/source", h.Sync.GetSource)
+			syncGroup.POST("/source", h.Sync.ResolveSource)
+		}
+
 		boards := v1.Group("/boards")
 		{
 			boards.POST("", h.Board.CreateBoard)

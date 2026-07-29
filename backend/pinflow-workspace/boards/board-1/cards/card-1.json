@@ -1,0 +1,39 @@
+{
+  "id": 1,
+  "columnId": 1,
+  "title": "Implement User Authentication",
+  "description": "Build a complete authentication system with JWT tokens, refresh token rotation, and secure session management. Must follow OWASP security guidelines.",
+  "position": 1,
+  "isPinned": false,
+  "storyPoint": 5,
+  "priority": 3,
+  "startTime": "2026-05-01T00:00:00Z",
+  "endTime": "2026-05-14T00:00:00Z",
+  "tag_ids": [2],
+  "checklists": [
+    {
+      "id": 1,
+      "cardId": 1,
+      "title": "Implementation Steps",
+      "position": 1,
+      "items": [
+        {"id": 1, "checklistId": 1, "text": "Design authentication flow diagram", "completed": true, "position": 1},
+        {"id": 2, "checklistId": 1, "text": "Implement JWT token generation", "completed": false, "position": 2},
+        {"id": 3, "checklistId": 1, "text": "Add refresh token support", "completed": false, "position": 3},
+        {"id": 4, "checklistId": 1, "text": "Write unit tests for auth service", "completed": false, "position": 4}
+      ]
+    }
+  ],
+  "comments": [
+    {
+      "id": 1,
+      "cardId": 1,
+      "text": "Follow OWASP best practices for secure token handling. Tokens should be stored in httpOnly cookies, not localStorage.",
+      "authorId": "system",
+      "createdAt": "2026-04-28T10:00:00Z",
+      "updatedAt": "2026-04-28T10:00:00Z"
+    }
+  ],
+  "createdAt": "2026-04-28T09:00:00Z",
+  "updatedAt": "2026-04-28T09:00:00Z"
+}

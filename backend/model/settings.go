@@ -1,6 +1,7 @@
 package model
 
 type Settings struct {
-	Theme  string `json:"theme"`
-	Locale string `json:"locale"`
+	Theme       string `json:"theme"`
+	Locale      string `json:"locale"`
+	SyncEnabled bool   `json:"syncEnabled"`
 }

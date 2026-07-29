@@ -15,7 +15,7 @@ func TestSnapshotMiddleware_DeleteCard_CreatesSnapshot(t *testing.T) {
 	fs := setupTestStore(t)
 	repos := repository.NewRepositories(fs)
 	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
-	handlers := api.NewHandlers(services)
+	handlers := setupTestHandlers(services, fs)
 	r := api.NewRouter(handlers, fs)
 
 	// Setup: board → column → card
@@ -45,7 +45,7 @@ func TestSnapshotMiddleware_DeleteColumn_CreatesSnapshot(t *testing.T) {
 	fs := setupTestStore(t)
 	repos := repository.NewRepositories(fs)
 	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
-	handlers := api.NewHandlers(services)
+	handlers := setupTestHandlers(services, fs)
 	r := api.NewRouter(handlers, fs)
 
 	board, _ := services.Board.CreateBoard("MidBoard2")
@@ -71,7 +71,7 @@ func TestSnapshotMiddleware_FailedRequest_NoSnapshot(t *testing.T) {
 	fs := setupTestStore(t)
 	repos := repository.NewRepositories(fs)
 	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
-	handlers := api.NewHandlers(services)
+	handlers := setupTestHandlers(services, fs)
 	r := api.NewRouter(handlers, fs)
 
 	board, _ := services.Board.CreateBoard("MidBoard3")

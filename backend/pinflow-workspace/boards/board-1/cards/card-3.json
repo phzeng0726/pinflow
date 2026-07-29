@@ -1,0 +1,17 @@
+{
+  "id": 3,
+  "columnId": 1,
+  "title": "Fix Login Button Misalignment",
+  "description": "The login button shifts 4px to the right on Safari due to a box-model inconsistency. Affects users on macOS and iOS.",
+  "position": 3,
+  "isPinned": false,
+  "storyPoint": 1,
+  "priority": 2,
+  "startTime": null,
+  "endTime": "2026-05-02T00:00:00Z",
+  "tag_ids": [1, 5],
+  "checklists": [],
+  "comments": [],
+  "createdAt": "2026-04-28T09:00:00Z",
+  "updatedAt": "2026-04-28T09:00:00Z"
+}

@@ -11,6 +11,10 @@ interface ElectronAPI {
   hidePinWindow?: () => void
   minimizeWindow?: () => void
   isElectron?: boolean
+  startAuth?: () => Promise<void>
+  getAuthStatus?: () => Promise<unknown>
+  logout?: () => Promise<void>
+  onAuthChanged?: (callback: () => void) => void
   onUpdateAvailable?: (cb: (info: { version: string }) => void) => void
   onUpdateProgress?: (cb: (data: { percent: number; total: number }) => void) => void
   onUpdateDownloaded?: (cb: () => void) => void

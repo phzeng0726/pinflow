@@ -5,6 +5,8 @@ import { useLocaleStore } from '@/stores/localeStore'
 import { useThemeStore } from '@/stores/themeStore'
 import { getSettings } from '@/lib/api'
 import { UpdateDialog } from '@/components/common/UpdateDialog'
+import { useAuthStore } from '@/stores/authStore'
+import { WorkspaceSourceDialog } from '@/components/common/WorkspaceSourceDialog'
 
 function Root() {
   const apply = useThemeStore((s) => s.apply)
@@ -13,10 +15,16 @@ function Root() {
   const locale = useLocaleStore((s) => s.locale)
 
   useEffect(() => {
+    void useAuthStore.getState().checkStatus()
+    window.electronAPI?.onAuthChanged?.(
+      () => void useAuthStore.getState().checkStatus(),
+    )
     getSettings()
       .then((settings) => {
         useThemeStore.setState({ theme: settings.theme as 'light' | 'dark' })
-        useLocaleStore.setState({ locale: settings.locale as 'en-US' | 'zh-TW' })
+        useLocaleStore.setState({
+          locale: settings.locale as 'en-US' | 'zh-TW',
+        })
         useThemeStore.getState().apply()
         useLocaleStore.getState().apply()
       })
@@ -32,6 +40,7 @@ function Root() {
   return (
     <>
       <Outlet />
+      <WorkspaceSourceDialog />
       <Toaster richColors position="bottom-right" theme={theme} />
       {window.electronAPI?.isElectron && <UpdateDialog />}
     </>

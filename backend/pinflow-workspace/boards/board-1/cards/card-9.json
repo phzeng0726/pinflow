@@ -1,0 +1,17 @@
+{
+  "id": 9,
+  "columnId": 3,
+  "title": "Add Swagger API Docs",
+  "description": "Integrated go-swagger to auto-generate interactive API documentation from godoc comments. Available at /swagger/index.html when the server is running.",
+  "position": 4,
+  "isPinned": false,
+  "storyPoint": 1,
+  "priority": null,
+  "startTime": "2026-04-08T00:00:00Z",
+  "endTime": "2026-04-10T00:00:00Z",
+  "tag_ids": [4],
+  "checklists": [],
+  "comments": [],
+  "createdAt": "2026-04-08T09:00:00Z",
+  "updatedAt": "2026-04-10T09:00:00Z"
+}

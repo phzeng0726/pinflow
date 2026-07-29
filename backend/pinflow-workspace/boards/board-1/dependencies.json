@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "boardId": 1,
+    "fromCardId": 4,
+    "toCardId": 1,
+    "type": "blocks",
+    "createdAt": "2026-04-28T09:00:00Z"
+  },
+  {
+    "id": 2,
+    "boardId": 1,
+    "fromCardId": 3,
+    "toCardId": 5,
+    "type": "related_to",
+    "createdAt": "2026-04-28T09:00:00Z"
+  }
+]

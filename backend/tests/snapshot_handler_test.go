@@ -14,12 +14,11 @@ import (
 	"pinflow/service"
 )
 
-
 func TestSnapshotHandler_List(t *testing.T) {
 	fs := setupTestStore(t)
 	repos := repository.NewRepositories(fs)
 	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
-	handlers := api.NewHandlers(services)
+	handlers := setupTestHandlers(services, fs)
 	r := api.NewRouter(handlers, fs)
 
 	board, _ := services.Board.CreateBoard("ListHBoard")
@@ -50,7 +49,7 @@ func TestSnapshotHandler_Create(t *testing.T) {
 	fs := setupTestStore(t)
 	repos := repository.NewRepositories(fs)
 	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
-	handlers := api.NewHandlers(services)
+	handlers := setupTestHandlers(services, fs)
 	r := api.NewRouter(handlers, fs)
 
 	board, _ := services.Board.CreateBoard("CreateHBoard")
@@ -83,7 +82,7 @@ func TestSnapshotHandler_Delete(t *testing.T) {
 	fs := setupTestStore(t)
 	repos := repository.NewRepositories(fs)
 	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
-	handlers := api.NewHandlers(services)
+	handlers := setupTestHandlers(services, fs)
 	r := api.NewRouter(handlers, fs)
 
 	board, _ := services.Board.CreateBoard("DelHBoard")
@@ -105,7 +104,7 @@ func TestSnapshotHandler_Delete_NotFound(t *testing.T) {
 	fs := setupTestStore(t)
 	repos := repository.NewRepositories(fs)
 	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
-	handlers := api.NewHandlers(services)
+	handlers := setupTestHandlers(services, fs)
 	r := api.NewRouter(handlers, fs)
 
 	board, _ := services.Board.CreateBoard("DelHBoard2")
@@ -124,7 +123,7 @@ func TestSnapshotHandler_Restore(t *testing.T) {
 	fs := setupTestStore(t)
 	repos := repository.NewRepositories(fs)
 	services := service.NewServices(service.Deps{Repos: repos, Store: fs})
-	handlers := api.NewHandlers(services)
+	handlers := setupTestHandlers(services, fs)
 	r := api.NewRouter(handlers, fs)
 
 	board, _ := services.Board.CreateBoard("RestoreHBoard")

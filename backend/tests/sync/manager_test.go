@@ -160,13 +160,61 @@ func TestManagerInitializesCloudSourceDecision(t *testing.T) {
 	if !source.Pending || !source.CloudHasData {
 		t.Fatalf("expected pending cloud source decision, got %#v", source)
 	}
-	if fs.GetSettings().SyncEnabled {
-		t.Fatal("expected sync to be disabled while source decision is pending")
+	if !fs.GetSettings().SyncEnabled {
+		t.Fatal("expected source decision to preserve the sync preference")
+	}
+	if status := manager.Status(); status.State != "disabled" {
+		t.Fatalf("expected sync status to be disabled while source decision is pending, got %#v", status)
 	}
 
 	manager.ClearSourceDecision()
 	if source := manager.SourceState(); source != (pinflowsync.SourceState{}) {
 		t.Fatalf("expected source state to clear, got %#v", source)
+	}
+}
+
+func TestManagerAllowsLocalWorkspaceWhenCloudCheckFailed(t *testing.T) {
+	var uploaded map[string][]byte
+	client := &fakeCloudClient{
+		listFilesFn: func() ([]pinflowsync.WorkspaceFile, error) {
+			return nil, errors.New("cloud check failed")
+		},
+		upsertFn: func(files map[string][]byte) error {
+			uploaded = files
+			return nil
+		},
+	}
+	manager, fs, auth := newManager(t, client, nil, pinflowsync.ManagerDeps{})
+	fs.SetSyncEnabled(true)
+	auth.Set(pinflowsync.AuthState{AccessToken: "access-token", UserID: "user-1"})
+
+	if err := manager.InitializeSourceDecision(); err == nil {
+		t.Fatal("expected cloud check failure")
+	}
+	if source := manager.SourceState(); !source.Pending || source.CloudHasData {
+		t.Fatalf("expected unresolved source without confirmed cloud data, got %#v", source)
+	}
+
+	if err := manager.ReplaceCloudFromLocal(); err != nil {
+		t.Fatalf("replace cloud from local: %v", err)
+	}
+	if len(uploaded) == 0 {
+		t.Fatal("expected local workspace files to be uploaded")
+	}
+	if status := manager.Status(); status.State != "idle" {
+		t.Fatalf("expected enabled sync to resume after source resolution, got %#v", status)
+	}
+}
+
+func TestManagerReplaceCloudFromLocalKeepsDisabledStatus(t *testing.T) {
+	manager, _, auth := newManager(t, &fakeCloudClient{}, nil, pinflowsync.ManagerDeps{})
+	auth.Set(pinflowsync.AuthState{AccessToken: "access-token", UserID: "user-1"})
+
+	if err := manager.ReplaceCloudFromLocal(); err != nil {
+		t.Fatalf("replace cloud from local: %v", err)
+	}
+	if status := manager.Status(); status.State != "disabled" {
+		t.Fatalf("expected disabled sync preference to remain visible, got %#v", status)
 	}
 }
 

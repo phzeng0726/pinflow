@@ -127,7 +127,6 @@ func (m *Manager) InitializeSourceDecision() error {
 	if err != nil {
 		m.source = SourceState{Pending: true, Error: err.Error()}
 		m.mu.Unlock()
-		m.store.SetSyncEnabled(false)
 		m.SetEnabled(false)
 		return err
 	}
@@ -138,8 +137,9 @@ func (m *Manager) InitializeSourceDecision() error {
 	}
 	m.mu.Unlock()
 	if hasCloudData {
-		m.store.SetSyncEnabled(false)
 		m.SetEnabled(false)
+	} else {
+		m.SetEnabled(m.store.GetSettings().SyncEnabled)
 	}
 	return nil
 }
@@ -334,17 +334,17 @@ func (m *Manager) ReplaceLocalFromCloud() error {
 	m.source.Pending = false
 	m.source.Error = ""
 	m.mu.Unlock()
-	m.setStatus("idle", "")
+	if m.store.GetSettings().SyncEnabled {
+		m.setStatus("idle", "")
+	} else {
+		m.SetEnabled(false)
+	}
 	return nil
 }
 
 func (m *Manager) ReplaceCloudFromLocal() error {
 	if !m.auth.Authenticated() {
 		return fmt.Errorf("not authenticated")
-	}
-	source := m.SourceState()
-	if !source.Pending || !source.CloudHasData {
-		return ErrSourceDecisionRequired
 	}
 	if !m.sourceResolving.CompareAndSwap(false, true) {
 		return ErrSourceResolutionInProgress
@@ -375,7 +375,11 @@ func (m *Manager) ReplaceCloudFromLocal() error {
 	m.source.CloudHasData = len(files) > 0
 	m.source.Error = ""
 	m.mu.Unlock()
-	m.setStatus("idle", "")
+	if m.store.GetSettings().SyncEnabled {
+		m.setStatus("idle", "")
+	} else {
+		m.SetEnabled(false)
+	}
 	return nil
 }
 

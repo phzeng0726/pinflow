@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   CloudDownload,
   Clock3,
@@ -34,6 +34,7 @@ export function WorkspaceSourceDialog() {
   const [selection, setSelection] = useState<WorkspaceSource>()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>()
+  const resolving = useRef(false)
 
   useEffect(() => {
     if (source.data?.pending) open()
@@ -59,7 +60,8 @@ export function WorkspaceSourceDialog() {
   }
 
   const resolve = async () => {
-    if (!selection) return
+    if (!selection || resolving.current) return
+    resolving.current = true
     setLoading(true)
     setError(undefined)
     try {
@@ -73,6 +75,7 @@ export function WorkspaceSourceDialog() {
         reason instanceof Error ? reason.message : t('sync.actionFailed'),
       )
     } finally {
+      resolving.current = false
       setLoading(false)
     }
   }

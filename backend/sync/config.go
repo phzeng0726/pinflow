@@ -11,18 +11,44 @@ import "os"
 var defaultSupabaseURL string
 var defaultSupabaseAnonKey string
 
-func SupabaseURL() string {
-	if value := os.Getenv("PINFLOW_SUPABASE_URL"); value != "" {
-		return value
+// SupabaseConfig contains the resolved public connection settings.
+type SupabaseConfig struct {
+	URL     string
+	AnonKey string
+}
+
+// ResolveSupabaseConfig resolves environment overrides over embedded defaults.
+func ResolveSupabaseConfig(
+	embeddedURL string,
+	embeddedAnonKey string,
+	lookupEnv func(string) string,
+) SupabaseConfig {
+	if lookupEnv == nil {
+		lookupEnv = os.Getenv
 	}
-	return defaultSupabaseURL
+	config := SupabaseConfig{
+		URL:     embeddedURL,
+		AnonKey: embeddedAnonKey,
+	}
+	if value := lookupEnv("PINFLOW_SUPABASE_URL"); value != "" {
+		config.URL = value
+	}
+	if value := lookupEnv("PINFLOW_SUPABASE_ANON_KEY"); value != "" {
+		config.AnonKey = value
+	}
+	return config
+}
+
+func resolvedSupabaseConfig() SupabaseConfig {
+	return ResolveSupabaseConfig(defaultSupabaseURL, defaultSupabaseAnonKey, os.Getenv)
+}
+
+func SupabaseURL() string {
+	return resolvedSupabaseConfig().URL
 }
 
 func SupabaseAnonKey() string {
-	if value := os.Getenv("PINFLOW_SUPABASE_ANON_KEY"); value != "" {
-		return value
-	}
-	return defaultSupabaseAnonKey
+	return resolvedSupabaseConfig().AnonKey
 }
 
 func SupabaseConfigured() bool {

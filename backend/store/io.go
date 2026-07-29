@@ -4,26 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"sync"
 )
-
-var notifier struct {
-	sync.RWMutex
-	ch       chan<- string
-	basePath string
-}
-
-// SetWriteNotifier registers the optional non-blocking persistence notification channel.
-func SetWriteNotifier(ch chan<- string) {
-	setWriteNotifier(ch, "")
-}
-
-func setWriteNotifier(ch chan<- string, basePath string) {
-	notifier.Lock()
-	defer notifier.Unlock()
-	notifier.ch = ch
-	notifier.basePath = basePath
-}
 
 func readJSON(path string, v interface{}) error {
 	data, err := os.ReadFile(path)
@@ -33,7 +14,7 @@ func readJSON(path string, v interface{}) error {
 	return json.Unmarshal(data, v)
 }
 
-func writeJSON(path string, v interface{}) error {
+func (s *FileStore) writeJSON(path string, v interface{}) error {
 	data, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		return err
@@ -45,24 +26,24 @@ func writeJSON(path string, v interface{}) error {
 	if err := os.WriteFile(path, data, 0644); err != nil {
 		return err
 	}
-	notifier.RLock()
-	ch := notifier.ch
-	basePath := notifier.basePath
-	notifier.RUnlock()
-	if ch != nil {
-		notificationPath := path
-		if basePath != "" {
-			if rel, relErr := filepath.Rel(basePath, path); relErr == nil &&
-				rel != ".." && !filepath.IsAbs(rel) {
-				notificationPath = rel
-			}
-		}
-		select {
-		case ch <- filepath.ToSlash(notificationPath):
-		default:
-		}
+	rel, err := filepath.Rel(s.basePath, path)
+	if err == nil && rel != ".." && !filepath.IsAbs(rel) {
+		s.sendNotification(filepath.ToSlash(rel))
 	}
 	return nil
+}
+
+func (s *FileStore) sendNotification(value string) {
+	s.notifierMu.RLock()
+	ch := s.notifier
+	s.notifierMu.RUnlock()
+	if ch == nil {
+		return
+	}
+	select {
+	case ch <- value:
+	default:
+	}
 }
 
 func fileExists(path string) bool {

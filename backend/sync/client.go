@@ -15,7 +15,17 @@ type Client struct {
 	auth *AuthManager
 }
 
-func NewClient(auth *AuthManager) *Client { return &Client{http: http.DefaultClient, auth: auth} }
+func NewClient(auth *AuthManager) *Client {
+	return NewClientWithHTTPClient(auth, http.DefaultClient)
+}
+
+// NewClientWithHTTPClient creates a Supabase client with an explicit transport.
+func NewClientWithHTTPClient(auth *AuthManager, client *http.Client) *Client {
+	if client == nil {
+		client = http.DefaultClient
+	}
+	return &Client{http: client, auth: auth}
+}
 
 func (c *Client) request(method, endpoint string, body any, headers map[string]string) (*http.Response, error) {
 	state := c.auth.Get()

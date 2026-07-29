@@ -17,12 +17,32 @@ import (
 
 const reconciliationInterval = 3 * time.Minute
 const offlineRetryInterval = 5 * time.Second
+const debounceInterval = 500 * time.Millisecond
+
+// CloudClient is the remote workspace contract required by Manager.
+type CloudClient interface {
+	UpsertFiles(files map[string][]byte) error
+	ListFiles() ([]WorkspaceFile, error)
+	DeleteFile(path string) error
+	DeleteAllFiles() error
+}
+
+// ManagerDeps configures Manager dependencies while production callers can
+// continue using NewManager for standard defaults.
+type ManagerDeps struct {
+	Client         CloudClient
+	DebounceEvery  time.Duration
+	ReconcileEvery time.Duration
+	RetryAfter     time.Duration
+	RunFullSync    func()
+}
 
 type Manager struct {
 	store           *store.FileStore
-	client          *Client
+	client          CloudClient
 	auth            *AuthManager
 	notifications   <-chan string
+	debounceEvery   time.Duration
 	reconcileEvery  time.Duration
 	retryAfter      time.Duration
 	mu              sync.RWMutex
@@ -35,14 +55,38 @@ type Manager struct {
 }
 
 func NewManager(fs *store.FileStore, auth *AuthManager, notifications <-chan string) *Manager {
+	return NewManagerWithDeps(fs, auth, notifications, ManagerDeps{})
+}
+
+// NewManagerWithDeps creates a Manager with explicit, independently owned dependencies.
+func NewManagerWithDeps(
+	fs *store.FileStore,
+	auth *AuthManager,
+	notifications <-chan string,
+	deps ManagerDeps,
+) *Manager {
+	if deps.Client == nil {
+		deps.Client = NewClient(auth)
+	}
+	if deps.DebounceEvery <= 0 {
+		deps.DebounceEvery = debounceInterval
+	}
+	if deps.ReconcileEvery <= 0 {
+		deps.ReconcileEvery = reconciliationInterval
+	}
+	if deps.RetryAfter <= 0 {
+		deps.RetryAfter = offlineRetryInterval
+	}
 	return &Manager{
 		store:          fs,
-		client:         NewClient(auth),
+		client:         deps.Client,
 		auth:           auth,
 		notifications:  notifications,
-		reconcileEvery: reconciliationInterval,
-		retryAfter:     offlineRetryInterval,
+		debounceEvery:  deps.DebounceEvery,
+		reconcileEvery: deps.ReconcileEvery,
+		retryAfter:     deps.RetryAfter,
 		status:         SyncStatus{State: "idle"},
+		runFullSync:    deps.RunFullSync,
 	}
 }
 func (m *Manager) Status() SyncStatus { m.mu.RLock(); defer m.mu.RUnlock(); return m.status }
@@ -145,7 +189,7 @@ func (m *Manager) Run(done <-chan struct{}) {
 			return
 		case raw := <-m.notifications:
 			pending[raw] = true
-			resetTimer(500 * time.Millisecond)
+			resetTimer(m.debounceEvery)
 		case <-timer.C:
 			pending = m.push(pending)
 			if len(pending) > 0 {

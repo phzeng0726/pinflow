@@ -175,14 +175,60 @@ pnpm dev
 
 ---
 
+## Supabase Schema
+
+雲端同步使用的資料表與 RLS policy 由版本化 migration 管理：
+
+```text
+supabase/migrations/20260729000000_create_workspace_files.sql
+```
+
+新 Supabase project 應透過 Supabase migration 工具套用儲存庫內的 migration。若既有 project 曾手動執行舊版 `backend/sync/schema.sql`，可直接套用目前的 migration 納入版本追蹤；SQL 會保留既有 `workspace_files` 資料列，且只補建不存在的資料表或 policy。
+
+PinFlow backend 啟動時只透過 PostgREST 存取 `workspace_files`，不會自行執行 migration，也不需要資料庫 schema 管理權限。部署者應在發佈或環境建置階段預先完成 migration。
+
+套用至新的或已連結的 Supabase project：
+
+```bash
+supabase link --project-ref <project-ref>
+supabase db push --dry-run
+supabase db push
+```
+
+若既有 project 已手動建立完全等效的 schema，但 remote migration history 與本機不一致，可在確認 table、foreign key、RLS policy 與既有資料後，將此版本標記為已套用：
+
+```bash
+supabase migration repair --status applied 20260729000000
+supabase db push --dry-run
+```
+
+可使用本機的 `postgres:17-alpine` image，在 port `5433` 驗證 migration 能重複套用於全新 schema，並保留 legacy schema 的既有資料：
+
+```bash
+make test-migration
+```
+
+相關資料庫管理指令：
+
+```bash
+make test-db-up
+make test-db-status
+make test-db-logs
+make test-db-down
+```
+
+---
+
 ## 執行測試
 
 ### Backend 測試
 
 ```bash
 cd backend
-go test ./tests/... -v
+go test ./... -v
 ```
+
+`go test ./...` 是完整後端測試套件的唯一標準入口；不要以 `go test ./tests/...` 取代，否則未來可能遺漏其他 package。
 
 ### Frontend 測試
 
@@ -295,6 +341,8 @@ pinflow/
 │   ├── config.yaml   # openspec 設定
 │   ├── specs/        # 功能規格（每個功能一個子目錄）
 │   └── changes/      # 變更記錄
+├── supabase/
+│   └── migrations/   # Supabase schema 與 RLS 版本化 migration
 ├── .github/
 │   └── workflows/
 │       └── release.yml      # Tag 觸發的自動打包與 Release 發佈

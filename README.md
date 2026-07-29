@@ -12,7 +12,7 @@
 - **卡片詳情**：富文字編輯（Lexical）、截止日期、留言、附件圖片
 - **Checklist**：支援多清單、拖曳排序與跨清單移動
 - **依賴關係圖**：視覺化呈現卡片間的前置/後置依賴（@xyflow/react + dagre）
-- **標籤管理**：全域 Tag，可附加至多張卡片並支援 CRUD
+- **標籤管理**：每個 Board 可獨立管理 Tag，並可附加至多張卡片
 - **卡片搜尋**：跨欄位搜尋卡片
 - **檔案式儲存**：資料以 JSON 儲存，可透過 Git 同步到不同裝置
 - **時間軸視圖**：以甘特圖風格瀏覽卡片截止日期，支援欄位與標籤篩選
@@ -64,7 +64,7 @@ pinflow-workspace/
 
 ---
 
-## 桌面版應用（Electron）
+## 快速開始
 
 ### 前置需求
 
@@ -72,122 +72,69 @@ pinflow-workspace/
 - Node.js 20+
 - pnpm（`npm install -g pnpm`）
 
-### 一、安裝依賴
+安裝根目錄與前端依賴：
 
 ```bash
-# 安裝 Electron 相關套件（在專案根目錄執行）
 pnpm install
-
-# 安裝 frontend 依賴
 cd frontend && pnpm install && cd ..
 ```
 
-### 二、啟動桌面版（開發模式）
-
-推薦使用 `make` 指令一鍵啟動：
+啟動完整桌面開發環境：
 
 ```bash
-make dev   # 同時啟動 backend、frontend、electron（-j3 並行）
+make dev
 ```
 
-或分別啟動：
+也可分別執行 `make backend`、`make frontend` 與 `make electron`。Electron 會載入 `http://localhost:5173`，Vite 則將 `/api` 代理至 `http://localhost:34115`。
+
+純 Web 模式只需啟動前後端：
 
 ```bash
-make backend   # cd backend && go run . --workspace ../../pinflow-workspace
-make frontend  # cd frontend && pnpm dev
-make electron  # pnpm electron:dev
+make backend
+make frontend
 ```
-
-> Electron 視窗會載入 `http://localhost:5173`（Vite dev server）。DevTools 會自動開啟。
-
-### 三、打包桌面安裝檔
-
-一鍵完成 Go backend 編譯、前端建置、Electron 打包：
-
-```bash
-make package
-```
-
-或直接呼叫 PowerShell 腳本：
-
-```bat
-scripts\build.bat
-```
-
-打包完成後安裝程式會在 `dist-electron/` 目錄下：
-
-| 平台    | 產出檔案                                   |
-| ------- | ------------------------------------------ |
-| Windows | `PinFlow Setup 0.1.0.exe`（NSIS 安裝程式） |
-
-### 四、安裝與資料儲存
-
-執行 `dist-electron/PinFlow Setup 0.1.0.exe`，依照安裝精靈完成安裝。安裝後從桌面捷徑或開始功能表啟動「PinFlow」。
-
-**資料儲存位置：**
-
-安裝版的 workspace 位於使用者的 AppData 目錄下：
-
-```
-C:\Users\<使用者>\AppData\Roaming\PinFlow\workspace\
-```
-
-該目錄包含所有看板、卡片、標籤等資料（JSON 格式），結構同上方「資料儲存」段落。
-
-> **提示：**
-> - 關閉主視窗後程式會縮小至系統列（System Tray），右鍵點擊托盤圖示可選擇重新開啟或完全關閉。
-> - 備份資料只需複製整個 workspace 目錄。
-
----
-
-## 純網頁開發模式
-
-不需要 Electron，直接在瀏覽器中使用：
-
-### 前置需求
-
-- Go 1.25+
-- Node.js 20+
-- pnpm（`npm install -g pnpm`）
-
-### 1. 啟動 Backend
-
-```bash
-cd backend
-go run . --workspace ../../pinflow-workspace
-```
-
-API 服務啟動於 `http://localhost:34115`
 
 Swagger UI：`http://localhost:34115/swagger/index.html`
 
-### 2. 啟動 Frontend
+## 雲端同步設定
 
-```bash
-cd frontend
-pnpm install   # 第一次需要
-pnpm dev
+雲端同步目前由 Electron 桌面版提供登入入口。請先建立 Supabase project、啟用 Google Provider，並將以下網址加入 Authentication Redirect URLs：
+
+```text
+http://127.0.0.1:34116/auth/callback
 ```
 
-開啟瀏覽器：`http://localhost:5173`
+在專案根目錄設定：
 
-> Vite 會自動將 `/api` 請求 proxy 到 `:34115`，無需額外設定。
+| 變數 | 說明 |
+| --- | --- |
+| `PINFLOW_SUPABASE_URL` | Supabase project URL |
+| `PINFLOW_SUPABASE_ANON_KEY` | Supabase anon 或 publishable key |
 
----
+```text
+PINFLOW_SUPABASE_URL=https://<project-ref>.supabase.co
+PINFLOW_SUPABASE_ANON_KEY=<publishable-key>
+```
 
-## Supabase Schema
+`Makefile` 會載入根目錄的 `.env`。`make package` 會將設定嵌入 Go backend，執行期間提供的環境變數仍具有最高優先權。
 
-雲端同步使用的資料表與 RLS policy 由版本化 migration 管理：
+登入後若雲端已有資料，PinFlow 會要求選擇工作區來源：
+
+- **使用雲端資料**：以雲端工作區取代本機 JSON。
+- **使用本機資料**：清除該帳號的雲端工作區，再上傳本機 JSON。
+- **稍後決定**：暫停同步，直到完成來源選擇。
+
+選定來源後，可透過工具列的同步狀態按鈕啟用、停用或立即同步。
+
+### Supabase Migration
+
+Schema 與 RLS policy 位於：
 
 ```text
 supabase/migrations/20260729000000_create_workspace_files.sql
 ```
 
-新 Supabase project 應透過 Supabase migration 工具套用儲存庫內的 migration。若既有 project 曾手動執行舊版 `backend/sync/schema.sql`，可直接套用目前的 migration 納入版本追蹤；SQL 會保留既有 `workspace_files` 資料列，且只補建不存在的資料表或 policy。
-
-PinFlow backend 啟動時只透過 PostgREST 存取 `workspace_files`，不會自行執行 migration，也不需要資料庫 schema 管理權限。部署者應在發佈或環境建置階段預先完成 migration。
-
-套用至新的或已連結的 Supabase project：
+Backend 只透過 PostgREST 存取資料，不會自行執行 migration。部署前請使用 Supabase CLI 套用：
 
 ```bash
 supabase link --project-ref <project-ref>
@@ -195,219 +142,87 @@ supabase db push --dry-run
 supabase db push
 ```
 
-若既有 project 已手動建立完全等效的 schema，但 remote migration history 與本機不一致，可在確認 table、foreign key、RLS policy 與既有資料後，將此版本標記為已套用：
+若既有 project 已有完全等效的 schema，可在確認資料表、foreign key 與 RLS policy 後執行：
 
 ```bash
 supabase migration repair --status applied 20260729000000
-supabase db push --dry-run
 ```
 
-可使用本機的 `postgres:17-alpine` image，在 port `5433` 驗證 migration 能重複套用於全新 schema，並保留 legacy schema 的既有資料：
+## 常用指令
+
+| 指令 | 說明 |
+| --- | --- |
+| `make dev` | 同時啟動 Backend、Frontend 與 Electron |
+| `make backend` | 啟動 Go API，預設 port `34115` |
+| `make frontend` | 啟動 Vite，預設 port `5173` |
+| `make package` | 建置 Windows NSIS 安裝檔至 `dist-electron/` |
+| `make test-backend` | 執行完整 Backend 測試 |
+| `make test-migration` | 以 PostgreSQL 17 驗證 Supabase migration |
+| `make test-all` | 執行 Backend 與 migration 測試 |
+| `cd frontend && pnpm test` | 執行 Frontend 測試 |
+| `cd frontend && pnpm lint` | 執行 ESLint |
+| `cd frontend && pnpm format:check` | 檢查 Prettier 格式 |
+
+`go test ./...` 是完整 Backend 測試的標準入口，請勿以 `go test ./tests/...` 取代。
+
+Migration 測試資料庫可透過 `make test-db-up`、`make test-db-status`、`make test-db-logs` 與 `make test-db-down` 管理。
+
+## 打包與部署
+
+### Electron
 
 ```bash
-make test-migration
+make package
+# 或
+scripts/build.bat
 ```
 
-相關資料庫管理指令：
+安裝版工作區位於：
 
-```bash
-make test-db-up
-make test-db-status
-make test-db-logs
-make test-db-down
+```text
+C:/Users/<使用者>/AppData/Roaming/PinFlow/workspace/
 ```
 
----
+關閉主視窗後程式會縮小至 System Tray；備份時只需複製整個 workspace 目錄。
 
-## 執行測試
-
-### Backend 測試
-
-```bash
-cd backend
-go test ./... -v
-```
-
-`go test ./...` 是完整後端測試套件的唯一標準入口；不要以 `go test ./tests/...` 取代，否則未來可能遺漏其他 package。
-
-### Frontend 測試
-
-```bash
-cd frontend
-pnpm test          # vitest
-pnpm lint          # ESLint 檢查
-pnpm format        # Prettier 格式化
-pnpm format:check  # 確認格式符合規範
-```
-
----
-
-## Docker 部署（Web 模式）
-
-不需要 Electron，直接以容器化方式運行前後端。
-
-### 前置需求
-
-- Docker Desktop
-
-### 啟動
+### Docker Web 模式
 
 ```bash
 docker-compose up --build
-```
-
-| 服務     | URL                                         |
-| -------- | ------------------------------------------- |
-| 前端     | `http://localhost`                          |
-| 後端 API | `http://localhost:34115/api/v1`             |
-| Swagger  | `http://localhost:34115/swagger/index.html` |
-
-### 停止
-
-```bash
 docker-compose down
 ```
 
----
+前端位於 `http://localhost`，API 位於 `http://localhost:34115/api/v1`。
 
-## 自動化版本發佈（CI/CD）
+### GitHub Release
 
-專案透過 GitHub Actions（`.github/workflows/release.yml`）在推送符合 `v*` 格式的 Git tag 時，自動完成打包並建立 GitHub Release。
-
-### 觸發方式
+推送 `v*` 格式的 tag 會觸發 `.github/workflows/release.yml`，建立 Windows NSIS 安裝檔與 auto-update metadata：
 
 ```bash
-# 1. 在本地建立帶版號的 tag
 git tag v0.1.0
-
-# 2. 推送 tag 到遠端
 git push origin v0.1.0
 ```
 
-> tag 名稱會自動去除前綴 `v`，並同步寫入根目錄 `package.json` 的 `version` 欄位作為打包版號。
-
-### 自動執行流程
-
-| 步驟 | 說明                                                          |
-| ---- | ------------------------------------------------------------- |
-| 1    | 在 `windows-latest` runner 上 checkout                        |
-| 2    | 從 tag 解析版本號並同步到 `package.json`                      |
-| 3    | 安裝 Go 1.25、Node.js 20、pnpm 9                              |
-| 4    | 編譯 Go backend → `electron/resources/pinflow-backend.exe`    |
-| 5    | 建置 Frontend（`ELECTRON_BUILD=1`）                           |
-| 6    | 執行 `electron-builder --win --publish never` 打包 NSIS 安裝檔 |
-| 7    | 將 `dist-electron/` 內的 `.exe`、`.exe.blockmap`、`latest.yml` 上傳至 GitHub Release（自動產生 Release Notes） |
-
-### 產出檔案
-
-Release 頁面會附帶下列檔案，可直接提供使用者下載安裝：
-
-- `PinFlow Setup <version>.exe`
-- `PinFlow Setup <version>.exe.blockmap`
-- `latest.yml`（auto-update 用 metadata）
-
----
-
 ## 專案結構
 
-```
-pinflow/
-├── backend/          # Go API server
-│   ├── api/          # Handlers 容器（handler.go）+ Gin handlers + router.go
-│   ├── api/middleware/ # Snapshot middleware
-│   ├── service/      # Services 容器（service.go）+ 業務邏輯
-│   ├── repository/   # Repositories 容器（repository.go）+ 檔案式實作
-│   ├── store/        # FileStore（記憶體 + JSON 持久化）
-│   ├── model/        # 資料模型
-│   ├── dto/          # 請求/回應 DTO
-│   ├── sync/         # Supabase 雲端同步（auth, client, config, manager）
-│   ├── seed/         # 首次啟動範例工作區資料（embed）
-│   ├── docs/         # Swagger 自動生成文件
-│   └── tests/        # 單元 + 整合測試
-├── frontend/         # React SPA
-│   └── src/
-│       ├── pages/    # board-list/ · board-detail/ · pin/
-│       ├── components/ # common/（SyncStatusIndicator 等）· ui/（shadcn/ui）
-│       ├── hooks/    # TanStack Query hooks（board/ card/ checklist/ comment/ dependency/ tag/ archive/ sync/ settings/ snapshot/）
-│       ├── stores/   # Zustand（themeStore、pinStore、authStore、workspaceSourceStore 等）
-│       ├── lib/      # API client（boards · cards · columns · tags · checklists · comments · dependencies · images · auth · sync · archive · settings）
-│       └── routes/   # TanStack Router 路由
-├── electron/         # Electron 主程序
-│   ├── main.js       # 主程序（生命週期、視窗、系統列）
-│   ├── preload.js    # Context bridge（安全 IPC）
-│   ├── icons/        # 應用程式圖示
-│   └── resources/    # 打包用 Go backend 執行檔
-├── openspec/         # Spec-driven 開發規格
-│   ├── config.yaml   # openspec 設定
-│   ├── specs/        # 功能規格（每個功能一個子目錄）
-│   └── changes/      # 變更記錄
-├── supabase/
-│   └── migrations/   # Supabase schema 與 RLS 版本化 migration
-├── .github/
-│   └── workflows/
-│       └── release.yml      # Tag 觸發的自動打包與 Release 發佈
-├── scripts/          # 輔助建置腳本
-│   ├── build.bat           # 一鍵打包腳本（Windows Batch）
-│   └── patch-rcedit.js    # postinstall hook：修補 electron-builder rcedit 問題
-├── Makefile          # 快捷指令（make dev / backend / frontend / electron）
-├── package.json      # 根層 Electron 設定 + electron-builder
-└── docker-compose.yml
+```text
+backend/          # Go API、服務、檔案儲存與 Supabase sync
+frontend/         # React SPA、Query hooks、Zustand stores 與 UI
+electron/         # 桌面視窗、IPC、OAuth 與 Backend process
+openspec/         # Spec-driven 開發規格與變更記錄
+supabase/         # Schema、RLS migration 與驗證 SQL
+scripts/          # 建置及 migration 測試腳本
 ```
 
-## API 端點
+Backend 依序分為 `api/`、`service/`、`repository/`、`store/` 與 `model/`；Frontend 主要程式位於 `frontend/src/`，依 `pages/`、`components/`、`hooks/`、`stores/` 與 `lib/` 分層。
 
-| 方法             | 路徑                                    | 說明                     |
-| ---------------- | --------------------------------------- | ------------------------ |
-| GET              | `/api/health`                           | 健康檢查                 |
-| GET              | `/api/v1/auth/config`                   | 取得驗證設定             |
-| GET/POST/DELETE  | `/api/v1/auth/session`                  | 管理驗證 Session         |
-| GET              | `/api/v1/sync/status`                   | 取得同步狀態             |
-| POST             | `/api/v1/sync/trigger`                  | 觸發同步                 |
-| PATCH            | `/api/v1/sync/enable`                   | 啟用/停用同步            |
-| POST             | `/api/v1/sync/pull`                     | 從雲端拉取資料           |
-| GET              | `/api/v1/sync/has-cloud-data`           | 檢查是否有雲端資料       |
-| GET/POST         | `/api/v1/sync/source`                   | 取得/設定資料來源        |
-| GET/POST         | `/api/v1/boards`                        | 列出/建立看板            |
-| GET/PUT/DELETE   | `/api/v1/boards/:id`                    | 取得/更新/刪除看板       |
-| PATCH            | `/api/v1/boards/:id/move`               | 移動看板（排序）         |
-| POST             | `/api/v1/boards/:id/columns`            | 新增欄位                 |
-| GET              | `/api/v1/boards/:id/dependencies`       | 看板所有依賴關係         |
-| GET              | `/api/v1/boards/:id/images/:filename`   | 讀取圖片                 |
-| GET/POST         | `/api/v1/boards/:id/snapshots`          | 列出/建立快照            |
-| POST             | `/api/v1/boards/:id/snapshots/:sid/restore` | 還原快照             |
-| DELETE           | `/api/v1/boards/:id/snapshots/:sid`     | 刪除快照                 |
-| GET/POST         | `/api/v1/boards/:id/tags`               | 列出/建立看板標籤        |
-| GET              | `/api/v1/boards/:id/archive/cards`      | 取得封存卡片             |
-| GET              | `/api/v1/boards/:id/archive/columns`    | 取得封存欄位             |
-| PATCH/DELETE     | `/api/v1/columns/:id`                   | 更新/刪除欄位            |
-| POST             | `/api/v1/columns/:id/cards`             | 新增卡片                 |
-| PATCH            | `/api/v1/columns/:id/archive`           | 封存欄位                 |
-| PATCH            | `/api/v1/columns/:id/archive-cards`     | 封存欄位內所有卡片       |
-| PATCH            | `/api/v1/columns/:id/restore`           | 還原封存欄位             |
-| DELETE           | `/api/v1/columns/:id/archive`           | 刪除封存欄位             |
-| GET              | `/api/v1/cards/pinned`                  | 取得所有釘選卡片         |
-| GET              | `/api/v1/cards/search`                  | 跨欄搜尋卡片             |
-| GET/PATCH/DELETE | `/api/v1/cards/:id`                     | 取得/更新/刪除卡片       |
-| PATCH            | `/api/v1/cards/:id/move`                | 移動卡片（換欄/排序）    |
-| PATCH            | `/api/v1/cards/:id/pin`                 | 切換釘選狀態             |
-| PATCH            | `/api/v1/cards/:id/schedule`            | 更新截止日期             |
-| PATCH            | `/api/v1/cards/:id/archive`             | 封存卡片                 |
-| PATCH            | `/api/v1/cards/:id/restore`             | 還原封存卡片             |
-| DELETE           | `/api/v1/cards/:id/archive`             | 刪除封存卡片             |
-| POST             | `/api/v1/cards/:id/duplicate`           | 複製卡片                 |
-| POST/DELETE      | `/api/v1/cards/:id/tags`                | 附加/移除卡片標籤        |
-| GET/POST         | `/api/v1/cards/:id/checklists`          | 列出/新增 Checklist      |
-| GET/POST         | `/api/v1/cards/:id/dependencies`        | 列出/新增卡片依賴        |
-| POST             | `/api/v1/cards/:id/comments`            | 新增留言                 |
-| POST             | `/api/v1/cards/:id/images`              | 上傳圖片                 |
-| DELETE           | `/api/v1/dependencies/:id`              | 刪除依賴關係             |
-| PATCH/DELETE     | `/api/v1/tags/:id`                      | 更新/刪除標籤            |
-| PATCH/DELETE     | `/api/v1/checklists/:id`                | 更新/刪除 Checklist      |
-| POST             | `/api/v1/checklists/:id/items`          | 新增檢查項目             |
-| PUT              | `/api/v1/checklists/:id/items`          | 同步檢查項目             |
-| PATCH/DELETE     | `/api/v1/checklist-items/:id`           | 更新/刪除檢查項目        |
-| PATCH            | `/api/v1/checklist-items/:id/move`      | 移動檢查項目             |
-| PATCH/DELETE     | `/api/v1/comments/:id`                  | 更新/刪除留言            |
-| GET/PUT          | `/api/v1/settings`                      | 取得/更新設定            |
+## API
 
-完整 API 文件請見 Swagger UI：`http://localhost:34115/swagger/index.html`
+API base URL 為 `http://localhost:34115/api/v1`，主要資源包括：
+
+- `auth`、`sync`、`settings`
+- `boards`、`columns`、`cards`、`tags`
+- `checklists`、`comments`、`dependencies`
+- `images`、`snapshots`、`archive`
+
+完整端點與 request/response schema 請見 Swagger UI：`http://localhost:34115/swagger/index.html`

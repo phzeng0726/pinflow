@@ -1,8 +1,8 @@
 import { useCardMutations } from '@/hooks/card/mutations/useCardMutations'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, X } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -23,11 +23,11 @@ export function AddCardForm(props: AddCardFormProps) {
 
   const { createCard } = useCardMutations(boardId)
 
-  const { register, handleSubmit, reset, watch } = useForm<NewCardForm>({
+  const { register, handleSubmit, reset, control } = useForm<NewCardForm>({
     resolver: zodResolver(cardSchema),
   })
 
-  const titleValue = watch('title')
+  const titleValue = useWatch({ control, name: 'title' })
 
   const handleOpen = () => setOpen(true)
 
@@ -36,11 +36,14 @@ export function AddCardForm(props: AddCardFormProps) {
     setOpen(false)
   }
 
-  const onSubmit = (form: NewCardForm) => {
-    createCard.mutate({ columnId, form })
-    reset()
-    setOpen(false)
-  }
+  const onSubmit = useCallback(
+    (form: NewCardForm) => {
+      createCard.mutate({ columnId, form })
+      reset()
+      setOpen(false)
+    },
+    [columnId, createCard, reset],
+  )
 
   useEffect(() => {
     if (!open) return
@@ -56,7 +59,7 @@ export function AddCardForm(props: AddCardFormProps) {
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [open, titleValue])
+  }, [handleSubmit, onSubmit, open, reset, titleValue])
 
   if (!open) {
     return (

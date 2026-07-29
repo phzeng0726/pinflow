@@ -1,5 +1,6 @@
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { LocaleToggle } from '@/components/common/LocaleToggle'
+import { SyncStatusIndicator } from '@/components/common/SyncStatusIndicator'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -254,6 +255,7 @@ export function BoardPage() {
               {t('graphView.timelineView')}
             </button>
           </div>
+          <SyncStatusIndicator />
           <div className="relative" ref={pinPopoverRef}>
             <Button
               variant="outline"

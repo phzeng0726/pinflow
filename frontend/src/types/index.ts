@@ -131,7 +131,25 @@ export interface ArchivedColumn {
 export interface Settings {
   theme: string
   locale: string
+  syncEnabled: boolean
 }
+
+export interface AuthStatus {
+  authenticated: boolean
+  userId?: string
+  email?: string
+}
+export interface SyncStatus {
+  state: 'idle' | 'syncing' | 'error' | 'offline' | 'disabled'
+  lastSyncAt?: string
+  error?: string
+}
+export interface WorkspaceSourceState {
+  pending: boolean
+  cloudHasData: boolean
+  error?: string
+}
+export type WorkspaceSource = 'cloud' | 'local'
 
 export interface BoardSnapshot {
   id: number

@@ -7,6 +7,8 @@ const {
   nativeImage,
   screen,
   dialog,
+  shell,
+  safeStorage,
 } = require("electron");
 const path = require("path");
 const { pathToFileURL } = require("url");
@@ -26,6 +28,85 @@ let mainWindow = null;
 let pinWindow = null;
 let tray = null;
 let backendProcess = null;
+const AUTH_CALLBACK_PORT = 34116;
+const authFilePath = () => path.join(app.getPath("userData"), "auth.dat");
+
+function backendRequest(method, pathname, body) {
+  return new Promise((resolve, reject) => {
+    const req = http.request({ hostname: "localhost", port: BACKEND_PORT, path: pathname, method, headers: { "Content-Type": "application/json" } }, (res) => {
+      let data = ""; res.on("data", (chunk) => (data += chunk)); res.on("end", () => resolve({ status: res.statusCode, data: data ? JSON.parse(data) : {} }));
+    });
+    req.on("error", reject); if (body) req.write(JSON.stringify(body)); req.end();
+  });
+}
+
+function notifyAuthChanged() { BrowserWindow.getAllWindows().forEach((win) => win.webContents.send("auth:changed")); }
+
+async function startAuthFlow() {
+  const configResponse = await backendRequest("GET", "/api/v1/auth/config");
+  const baseUrl = configResponse.data.supabaseUrl;
+  if (configResponse.status !== 200 || !configResponse.data.configured || !baseUrl) {
+    throw new Error("Supabase is not configured");
+  }
+  return new Promise((resolve, reject) => {
+    let completed = false;
+    const finish = (error) => { if (completed) return; completed = true; server.close(); error ? reject(error) : resolve(); };
+    const server = http.createServer(async (req, res) => {
+      if (req.method === "POST" && req.url === "/auth/callback") {
+        let raw = ""; req.on("data", (chunk) => (raw += chunk)); req.on("end", async () => {
+          try {
+            const tokens = JSON.parse(raw);
+            const session = await backendRequest("POST", "/api/v1/auth/session", { accessToken: tokens.access_token, refreshToken: tokens.refresh_token });
+            if (session.status !== 200) throw new Error(session.data.error || "Authentication failed");
+            if (safeStorage.isEncryptionAvailable()) require("fs").writeFileSync(authFilePath(), safeStorage.encryptString(session.data.refreshToken || tokens.refresh_token));
+            notifyAuthChanged();
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ ok: true }), () => finish());
+          } catch (error) {
+            res.writeHead(500, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: error.message || "Authentication failed" }), () => finish(error));
+          }
+        }); return;
+      }
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(`<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8"><title>PinFlow sign in</title></head>
+  <body>
+    <p id="status">Completing sign in...</p>
+    <script>
+      const tokens = Object.fromEntries(new URLSearchParams(location.hash.slice(1)));
+      history.replaceState(null, "", "/auth/callback");
+      fetch("/auth/callback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(tokens),
+      })
+        .then(async (response) => {
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || "Authentication failed");
+          document.getElementById("status").textContent = "Sign in complete. You can return to PinFlow.";
+        })
+        .catch((error) => {
+          document.getElementById("status").textContent = "Sign in failed: " + error.message;
+        });
+    </script>
+  </body>
+</html>`);
+    });
+    server.once("error", reject); server.listen(AUTH_CALLBACK_PORT, "127.0.0.1", () => {
+      const redirect = encodeURIComponent(`http://127.0.0.1:${AUTH_CALLBACK_PORT}/auth/callback`);
+      shell.openExternal(`${baseUrl.replace(/\/$/, "")}/auth/v1/authorize?provider=google&redirect_to=${redirect}`).catch(finish);
+    });
+  });
+}
+
+async function loadSavedAuth() {
+  const fs = require("fs"); if (!fs.existsSync(authFilePath()) || !safeStorage.isEncryptionAvailable()) return;
+  try { const refreshToken = safeStorage.decryptString(fs.readFileSync(authFilePath())); const response = await backendRequest("POST", "/api/v1/auth/session", { accessToken: "", refreshToken }); if (response.status !== 200) throw new Error("Saved session expired"); if (response.data.refreshToken) fs.writeFileSync(authFilePath(), safeStorage.encryptString(response.data.refreshToken)); notifyAuthChanged(); } catch { fs.rmSync(authFilePath(), { force: true }); }
+}
+
+async function clearAuth() { require("fs").rmSync(authFilePath(), { force: true }); await backendRequest("DELETE", "/api/v1/auth/session"); notifyAuthChanged(); }
 
 // ── Backend ──────────────────────────────────────────────────────────────────
 
@@ -267,6 +348,10 @@ ipcMain.on("hide-pin-window", () => {
   }
 });
 
+ipcMain.handle("auth:start", () => startAuthFlow());
+ipcMain.handle("auth:status", () => backendRequest("GET", "/api/v1/auth/session").then((response) => response.data));
+ipcMain.handle("auth:logout", () => clearAuth());
+
 // 接收 theme/locale 設定變更，廣播給其他視窗
 ipcMain.on("broadcast-settings", (event, settings) => {
   const windows = BrowserWindow.getAllWindows();
@@ -365,6 +450,7 @@ if (!gotLock) {
 
     createMainWindow();
     createTray();
+    await loadSavedAuth();
     if (!isDev) setupAutoUpdater();
   });
 

@@ -23,6 +23,11 @@ export const queryKeys = {
   settings: {
     all: () => ['settings'] as const,
   },
+  sync: {
+    all: () => ['sync'] as const,
+    status: () => ['sync', 'status'] as const,
+    source: () => ['sync', 'source'] as const,
+  },
   snapshots: {
     byBoard: (boardId: number) => ['snapshots', 'board', boardId] as const,
   },

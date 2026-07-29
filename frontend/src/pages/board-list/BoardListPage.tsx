@@ -1,5 +1,6 @@
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { LocaleToggle } from '@/components/common/LocaleToggle'
+import { SyncStatusIndicator } from '@/components/common/SyncStatusIndicator'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -203,6 +204,7 @@ export function BoardListPage() {
                 {theme === 'dark' ? t('theme.toLight') : t('theme.toDark')}
               </TooltipContent>
             </Tooltip>
+            <SyncStatusIndicator />
             <Button
               onClick={handleStartCreating}
               className="flex items-center gap-2"

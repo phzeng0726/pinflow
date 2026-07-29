@@ -1,6 +1,10 @@
 package api
 
-import "pinflow/service"
+import (
+	"pinflow/service"
+	"pinflow/store"
+	"pinflow/sync"
+)
 
 type Handlers struct {
 	Board         *BoardHandler
@@ -15,9 +19,11 @@ type Handlers struct {
 	Settings      *SettingsHandler
 	Snapshot      *SnapshotHandler
 	Archive       *ArchiveHandler
+	Auth          *AuthHandler
+	Sync          *SyncHandler
 }
 
-func NewHandlers(services *service.Services) *Handlers {
+func NewHandlers(services *service.Services, auth *sync.AuthManager, manager *sync.Manager, fs *store.FileStore) *Handlers {
 	return &Handlers{
 		Board:         &BoardHandler{services: services},
 		Column:        &ColumnHandler{services: services},
@@ -31,5 +37,7 @@ func NewHandlers(services *service.Services) *Handlers {
 		Settings:      &SettingsHandler{services: services},
 		Snapshot:      &SnapshotHandler{services: services},
 		Archive:       &ArchiveHandler{services: services},
+		Auth:          NewAuthHandler(auth, manager),
+		Sync:          NewSyncHandler(manager, fs),
 	}
 }

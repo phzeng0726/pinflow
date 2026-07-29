@@ -14,7 +14,7 @@ func readJSON(path string, v interface{}) error {
 	return json.Unmarshal(data, v)
 }
 
-func writeJSON(path string, v interface{}) error {
+func (s *FileStore) writeJSON(path string, v interface{}) error {
 	data, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		return err
@@ -23,7 +23,27 @@ func writeJSON(path string, v interface{}) error {
 		return err
 	}
 	data = append(data, '\n')
-	return os.WriteFile(path, data, 0644)
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		return err
+	}
+	rel, err := filepath.Rel(s.basePath, path)
+	if err == nil && rel != ".." && !filepath.IsAbs(rel) {
+		s.sendNotification(filepath.ToSlash(rel))
+	}
+	return nil
+}
+
+func (s *FileStore) sendNotification(value string) {
+	s.notifierMu.RLock()
+	ch := s.notifier
+	s.notifierMu.RUnlock()
+	if ch == nil {
+		return
+	}
+	select {
+	case ch <- value:
+	default:
+	}
 }
 
 func fileExists(path string) bool {

@@ -2,7 +2,7 @@
 
 任務不只是管理，還要時刻可見。PinFlow 是一套桌面 Kanban 應用，核心特色是「釘選（Pin）」——把任何卡片懸浮顯示在螢幕最上層，讓進行中的任務始終在視野內，不需切換視窗。
 
-搭配卡片依賴關係圖、甘特式時間軸、多語系介面與 Git 可同步的檔案式儲存，PinFlow 為個人與小團隊打造流暢的桌面工作流程。
+搭配卡片依賴關係圖、甘特式時間軸、封存管理、Supabase 雲端同步、多語系介面與 Git 可同步的檔案式儲存，PinFlow 為個人與小團隊打造流暢的桌面工作流程。
 
 ## 功能
 
@@ -20,6 +20,8 @@
 - **看板排序**：支援拖曳重新排列看板列表的顯示順序
 - **多語系介面**：支援繁體中文與 English，可即時切換
 - **範例資料**：首次啟動時自動填入 Example Board，包含四個欄位（Todo、In Progress、Done、Important），其中 **Important 欄位預設啟用「自動釘選」**，新增或移入的卡片會自動釘選至懸浮視窗；Seed 資料涵蓋卡片、標籤、Checklist、留言、依賴與時程，讓使用者立即體驗完整功能
+- **封存管理**：封存卡片或欄位，減少看板雜亂，需要時可隨時還原
+- **雲端同步**：透過 Supabase 將工作區資料同步至雲端，支援多裝置存取
 - **桌面版自動更新**：啟動時自動檢查並下載新版本，重啟後完成安裝（electron-updater）
 - **Swagger UI**：內建 API 文件
 
@@ -27,7 +29,7 @@
 
 | 層級     | 技術                                                                                                                              |
 | -------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Backend  | Go 1.25 · Gin · 檔案式 JSON 儲存 · Swagger                                                                                        |
+| Backend  | Go 1.25 · Gin · 檔案式 JSON 儲存 · Supabase cloud sync · Swagger                                                                  |
 | Frontend | React 19 · TypeScript · Vite · Tailwind v3 · TanStack Query/Router · Zustand · @dnd-kit · Lexical · @xyflow/react · shadcn/ui · i18next |
 | Desktop  | Electron 36 (Windows)                                                                                                             |
 | 部署     | Docker Compose                                                                                                                    |
@@ -173,14 +175,60 @@ pnpm dev
 
 ---
 
+## Supabase Schema
+
+雲端同步使用的資料表與 RLS policy 由版本化 migration 管理：
+
+```text
+supabase/migrations/20260729000000_create_workspace_files.sql
+```
+
+新 Supabase project 應透過 Supabase migration 工具套用儲存庫內的 migration。若既有 project 曾手動執行舊版 `backend/sync/schema.sql`，可直接套用目前的 migration 納入版本追蹤；SQL 會保留既有 `workspace_files` 資料列，且只補建不存在的資料表或 policy。
+
+PinFlow backend 啟動時只透過 PostgREST 存取 `workspace_files`，不會自行執行 migration，也不需要資料庫 schema 管理權限。部署者應在發佈或環境建置階段預先完成 migration。
+
+套用至新的或已連結的 Supabase project：
+
+```bash
+supabase link --project-ref <project-ref>
+supabase db push --dry-run
+supabase db push
+```
+
+若既有 project 已手動建立完全等效的 schema，但 remote migration history 與本機不一致，可在確認 table、foreign key、RLS policy 與既有資料後，將此版本標記為已套用：
+
+```bash
+supabase migration repair --status applied 20260729000000
+supabase db push --dry-run
+```
+
+可使用本機的 `postgres:17-alpine` image，在 port `5433` 驗證 migration 能重複套用於全新 schema，並保留 legacy schema 的既有資料：
+
+```bash
+make test-migration
+```
+
+相關資料庫管理指令：
+
+```bash
+make test-db-up
+make test-db-status
+make test-db-logs
+make test-db-down
+```
+
+---
+
 ## 執行測試
 
 ### Backend 測試
 
 ```bash
 cd backend
-go test ./tests/... -v
+go test ./... -v
 ```
+
+`go test ./...` 是完整後端測試套件的唯一標準入口；不要以 `go test ./tests/...` 取代，否則未來可能遺漏其他 package。
 
 ### Frontend 測試
 
@@ -266,20 +314,23 @@ Release 頁面會附帶下列檔案，可直接提供使用者下載安裝：
 pinflow/
 ├── backend/          # Go API server
 │   ├── api/          # Handlers 容器（handler.go）+ Gin handlers + router.go
+│   ├── api/middleware/ # Snapshot middleware
 │   ├── service/      # Services 容器（service.go）+ 業務邏輯
 │   ├── repository/   # Repositories 容器（repository.go）+ 檔案式實作
 │   ├── store/        # FileStore（記憶體 + JSON 持久化）
 │   ├── model/        # 資料模型
 │   ├── dto/          # 請求/回應 DTO
+│   ├── sync/         # Supabase 雲端同步（auth, client, config, manager）
 │   ├── seed/         # 首次啟動範例工作區資料（embed）
 │   ├── docs/         # Swagger 自動生成文件
 │   └── tests/        # 單元 + 整合測試
 ├── frontend/         # React SPA
 │   └── src/
 │       ├── pages/    # board-list/ · board-detail/ · pin/
-│       ├── hooks/    # TanStack Query hooks（board/ card/ checklist/ comment/ dependency/ tag/）
-│       ├── stores/   # Zustand（themeStore、pinStore）
-│       ├── lib/      # API client（boards · cards · columns · tags · checklists · comments · dependencies · images）
+│       ├── components/ # common/（SyncStatusIndicator 等）· ui/（shadcn/ui）
+│       ├── hooks/    # TanStack Query hooks（board/ card/ checklist/ comment/ dependency/ tag/ archive/ sync/ settings/ snapshot/）
+│       ├── stores/   # Zustand（themeStore、pinStore、authStore、workspaceSourceStore 等）
+│       ├── lib/      # API client（boards · cards · columns · tags · checklists · comments · dependencies · images · auth · sync · archive · settings）
 │       └── routes/   # TanStack Router 路由
 ├── electron/         # Electron 主程序
 │   ├── main.js       # 主程序（生命週期、視窗、系統列）
@@ -290,6 +341,8 @@ pinflow/
 │   ├── config.yaml   # openspec 設定
 │   ├── specs/        # 功能規格（每個功能一個子目錄）
 │   └── changes/      # 變更記錄
+├── supabase/
+│   └── migrations/   # Supabase schema 與 RLS 版本化 migration
 ├── .github/
 │   └── workflows/
 │       └── release.yml      # Tag 觸發的自動打包與 Release 發佈
@@ -306,19 +359,41 @@ pinflow/
 | 方法             | 路徑                                    | 說明                     |
 | ---------------- | --------------------------------------- | ------------------------ |
 | GET              | `/api/health`                           | 健康檢查                 |
+| GET              | `/api/v1/auth/config`                   | 取得驗證設定             |
+| GET/POST/DELETE  | `/api/v1/auth/session`                  | 管理驗證 Session         |
+| GET              | `/api/v1/sync/status`                   | 取得同步狀態             |
+| POST             | `/api/v1/sync/trigger`                  | 觸發同步                 |
+| PATCH            | `/api/v1/sync/enable`                   | 啟用/停用同步            |
+| POST             | `/api/v1/sync/pull`                     | 從雲端拉取資料           |
+| GET              | `/api/v1/sync/has-cloud-data`           | 檢查是否有雲端資料       |
+| GET/POST         | `/api/v1/sync/source`                   | 取得/設定資料來源        |
 | GET/POST         | `/api/v1/boards`                        | 列出/建立看板            |
 | GET/PUT/DELETE   | `/api/v1/boards/:id`                    | 取得/更新/刪除看板       |
+| PATCH            | `/api/v1/boards/:id/move`               | 移動看板（排序）         |
 | POST             | `/api/v1/boards/:id/columns`            | 新增欄位                 |
 | GET              | `/api/v1/boards/:id/dependencies`       | 看板所有依賴關係         |
 | GET              | `/api/v1/boards/:id/images/:filename`   | 讀取圖片                 |
+| GET/POST         | `/api/v1/boards/:id/snapshots`          | 列出/建立快照            |
+| POST             | `/api/v1/boards/:id/snapshots/:sid/restore` | 還原快照             |
+| DELETE           | `/api/v1/boards/:id/snapshots/:sid`     | 刪除快照                 |
+| GET/POST         | `/api/v1/boards/:id/tags`               | 列出/建立看板標籤        |
+| GET              | `/api/v1/boards/:id/archive/cards`      | 取得封存卡片             |
+| GET              | `/api/v1/boards/:id/archive/columns`    | 取得封存欄位             |
 | PATCH/DELETE     | `/api/v1/columns/:id`                   | 更新/刪除欄位            |
 | POST             | `/api/v1/columns/:id/cards`             | 新增卡片                 |
+| PATCH            | `/api/v1/columns/:id/archive`           | 封存欄位                 |
+| PATCH            | `/api/v1/columns/:id/archive-cards`     | 封存欄位內所有卡片       |
+| PATCH            | `/api/v1/columns/:id/restore`           | 還原封存欄位             |
+| DELETE           | `/api/v1/columns/:id/archive`           | 刪除封存欄位             |
 | GET              | `/api/v1/cards/pinned`                  | 取得所有釘選卡片         |
 | GET              | `/api/v1/cards/search`                  | 跨欄搜尋卡片             |
 | GET/PATCH/DELETE | `/api/v1/cards/:id`                     | 取得/更新/刪除卡片       |
 | PATCH            | `/api/v1/cards/:id/move`                | 移動卡片（換欄/排序）    |
 | PATCH            | `/api/v1/cards/:id/pin`                 | 切換釘選狀態             |
 | PATCH            | `/api/v1/cards/:id/schedule`            | 更新截止日期             |
+| PATCH            | `/api/v1/cards/:id/archive`             | 封存卡片                 |
+| PATCH            | `/api/v1/cards/:id/restore`             | 還原封存卡片             |
+| DELETE           | `/api/v1/cards/:id/archive`             | 刪除封存卡片             |
 | POST             | `/api/v1/cards/:id/duplicate`           | 複製卡片                 |
 | POST/DELETE      | `/api/v1/cards/:id/tags`                | 附加/移除卡片標籤        |
 | GET/POST         | `/api/v1/cards/:id/checklists`          | 列出/新增 Checklist      |
@@ -326,7 +401,6 @@ pinflow/
 | POST             | `/api/v1/cards/:id/comments`            | 新增留言                 |
 | POST             | `/api/v1/cards/:id/images`              | 上傳圖片                 |
 | DELETE           | `/api/v1/dependencies/:id`              | 刪除依賴關係             |
-| GET/POST         | `/api/v1/tags`                          | 列出/建立標籤            |
 | PATCH/DELETE     | `/api/v1/tags/:id`                      | 更新/刪除標籤            |
 | PATCH/DELETE     | `/api/v1/checklists/:id`                | 更新/刪除 Checklist      |
 | POST             | `/api/v1/checklists/:id/items`          | 新增檢查項目             |
@@ -334,5 +408,6 @@ pinflow/
 | PATCH/DELETE     | `/api/v1/checklist-items/:id`           | 更新/刪除檢查項目        |
 | PATCH            | `/api/v1/checklist-items/:id/move`      | 移動檢查項目             |
 | PATCH/DELETE     | `/api/v1/comments/:id`                  | 更新/刪除留言            |
+| GET/PUT          | `/api/v1/settings`                      | 取得/更新設定            |
 
 完整 API 文件請見 Swagger UI：`http://localhost:34115/swagger/index.html`

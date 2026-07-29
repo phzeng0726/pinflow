@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
 import { TooltipProvider } from '../src/components/ui/tooltip'
 import { PinnedCardItem } from '../src/pages/pin/components/PinnedCardItem'
@@ -24,10 +25,18 @@ function renderCard(props: {
   card: PinnedCard
   onUnpin: (id: number) => void
 }) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  })
   return render(
-    <TooltipProvider>
-      <PinnedCardItem {...props} onEdit={vi.fn()} />
-    </TooltipProvider>,
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <PinnedCardItem {...props} onEdit={vi.fn()} />
+      </TooltipProvider>
+    </QueryClientProvider>,
   )
 }
 

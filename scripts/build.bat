@@ -5,7 +5,10 @@ set "REPO_ROOT=%~dp0.."
 
 echo === [1/3] Building Go backend ===
 pushd "%REPO_ROOT%\backend"
-go build -o "%REPO_ROOT%\electron\resources\pinflow-backend.exe" .
+set "GO_LDFLAGS="
+if defined PINFLOW_SUPABASE_URL set "GO_LDFLAGS=%GO_LDFLAGS% -X pinflow/sync.defaultSupabaseURL=%PINFLOW_SUPABASE_URL%"
+if defined PINFLOW_SUPABASE_ANON_KEY set "GO_LDFLAGS=%GO_LDFLAGS% -X pinflow/sync.defaultSupabaseAnonKey=%PINFLOW_SUPABASE_ANON_KEY%"
+go build -ldflags "%GO_LDFLAGS%" -o "%REPO_ROOT%\electron\resources\pinflow-backend.exe" .
 if errorlevel 1 goto :fail
 popd
 

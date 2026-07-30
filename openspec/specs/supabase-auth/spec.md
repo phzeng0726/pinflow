@@ -1,9 +1,7 @@
 ## Purpose
 
 定義 PinFlow 使用 Supabase Auth 建立可選式雲端身分驗證的行為，包括後端 session 與 token refresh、Electron OAuth 與安全儲存、IPC、前端 auth state 及登出流程。
-
 ## Requirements
-
 ### Requirement: Backend auth session endpoints
 The backend SHALL expose auth session management endpoints under `/api/v1/auth/`.
 
@@ -52,6 +50,8 @@ The flow SHALL:
 6. Close the temporary server
 7. Notify the renderer process via IPC `auth:changed`
 
+On app restart, `loadSavedAuth()` SHALL decrypt the saved refresh token, send it to the backend via `POST /api/v1/auth/session`, and restore the authenticated session. On failure, it SHALL distinguish between authentication errors (token expired/revoked) and transient errors (network unreachable, backend not ready). Authentication errors SHALL delete `auth.dat`. Transient errors SHALL preserve `auth.dat` for retry on next launch. All failures SHALL be logged via `electron-log`.
+
 #### Scenario: First-time login
 - **WHEN** user triggers login from the frontend
 - **THEN** system browser opens Google login, user authenticates, tokens are stored, and app shows authenticated state
@@ -59,6 +59,14 @@ The flow SHALL:
 #### Scenario: App restart with saved token
 - **WHEN** app starts and `{userData}/auth.dat` exists
 - **THEN** Electron decrypts the saved refresh token, refreshes it via `POST /api/v1/auth/session`, and restores authenticated state automatically
+
+#### Scenario: App restart with expired token
+- **WHEN** app starts and the saved refresh token has expired
+- **THEN** `loadSavedAuth()` logs the failure, deletes `auth.dat`, and the app shows unauthenticated state
+
+#### Scenario: App restart with network error
+- **WHEN** app starts and the backend or Supabase is temporarily unreachable
+- **THEN** `loadSavedAuth()` logs the error, preserves `auth.dat`, and the app shows unauthenticated state for this session but can retry on next launch
 
 #### Scenario: Logout
 - **WHEN** user triggers logout
@@ -113,3 +121,4 @@ Auth SHALL NOT block any existing app functionality. The app SHALL work 100% off
 #### Scenario: No auth guard on routes
 - **WHEN** user navigates to any route without being authenticated
 - **THEN** the route loads normally without redirect or blocking
+

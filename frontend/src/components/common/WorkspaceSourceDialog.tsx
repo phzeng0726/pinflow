@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -35,13 +36,27 @@ export function WorkspaceSourceDialog() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>()
   const resolving = useRef(false)
+  const lastAutoAction = useRef<string | undefined>(undefined)
 
   useEffect(() => {
     if (source.data?.pending) open()
   }, [open, source.data?.pending])
 
   useEffect(() => {
+    const autoAction = source.data?.autoAction
+    if (!autoAction || autoAction === lastAutoAction.current) return
+    lastAutoAction.current = autoAction
+    if (autoAction === 'pulled' || autoAction === 'pushed') {
+      toast.success(
+        t(autoAction === 'pulled' ? 'sync.autoPulled' : 'sync.autoPushed'),
+      )
+      void queryClient.invalidateQueries()
+    }
+  }, [queryClient, source.data?.autoAction, t])
+
+  useEffect(() => {
     if (!authenticated) {
+      lastAutoAction.current = undefined
       close()
       setSelection(undefined)
       setError(undefined)

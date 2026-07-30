@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"time"
 )
 
 type Client struct {
@@ -127,6 +128,33 @@ func (c *Client) ListFiles() ([]WorkspaceFile, error) {
 	var files []WorkspaceFile
 	return files, json.NewDecoder(resp.Body).Decode(&files)
 }
+
+func (c *Client) GetLatestUpdatedAt() (*time.Time, error) {
+	resp, err := c.request(
+		http.MethodGet,
+		"/rest/v1/workspace_files?select=updated_at&order=updated_at.desc&limit=1",
+		nil,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("latest updated_at query failed: %s", resp.Status)
+	}
+	var rows []struct {
+		UpdatedAt time.Time `json:"updated_at"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&rows); err != nil {
+		return nil, err
+	}
+	if len(rows) == 0 {
+		return nil, nil
+	}
+	return &rows[0].UpdatedAt, nil
+}
+
 func (c *Client) DeleteFile(path string) error {
 	resp, err := c.request(http.MethodDelete, "/rest/v1/workspace_files?path=eq."+url.QueryEscape(path), nil, nil)
 	if err != nil {

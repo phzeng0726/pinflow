@@ -148,6 +148,7 @@ export interface WorkspaceSourceState {
   pending: boolean
   cloudHasData: boolean
   error?: string
+  autoAction?: 'pulling' | 'pulled' | 'pushing' | 'pushed'
 }
 export type WorkspaceSource = 'cloud' | 'local'
 

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"pinflow/model"
 	"sort"
+	"time"
 )
 
 // Internal: paths
@@ -118,6 +119,27 @@ func (s *FileStore) UpdateSettings(theme, locale *string) *model.Settings {
 
 func (s *FileStore) persistSettings() error {
 	return s.writeJSON(filepath.Join(s.basePath, "settings.json"), s.settings)
+}
+
+func (s *FileStore) SetSourceDecisionMade(made bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.settings.SourceDecisionMade = made
+	_ = s.persistSettings()
+}
+
+func (s *FileStore) SetLastSyncedAt(syncedAt time.Time) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.settings.LastSyncedAt = &syncedAt
+	_ = s.persistSettings()
+}
+
+func (s *FileStore) SetLastSyncedUserID(userID string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.settings.LastSyncedUserID = userID
+	_ = s.persistSettings()
 }
 
 func (s *FileStore) notifyDelete(path string) {

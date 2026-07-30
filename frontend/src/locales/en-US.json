@@ -402,6 +402,8 @@
     "syncNow": "Sync now",
     "logout": "Sign out",
     "actionFailed": "The sync action failed",
+    "autoPulled": "Latest cloud data synced automatically",
+    "autoPushed": "Local data synced to the cloud automatically",
     "states": {
       "idle": "Up to date",
       "syncing": "Syncing",

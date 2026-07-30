@@ -402,6 +402,8 @@
     "syncNow": "立即同步",
     "logout": "登出",
     "actionFailed": "同步操作失敗",
+    "autoPulled": "已自動從雲端同步最新資料",
+    "autoPushed": "已自動將本機資料同步至雲端",
     "states": {
       "idle": "已是最新",
       "syncing": "同步中",

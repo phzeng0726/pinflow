@@ -102,8 +102,45 @@ async function startAuthFlow() {
 }
 
 async function loadSavedAuth() {
-  const fs = require("fs"); if (!fs.existsSync(authFilePath()) || !safeStorage.isEncryptionAvailable()) return;
-  try { const refreshToken = safeStorage.decryptString(fs.readFileSync(authFilePath())); const response = await backendRequest("POST", "/api/v1/auth/session", { accessToken: "", refreshToken }); if (response.status !== 200) throw new Error("Saved session expired"); if (response.data.refreshToken) fs.writeFileSync(authFilePath(), safeStorage.encryptString(response.data.refreshToken)); notifyAuthChanged(); } catch { fs.rmSync(authFilePath(), { force: true }); }
+  const fs = require("fs");
+  if (!fs.existsSync(authFilePath()) || !safeStorage.isEncryptionAvailable()) return;
+
+  let refreshToken;
+  try {
+    refreshToken = safeStorage.decryptString(fs.readFileSync(authFilePath()));
+  } catch (error) {
+    log.error("[auth] Failed to decrypt saved session:", error);
+    fs.rmSync(authFilePath(), { force: true });
+    return;
+  }
+
+  try {
+    const response = await backendRequest("POST", "/api/v1/auth/session", {
+      accessToken: "",
+      refreshToken,
+    });
+    if (response.status !== 200) {
+      const message = response.data.error || "Failed to restore saved session";
+      const isAuthError =
+        response.status === 401 ||
+        response.status === 403 ||
+        /(expired|revoked|invalid.*token|refresh token|unauthorized)/i.test(message);
+      log.error(`[auth] Saved session restore failed (${response.status}): ${message}`);
+      if (isAuthError) {
+        fs.rmSync(authFilePath(), { force: true });
+      }
+      return;
+    }
+    if (response.data.refreshToken) {
+      fs.writeFileSync(
+        authFilePath(),
+        safeStorage.encryptString(response.data.refreshToken),
+      );
+    }
+    notifyAuthChanged();
+  } catch (error) {
+    log.error("[auth] Saved session restore deferred after transient error:", error);
+  }
 }
 
 async function clearAuth() { require("fs").rmSync(authFilePath(), { force: true }); await backendRequest("DELETE", "/api/v1/auth/session"); notifyAuthChanged(); }

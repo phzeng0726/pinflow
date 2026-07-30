@@ -17,10 +17,11 @@ import (
 type fakeCloudClient struct {
 	mu sync.Mutex
 
-	listFilesFn  func() ([]pinflowsync.WorkspaceFile, error)
-	upsertFn     func(map[string][]byte) error
-	deleteFileFn func(string) error
-	deleteAllFn  func() error
+	listFilesFn       func() ([]pinflowsync.WorkspaceFile, error)
+	latestUpdatedAtFn func() (*time.Time, error)
+	upsertFn          func(map[string][]byte) error
+	deleteFileFn      func(string) error
+	deleteAllFn       func() error
 }
 
 func (c *fakeCloudClient) ListFiles() ([]pinflowsync.WorkspaceFile, error) {
@@ -28,6 +29,13 @@ func (c *fakeCloudClient) ListFiles() ([]pinflowsync.WorkspaceFile, error) {
 		return nil, nil
 	}
 	return c.listFilesFn()
+}
+
+func (c *fakeCloudClient) GetLatestUpdatedAt() (*time.Time, error) {
+	if c.latestUpdatedAtFn == nil {
+		return nil, nil
+	}
+	return c.latestUpdatedAtFn()
 }
 
 func (c *fakeCloudClient) UpsertFiles(files map[string][]byte) error {
@@ -62,6 +70,31 @@ func newManager(
 	auth := &pinflowsync.AuthManager{}
 	deps.Client = client
 	return pinflowsync.NewManagerWithDeps(fs, auth, notifications, deps), fs, auth
+}
+
+func setReturningSession(fs *store.FileStore, userID string, lastSyncedAt time.Time) {
+	fs.SetSourceDecisionMade(true)
+	fs.SetLastSyncedUserID(userID)
+	fs.SetLastSyncedAt(lastSyncedAt)
+}
+
+func cloudWorkspaceFiles(workspaceID string, syncEnabled bool) []pinflowsync.WorkspaceFile {
+	return []pinflowsync.WorkspaceFile{
+		{
+			Path: "manifest.json",
+			Content: map[string]any{
+				"version":     "1.0",
+				"workspaceId": workspaceID,
+				"next_ids":    map[string]any{"board": 1},
+			},
+		},
+		{
+			Path: "settings.json",
+			Content: map[string]any{
+				"theme": "dark", "locale": "en-US", "syncEnabled": syncEnabled,
+			},
+		},
+	}
 }
 
 func TestManagerSetEnabledUpdatesDisabledStatus(t *testing.T) {
@@ -231,6 +264,172 @@ func TestManagerAllowsLocalWorkspaceWhenCloudIsEmpty(t *testing.T) {
 	}
 	if !fs.GetSettings().SyncEnabled {
 		t.Fatal("expected existing sync setting to remain enabled")
+	}
+	settings := fs.GetSettings()
+	if !settings.SourceDecisionMade || settings.LastSyncedUserID != "user-1" ||
+		settings.LastSyncedAt == nil {
+		t.Fatalf("expected first-time source decision to be persisted, got %#v", settings)
+	}
+}
+
+func TestManagerFirstTimeLoginWithCloudDataRequiresDecision(t *testing.T) {
+	client := &fakeCloudClient{listFilesFn: func() ([]pinflowsync.WorkspaceFile, error) {
+		return cloudWorkspaceFiles("cloud-workspace", true), nil
+	}}
+	manager, fs, auth := newManager(t, client, nil, pinflowsync.ManagerDeps{})
+	fs.SetSyncEnabled(true)
+	auth.Set(pinflowsync.AuthState{AccessToken: "access-token", UserID: "user-1"})
+
+	if err := manager.InitializeSourceDecision(); err != nil {
+		t.Fatalf("initialize source decision: %v", err)
+	}
+	source := manager.SourceState()
+	if !source.Pending || !source.CloudHasData {
+		t.Fatalf("expected pending source decision, got %#v", source)
+	}
+	if fs.GetSettings().SourceDecisionMade {
+		t.Fatal("expected source decision to remain incomplete")
+	}
+	if status := manager.Status(); status.State != "disabled" {
+		t.Fatalf("expected sync to remain disabled, got %#v", status)
+	}
+}
+
+func TestManagerReturningSessionAutoPullsWhenCloudIsNewer(t *testing.T) {
+	localSyncedAt := time.Now().Add(-time.Hour)
+	cloudUpdatedAt := time.Now()
+	client := &fakeCloudClient{
+		latestUpdatedAtFn: func() (*time.Time, error) {
+			return &cloudUpdatedAt, nil
+		},
+		listFilesFn: func() ([]pinflowsync.WorkspaceFile, error) {
+			return cloudWorkspaceFiles("cloud-workspace", true), nil
+		},
+	}
+	manager, fs, auth := newManager(t, client, nil, pinflowsync.ManagerDeps{})
+	setReturningSession(fs, "user-1", localSyncedAt)
+	auth.Set(pinflowsync.AuthState{AccessToken: "access-token", UserID: "user-1"})
+
+	if err := manager.InitializeSourceDecision(); err != nil {
+		t.Fatalf("initialize source decision: %v", err)
+	}
+	if got := fs.WorkspaceID(); got != "cloud-workspace" {
+		t.Fatalf("expected cloud workspace after auto-pull, got %q", got)
+	}
+	if source := manager.SourceState(); source.Pending || source.AutoAction != "pulled" {
+		t.Fatalf("expected completed auto-pull, got %#v", source)
+	}
+	settings := fs.GetSettings()
+	if settings.LastSyncedAt == nil || settings.LastSyncedUserID != "user-1" {
+		t.Fatalf("expected auto-pull timestamp to be persisted, got %#v", settings)
+	}
+}
+
+func TestManagerReturningSessionAutoPushesWhenLocalIsNewer(t *testing.T) {
+	localSyncedAt := time.Now()
+	cloudUpdatedAt := localSyncedAt.Add(-time.Hour)
+	var uploaded map[string][]byte
+	client := &fakeCloudClient{
+		latestUpdatedAtFn: func() (*time.Time, error) {
+			return &cloudUpdatedAt, nil
+		},
+		upsertFn: func(files map[string][]byte) error {
+			uploaded = files
+			return nil
+		},
+	}
+	manager, fs, auth := newManager(t, client, nil, pinflowsync.ManagerDeps{})
+	setReturningSession(fs, "user-1", localSyncedAt)
+	auth.Set(pinflowsync.AuthState{AccessToken: "access-token", UserID: "user-1"})
+
+	if err := manager.InitializeSourceDecision(); err != nil {
+		t.Fatalf("initialize source decision: %v", err)
+	}
+	if len(uploaded) == 0 {
+		t.Fatal("expected local workspace to be uploaded")
+	}
+	if source := manager.SourceState(); source.Pending || source.AutoAction != "pushed" {
+		t.Fatalf("expected completed auto-push, got %#v", source)
+	}
+	if syncedAt := fs.GetSettings().LastSyncedAt; syncedAt == nil ||
+		syncedAt.Before(localSyncedAt) {
+		t.Fatalf("expected auto-push to update lastSyncedAt, got %v", syncedAt)
+	}
+}
+
+func TestManagerReturningSessionEnablesSyncWhenTimestampsMatch(t *testing.T) {
+	lastSyncedAt := time.Now()
+	latestCalls := 0
+	client := &fakeCloudClient{latestUpdatedAtFn: func() (*time.Time, error) {
+		latestCalls++
+		return &lastSyncedAt, nil
+	}}
+	manager, fs, auth := newManager(t, client, nil, pinflowsync.ManagerDeps{})
+	fs.SetSyncEnabled(true)
+	setReturningSession(fs, "user-1", lastSyncedAt)
+	auth.Set(pinflowsync.AuthState{AccessToken: "access-token", UserID: "user-1"})
+
+	if err := manager.InitializeSourceDecision(); err != nil {
+		t.Fatalf("initialize source decision: %v", err)
+	}
+	if latestCalls != 1 {
+		t.Fatalf("expected one timestamp query, got %d", latestCalls)
+	}
+	if source := manager.SourceState(); source.Pending || source.AutoAction != "" {
+		t.Fatalf("expected no automatic replacement, got %#v", source)
+	}
+	if status := manager.Status(); status.State != "idle" {
+		t.Fatalf("expected sync to be enabled, got %#v", status)
+	}
+}
+
+func TestManagerReturningSessionDegradesGracefullyOnTimestampError(t *testing.T) {
+	lastSyncedAt := time.Now()
+	client := &fakeCloudClient{latestUpdatedAtFn: func() (*time.Time, error) {
+		return nil, errors.New("network unavailable")
+	}}
+	manager, fs, auth := newManager(t, client, nil, pinflowsync.ManagerDeps{})
+	fs.SetSyncEnabled(true)
+	setReturningSession(fs, "user-1", lastSyncedAt)
+	auth.Set(pinflowsync.AuthState{AccessToken: "access-token", UserID: "user-1"})
+
+	if err := manager.InitializeSourceDecision(); err != nil {
+		t.Fatalf("expected graceful degradation, got %v", err)
+	}
+	if source := manager.SourceState(); source.Pending {
+		t.Fatalf("expected no blocking source decision, got %#v", source)
+	}
+	if status := manager.Status(); status.State != "idle" {
+		t.Fatalf("expected local sync preference to be restored, got %#v", status)
+	}
+}
+
+func TestManagerUserMismatchUsesFirstTimeSourceDecision(t *testing.T) {
+	latestCalls := 0
+	client := &fakeCloudClient{
+		latestUpdatedAtFn: func() (*time.Time, error) {
+			latestCalls++
+			return nil, nil
+		},
+		listFilesFn: func() ([]pinflowsync.WorkspaceFile, error) {
+			return cloudWorkspaceFiles("other-account-workspace", true), nil
+		},
+	}
+	manager, fs, auth := newManager(t, client, nil, pinflowsync.ManagerDeps{})
+	setReturningSession(fs, "user-1", time.Now())
+	auth.Set(pinflowsync.AuthState{AccessToken: "access-token", UserID: "user-2"})
+
+	if err := manager.InitializeSourceDecision(); err != nil {
+		t.Fatalf("initialize source decision: %v", err)
+	}
+	if latestCalls != 0 {
+		t.Fatalf("expected first-time path to skip timestamp query, got %d calls", latestCalls)
+	}
+	if source := manager.SourceState(); !source.Pending || !source.CloudHasData {
+		t.Fatalf("expected pending first-time decision, got %#v", source)
+	}
+	if settings := fs.GetSettings(); settings.LastSyncedUserID != "user-1" {
+		t.Fatalf("expected stored account marker to remain unchanged, got %#v", settings)
 	}
 }
 
@@ -452,6 +651,9 @@ func TestManagerRetainsOfflinePathsAndRetries(t *testing.T) {
 	}
 	if attempts != 2 {
 		t.Fatalf("expected one failed attempt and one retry, got %d", attempts)
+	}
+	for manager.Status().State != "idle" && time.Now().Before(deadline) {
+		time.Sleep(time.Millisecond)
 	}
 	if status := manager.Status(); status.State != "idle" {
 		t.Fatalf("expected idle status after retry, got %#v", status)

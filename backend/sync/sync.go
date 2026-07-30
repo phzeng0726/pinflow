@@ -19,6 +19,7 @@ type SourceState struct {
 	Pending      bool   `json:"pending"`
 	CloudHasData bool   `json:"cloudHasData"`
 	Error        string `json:"error,omitempty"`
+	AutoAction   string `json:"autoAction,omitempty"`
 }
 
 type WorkspaceFile struct {

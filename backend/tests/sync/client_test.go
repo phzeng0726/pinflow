@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"testing"
+	"time"
 
 	pinflowsync "pinflow/sync"
 	"pinflow/tests/testutil"
@@ -95,6 +96,52 @@ func TestDeleteAllFilesRequiresAuthenticatedUserID(t *testing.T) {
 
 	if err := pinflowsync.NewClient(auth).DeleteAllFiles(); err == nil {
 		t.Fatal("expected missing user ID to prevent unscoped delete")
+	}
+}
+
+func TestGetLatestUpdatedAtQueriesNewestCloudTimestamp(t *testing.T) {
+	const timestamp = "2026-07-30T01:23:45Z"
+	testutil.NewSupabaseMock(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/rest/v1/workspace_files" {
+			t.Fatalf("unexpected request path: %s", r.URL.Path)
+		}
+		if got := r.URL.Query().Get("select"); got != "updated_at" {
+			t.Errorf("unexpected select query: %q", got)
+		}
+		if got := r.URL.Query().Get("order"); got != "updated_at.desc" {
+			t.Errorf("unexpected order query: %q", got)
+		}
+		if got := r.URL.Query().Get("limit"); got != "1" {
+			t.Errorf("unexpected limit query: %q", got)
+		}
+		_ = json.NewEncoder(w).Encode([]map[string]string{{"updated_at": timestamp}})
+	})
+
+	auth := &pinflowsync.AuthManager{}
+	auth.Set(pinflowsync.AuthState{AccessToken: "access-token", UserID: "user-1"})
+	updatedAt, err := pinflowsync.NewClient(auth).GetLatestUpdatedAt()
+	if err != nil {
+		t.Fatalf("GetLatestUpdatedAt returned an error: %v", err)
+	}
+	want, _ := time.Parse(time.RFC3339, timestamp)
+	if updatedAt == nil || !updatedAt.Equal(want) {
+		t.Fatalf("expected %v, got %v", want, updatedAt)
+	}
+}
+
+func TestGetLatestUpdatedAtReturnsNilForEmptyCloud(t *testing.T) {
+	testutil.NewSupabaseMock(t, func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode([]map[string]string{})
+	})
+
+	auth := &pinflowsync.AuthManager{}
+	auth.Set(pinflowsync.AuthState{AccessToken: "access-token", UserID: "user-1"})
+	updatedAt, err := pinflowsync.NewClient(auth).GetLatestUpdatedAt()
+	if err != nil {
+		t.Fatalf("GetLatestUpdatedAt returned an error: %v", err)
+	}
+	if updatedAt != nil {
+		t.Fatalf("expected nil timestamp, got %v", updatedAt)
 	}
 }
 

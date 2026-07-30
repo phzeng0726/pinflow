@@ -152,20 +152,35 @@ The sync manager SHALL support replacing all cloud workspace rows belonging to t
 - **THEN** rows belonging to other users are not read, modified, or deleted
 
 ### Requirement: Workspace source decision
-Every newly established or restored authenticated session SHALL check whether the account already has cloud workspace data. The backend SHALL expose the decision state and SHALL block automatic, manual, and periodic uploads while a decision is pending.
+Every newly established or restored authenticated session SHALL check whether the account already has cloud workspace data. The behavior SHALL differ based on whether the user has previously completed a source decision for this account:
+
+**First-time decision** (`sourceDecisionMade` is false or `lastSyncedUserId` does not match current user):
+- If the account has cloud data, the backend SHALL set the source state to pending and block uploads until the user chooses a source via the dialog.
+- If the account has no cloud data, the backend SHALL skip the dialog, mark the decision as complete, and enable sync per user settings.
+
+**Returning session** (`sourceDecisionMade` is true and `lastSyncedUserId` matches current user):
+- The backend SHALL NOT set the source state to pending.
+- The backend SHALL compare timestamps to auto-determine sync direction (see `sync-auto-decision` spec).
 
 The sync API SHALL provide:
-
-- `GET /api/v1/sync/source` returning whether cloud data exists and whether a decision is pending
-- `POST /api/v1/sync/source` accepting `{source: "cloud" | "local"}` and performing the selected replacement
+- `GET /api/v1/sync/source` returning whether cloud data exists, whether a decision is pending, and the current `autoAction` status
+- `POST /api/v1/sync/source` accepting `{source: "cloud" | "local"}` and performing the selected replacement. After successful resolution, `sourceDecisionMade` SHALL be set to `true` and `lastSyncedAt` SHALL be updated.
 
 #### Scenario: Login with existing cloud data
-- **WHEN** an auth session is established and the account has one or more cloud workspace rows
+- **WHEN** an auth session is established, `sourceDecisionMade` is `false`, and the account has cloud workspace rows
 - **THEN** the source state becomes pending and no local data is uploaded before the user chooses a source
 
 #### Scenario: Login without cloud data
-- **WHEN** an auth session is established and the account has no cloud workspace rows
-- **THEN** no source decision is required and the local example workspace remains available
+- **WHEN** an auth session is established, `sourceDecisionMade` is `false`, and the account has no cloud workspace rows
+- **THEN** no source decision is required, `sourceDecisionMade` is set to `true`, and sync is enabled per settings
+
+#### Scenario: Returning session with cloud data
+- **WHEN** an auth session is restored, `sourceDecisionMade` is `true`, and `lastSyncedUserId` matches
+- **THEN** no dialog is shown and the sync manager compares timestamps to auto-determine direction
+
+#### Scenario: Account switch
+- **WHEN** an auth session is established and `lastSyncedUserId` does not match the current user ID
+- **THEN** the session is treated as a first-time decision regardless of `sourceDecisionMade`
 
 #### Scenario: Decide later
 - **WHEN** the user dismisses the workspace source dialog
@@ -313,3 +328,4 @@ Cloud sync 所需的 Supabase schema 必須（MUST）以具版本編號的 SQL m
 #### Scenario: 桌面應用程式啟動
 - **WHEN** PinFlow 連線至已設定的 Supabase project 並啟動
 - **THEN** 應用程式透過 PostgREST 使用既有 schema，不會嘗試建立、變更或 migration 資料庫物件
+

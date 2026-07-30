@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -18,11 +19,13 @@ import (
 const reconciliationInterval = 3 * time.Minute
 const offlineRetryInterval = 5 * time.Second
 const debounceInterval = 500 * time.Millisecond
+const syncTimestampTolerance = 2 * time.Second
 
 // CloudClient is the remote workspace contract required by Manager.
 type CloudClient interface {
 	UpsertFiles(files map[string][]byte) error
 	ListFiles() ([]WorkspaceFile, error)
+	GetLatestUpdatedAt() (*time.Time, error)
 	DeleteFile(path string) error
 	DeleteAllFiles() error
 }
@@ -113,6 +116,14 @@ func (m *Manager) InitializeSourceDecision() error {
 		return nil
 	}
 
+	settings := m.store.GetSettings()
+	if settings.SourceDecisionMade && settings.LastSyncedUserID == state.UserID {
+		return m.initReturningSource(state, settings.LastSyncedAt)
+	}
+	return m.initFirstTimeSource(state)
+}
+
+func (m *Manager) initFirstTimeSource(state AuthState) error {
 	m.mu.Lock()
 	m.source = SourceState{Pending: true}
 	m.sourceUserID = state.UserID
@@ -139,10 +150,83 @@ func (m *Manager) InitializeSourceDecision() error {
 	if hasCloudData {
 		m.SetEnabled(false)
 	} else {
+		m.completeSourceDecision(state.UserID)
 		m.SetEnabled(m.store.GetSettings().SyncEnabled)
 	}
 	return nil
 }
+
+func (m *Manager) initReturningSource(state AuthState, lastSyncedAt *time.Time) error {
+	m.mu.Lock()
+	m.source = SourceState{}
+	m.sourceUserID = state.UserID
+	m.mu.Unlock()
+
+	cloudUpdatedAt, err := m.client.GetLatestUpdatedAt()
+	m.mu.Lock()
+	if m.sourceUserID != state.UserID {
+		m.mu.Unlock()
+		return nil
+	}
+	if err != nil {
+		m.source = SourceState{}
+		m.mu.Unlock()
+		log.Printf("sync: query latest cloud timestamp: %v", err)
+		m.SetEnabled(m.store.GetSettings().SyncEnabled)
+		return nil
+	}
+	m.source.CloudHasData = cloudUpdatedAt != nil
+	m.mu.Unlock()
+
+	if cloudUpdatedAt == nil {
+		m.SetEnabled(m.store.GetSettings().SyncEnabled)
+		return nil
+	}
+	if lastSyncedAt == nil || cloudUpdatedAt.After(lastSyncedAt.Add(syncTimestampTolerance)) {
+		return m.autoPull(state.UserID)
+	}
+	if lastSyncedAt.After(cloudUpdatedAt.Add(syncTimestampTolerance)) {
+		return m.autoPush()
+	}
+	m.SetEnabled(m.store.GetSettings().SyncEnabled)
+	return nil
+}
+
+func (m *Manager) autoPull(userID string) error {
+	m.mu.Lock()
+	m.source.AutoAction = "pulling"
+	m.mu.Unlock()
+
+	if err := m.replaceLocalFromCloud(userID, false); err != nil {
+		return err
+	}
+	m.mu.Lock()
+	m.source.AutoAction = "pulled"
+	m.mu.Unlock()
+	return nil
+}
+
+func (m *Manager) autoPush() error {
+	m.mu.Lock()
+	m.source.AutoAction = "pushing"
+	m.mu.Unlock()
+
+	if err := m.ReplaceCloudFromLocal(); err != nil {
+		return err
+	}
+	m.mu.Lock()
+	m.source.AutoAction = "pushed"
+	m.mu.Unlock()
+	return nil
+}
+
+func (m *Manager) completeSourceDecision(userID string) {
+	now := time.Now()
+	m.store.SetSourceDecisionMade(true)
+	m.store.SetLastSyncedUserID(userID)
+	m.store.SetLastSyncedAt(now)
+}
+
 func (m *Manager) SetEnabled(enabled bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -258,6 +342,7 @@ func (m *Manager) push(paths map[string]bool) map[string]bool {
 		m.setStatus(syncState, syncErr.Error())
 		return failed
 	}
+	m.store.SetLastSyncedAt(time.Now())
 	m.setStatus("idle", "")
 	return failed
 }
@@ -294,11 +379,16 @@ func (m *Manager) PullFromCloud() error {
 }
 
 func (m *Manager) ReplaceLocalFromCloud() error {
-	if !m.auth.Authenticated() {
+	state := m.auth.Get()
+	return m.replaceLocalFromCloud(state.UserID, true)
+}
+
+func (m *Manager) replaceLocalFromCloud(userID string, requireDecision bool) error {
+	if !m.auth.Authenticated() || userID == "" {
 		return fmt.Errorf("not authenticated")
 	}
 	source := m.SourceState()
-	if !source.Pending || !source.CloudHasData {
+	if requireDecision && (!source.Pending || !source.CloudHasData) {
 		return ErrSourceDecisionRequired
 	}
 	if !m.sourceResolving.CompareAndSwap(false, true) {
@@ -330,8 +420,10 @@ func (m *Manager) ReplaceLocalFromCloud() error {
 		m.setStatus("error", err.Error())
 		return err
 	}
+	m.completeSourceDecision(userID)
 	m.mu.Lock()
 	m.source.Pending = false
+	m.source.CloudHasData = true
 	m.source.Error = ""
 	m.mu.Unlock()
 	if m.store.GetSettings().SyncEnabled {
@@ -370,6 +462,7 @@ func (m *Manager) ReplaceCloudFromLocal() error {
 		return err
 	}
 
+	m.completeSourceDecision(m.auth.Get().UserID)
 	m.mu.Lock()
 	m.source.Pending = false
 	m.source.CloudHasData = len(files) > 0

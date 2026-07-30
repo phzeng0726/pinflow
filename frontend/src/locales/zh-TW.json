@@ -53,6 +53,13 @@
     "save": "儲存",
     "edit": "編輯"
   },
+  "cardSearch": {
+    "dialogTitle": "搜尋卡片",
+    "placeholder": "搜尋卡片...",
+    "noResults": "找不到卡片",
+    "searching": "搜尋中...",
+    "tooltip": "搜尋卡片（Ctrl+K）"
+  },
   "cardMenu": {
     "unpin": "取消釘選",
     "pin": "釘選",

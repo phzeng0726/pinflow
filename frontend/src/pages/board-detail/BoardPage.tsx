@@ -23,6 +23,7 @@ import { usePinnedCards } from '@/hooks/card/queries/usePinnedCards'
 import { useColumnMutations } from '@/hooks/column/mutations/useColumnMutations'
 import { useBoardDetailDnd } from '@/hooks/dnd/useBoardDetailDnd'
 import { cn } from '@/lib/utils'
+import { CardSearchCommand } from '@/pages/board-detail/components/CardSearchCommand'
 import { AddColumnForm } from '@/pages/board-detail/components/columns/AddColumnForm'
 import { ColumnView } from '@/pages/board-detail/components/columns/ColumnView'
 import { GraphView } from '@/pages/board-detail/components/graph'
@@ -47,6 +48,7 @@ import {
   Moon,
   Pin,
   Plus,
+  Search,
   Sun,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
@@ -69,6 +71,7 @@ export function BoardPage() {
   const [pendingUnpinCard, setPendingUnpinCard] = useState<Card | null>(null)
   const [snapshotOpen, setSnapshotOpen] = useState(false)
   const [archiveOpen, setArchiveOpen] = useState(false)
+  const [cardSearchOpen, setCardSearchOpen] = useState(false)
 
   const pinPopoverRef = useRef<HTMLDivElement>(null)
 
@@ -135,6 +138,18 @@ export function BoardPage() {
     return () => document.removeEventListener('mousedown', handler)
   }, [pinPopoverOpen])
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() === 'k' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault()
+        setCardSearchOpen(true)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
   if (isLoading) {
     return <LoadingSpinner />
   }
@@ -170,6 +185,19 @@ export function BoardPage() {
           <p className="text-xs text-gray-400 dark:text-gray-500">PinFlow</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCardSearchOpen(true)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('cardSearch.tooltip')}</TooltipContent>
+          </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -423,6 +451,12 @@ export function BoardPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <CardSearchCommand
+        boardId={id}
+        open={cardSearchOpen}
+        onOpenChange={setCardSearchOpen}
+      />
 
       <SnapshotDialog
         boardId={id}

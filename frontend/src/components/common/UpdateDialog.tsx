@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Clock3 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -92,7 +93,12 @@ export function UpdateDialog() {
         <DialogFooter>
           {state.phase === 'available' && (
             <>
-              <Button variant="ghost" onClick={() => setState({ phase: 'idle' })}>
+              <Button
+                variant="ghost"
+                className="gap-1.5"
+                onClick={() => setState({ phase: 'idle' })}
+              >
+                <Clock3 className="size-4" />
                 {t('updater.later')}
               </Button>
               <Button

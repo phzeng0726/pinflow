@@ -8,6 +8,7 @@ export function useCardSearch(
   limit = 10,
   debounceMs = 300,
   boardId?: number,
+  enabled = true,
 ) {
   const [debouncedQuery, setDebouncedQuery] = useState(query)
   const [debouncedLimit, setDebouncedLimit] = useState(limit)
@@ -20,8 +21,14 @@ export function useCardSearch(
     return () => clearTimeout(timer)
   }, [query, limit, debounceMs])
 
-  return useQuery({
-    queryKey: queryKeys.cards.search(debouncedQuery, debouncedLimit, boardId),
-    queryFn: () => searchCards(debouncedQuery, debouncedLimit, boardId),
-  })
+  const isDebouncing = query !== debouncedQuery
+
+  return {
+    ...useQuery({
+      queryKey: queryKeys.cards.search(debouncedQuery, debouncedLimit, boardId),
+      queryFn: () => searchCards(debouncedQuery, debouncedLimit, boardId),
+      enabled,
+    }),
+    isDebouncing,
+  }
 }

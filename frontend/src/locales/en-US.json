@@ -53,6 +53,13 @@
     "save": "Save",
     "edit": "Edit"
   },
+  "cardSearch": {
+    "dialogTitle": "Search Cards",
+    "placeholder": "Search cards...",
+    "noResults": "No cards found",
+    "searching": "Searching...",
+    "tooltip": "Search cards (Ctrl+K)"
+  },
   "cardMenu": {
     "unpin": "Unpin",
     "pin": "Pin",

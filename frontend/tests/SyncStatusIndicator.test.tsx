@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { setSyncEnabled, triggerSync } from '@/lib/api'
-import { SyncStatusIndicator } from './SyncStatusIndicator'
+import { SyncStatusIndicator } from '@/components/common/SyncStatusIndicator'
 
 const mocks = vi.hoisted(() => ({
   authState: {

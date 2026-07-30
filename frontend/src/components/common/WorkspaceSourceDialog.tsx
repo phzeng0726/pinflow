@@ -187,7 +187,7 @@ export function WorkspaceSourceDialog() {
               </p>
             )}
             <DialogFooter className="mt-6">
-              <Button variant="ghost" onClick={close}>
+              <Button variant="ghost" className="gap-1.5" onClick={close}>
                 <Clock3 className="size-4" />
                 {t('sync.decideLater')}
               </Button>

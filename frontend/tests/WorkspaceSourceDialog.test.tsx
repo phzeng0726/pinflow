@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { resolveWorkspaceSource } from '@/lib/api'
-import { WorkspaceSourceDialog } from './WorkspaceSourceDialog'
+import { WorkspaceSourceDialog } from '@/components/common/WorkspaceSourceDialog'
 
 const mocks = vi.hoisted(() => ({
   authenticated: true,

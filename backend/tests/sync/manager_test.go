@@ -2,9 +2,11 @@ package sync_test
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -94,7 +96,36 @@ func cloudWorkspaceFiles(workspaceID string, syncEnabled bool) []pinflowsync.Wor
 				"theme": "dark", "locale": "en-US", "syncEnabled": syncEnabled,
 			},
 		},
+		{
+			Path:    "boards/board-1/.snapshots/index.json",
+			Content: map[string]any{"snapshots": []any{map[string]any{"id": 99}}},
+		},
 	}
+}
+
+func writeSnapshotFixture(t *testing.T, fs *store.FileStore, boardID uint) string {
+	t.Helper()
+	snapshotsDir := filepath.Join(
+		fs.BasePath(),
+		"boards",
+		"board-"+fmt.Sprint(boardID),
+		".snapshots",
+	)
+	snapshotDir := filepath.Join(snapshotsDir, "snap-1")
+	if err := os.MkdirAll(filepath.Join(snapshotDir, "images"), 0755); err != nil {
+		t.Fatalf("create snapshot fixture: %v", err)
+	}
+	files := map[string][]byte{
+		filepath.Join(snapshotsDir, "index.json"):         []byte(`{"snapshots":[{"id":1}]}`),
+		filepath.Join(snapshotDir, "meta.json"):           []byte(`{"id":1}`),
+		filepath.Join(snapshotDir, "images", "image.png"): []byte("image"),
+	}
+	for path, data := range files {
+		if err := os.WriteFile(path, data, 0644); err != nil {
+			t.Fatalf("write snapshot fixture %s: %v", path, err)
+		}
+	}
+	return snapshotsDir
 }
 
 func TestManagerSetEnabledUpdatesDisabledStatus(t *testing.T) {
@@ -269,6 +300,28 @@ func TestManagerAllowsLocalWorkspaceWhenCloudIsEmpty(t *testing.T) {
 	if !settings.SourceDecisionMade || settings.LastSyncedUserID != "user-1" ||
 		settings.LastSyncedAt == nil {
 		t.Fatalf("expected first-time source decision to be persisted, got %#v", settings)
+	}
+}
+
+func TestManagerIgnoresSnapshotOnlyCloudData(t *testing.T) {
+	client := &fakeCloudClient{listFilesFn: func() ([]pinflowsync.WorkspaceFile, error) {
+		return []pinflowsync.WorkspaceFile{{
+			Path:    "boards/board-1/.snapshots/index.json",
+			Content: map[string]any{"snapshots": []any{}},
+		}}, nil
+	}}
+	manager, fs, auth := newManager(t, client, nil, pinflowsync.ManagerDeps{})
+	fs.SetSyncEnabled(true)
+	auth.Set(pinflowsync.AuthState{AccessToken: "access-token", UserID: "user-1"})
+
+	if err := manager.InitializeSourceDecision(); err != nil {
+		t.Fatalf("initialize source decision: %v", err)
+	}
+	if source := manager.SourceState(); source.Pending || source.CloudHasData {
+		t.Fatalf("expected snapshot-only cloud to be treated as empty, got %#v", source)
+	}
+	if hasData, err := manager.HasCloudData(); err != nil || hasData {
+		t.Fatalf("expected HasCloudData to ignore snapshots, got hasData=%v err=%v", hasData, err)
 	}
 }
 
@@ -449,6 +502,10 @@ func TestManagerReplaceLocalFromCloud(t *testing.T) {
 				"theme": "dark", "locale": "en-US", "syncEnabled": false,
 			},
 		},
+		{
+			Path:    "boards/board-1/.snapshots/index.json",
+			Content: map[string]any{"snapshots": []any{map[string]any{"id": 99}}},
+		},
 	}
 	client := &fakeCloudClient{listFilesFn: func() ([]pinflowsync.WorkspaceFile, error) {
 		return files, nil
@@ -462,6 +519,7 @@ func TestManagerReplaceLocalFromCloud(t *testing.T) {
 	if err := os.WriteFile(localOnlyPath, []byte(`{"local":true}`), 0644); err != nil {
 		t.Fatalf("write local file: %v", err)
 	}
+	snapshotsDir := writeSnapshotFixture(t, fs, 1)
 
 	if err := manager.ReplaceLocalFromCloud(); err != nil {
 		t.Fatalf("replace local from cloud: %v", err)
@@ -471,6 +529,9 @@ func TestManagerReplaceLocalFromCloud(t *testing.T) {
 	}
 	if got := fs.WorkspaceID(); got != "cloud-workspace" {
 		t.Fatalf("expected cloud workspace to be reloaded, got %q", got)
+	}
+	if _, err := os.Stat(snapshotsDir); !os.IsNotExist(err) {
+		t.Fatalf("expected local snapshots and assets to be removed, got %v", err)
 	}
 }
 
@@ -496,6 +557,7 @@ func TestManagerPreservesLocalDataWhenCloudFetchFails(t *testing.T) {
 	if err := os.WriteFile(localPath, []byte(localData), 0644); err != nil {
 		t.Fatalf("write local file: %v", err)
 	}
+	snapshotsDir := writeSnapshotFixture(t, fs, 1)
 
 	if err := manager.ReplaceLocalFromCloud(); err == nil {
 		t.Fatal("expected cloud fetch failure")
@@ -506,6 +568,69 @@ func TestManagerPreservesLocalDataWhenCloudFetchFails(t *testing.T) {
 	}
 	if string(after) != localData {
 		t.Fatalf("expected local data to remain unchanged, got %q", after)
+	}
+	if _, err := os.Stat(snapshotsDir); err != nil {
+		t.Fatalf("expected snapshots to survive cloud fetch failure: %v", err)
+	}
+}
+
+func TestManagerPreservesSnapshotsWhenCloudDecodeFails(t *testing.T) {
+	calls := 0
+	client := &fakeCloudClient{listFilesFn: func() ([]pinflowsync.WorkspaceFile, error) {
+		calls++
+		if calls == 1 {
+			return cloudWorkspaceFiles("cloud-workspace", false), nil
+		}
+		return []pinflowsync.WorkspaceFile{
+			{
+				Path:    "manifest.json",
+				Content: map[string]any{"version": "1.0", "workspaceId": "cloud-workspace"},
+			},
+			{Path: "boards/bad.json", Content: func() {}},
+		}, nil
+	}}
+	manager, fs, auth := newManager(t, client, nil, pinflowsync.ManagerDeps{})
+	auth.Set(pinflowsync.AuthState{AccessToken: "access-token", UserID: "user-1"})
+	if err := manager.InitializeSourceDecision(); err != nil {
+		t.Fatalf("initialize source decision: %v", err)
+	}
+	snapshotsDir := writeSnapshotFixture(t, fs, 1)
+
+	if err := manager.ReplaceLocalFromCloud(); err == nil {
+		t.Fatal("expected cloud JSON decode failure")
+	}
+	if _, err := os.Stat(snapshotsDir); err != nil {
+		t.Fatalf("expected snapshots to survive cloud decode failure: %v", err)
+	}
+}
+
+func TestManagerPreservesSnapshotsWhenWorkspaceReplacementFails(t *testing.T) {
+	calls := 0
+	client := &fakeCloudClient{listFilesFn: func() ([]pinflowsync.WorkspaceFile, error) {
+		calls++
+		if calls == 1 {
+			return cloudWorkspaceFiles("cloud-workspace", false), nil
+		}
+		return []pinflowsync.WorkspaceFile{
+			{
+				Path:    "manifest.json",
+				Content: map[string]any{"version": "1.0", "workspaceId": "cloud-workspace"},
+			},
+			{Path: "../outside.json", Content: map[string]any{"invalid": true}},
+		}, nil
+	}}
+	manager, fs, auth := newManager(t, client, nil, pinflowsync.ManagerDeps{})
+	auth.Set(pinflowsync.AuthState{AccessToken: "access-token", UserID: "user-1"})
+	if err := manager.InitializeSourceDecision(); err != nil {
+		t.Fatalf("initialize source decision: %v", err)
+	}
+	snapshotsDir := writeSnapshotFixture(t, fs, 1)
+
+	if err := manager.ReplaceLocalFromCloud(); err == nil {
+		t.Fatal("expected invalid workspace path to fail replacement")
+	}
+	if _, err := os.Stat(snapshotsDir); err != nil {
+		t.Fatalf("expected snapshots to survive workspace replacement failure: %v", err)
 	}
 }
 
@@ -538,6 +663,7 @@ func TestManagerReplaceCloudFromLocalDeletesBeforeUploading(t *testing.T) {
 	if err := os.WriteFile(localPath, []byte(`{"local":true}`), 0644); err != nil {
 		t.Fatalf("write local file: %v", err)
 	}
+	writeSnapshotFixture(t, fs, 1)
 
 	if err := manager.ReplaceCloudFromLocal(); err != nil {
 		t.Fatalf("replace cloud from local: %v", err)
@@ -547,6 +673,11 @@ func TestManagerReplaceCloudFromLocalDeletesBeforeUploading(t *testing.T) {
 	}
 	if _, ok := uploaded["boards/local.json"]; !ok {
 		t.Fatalf("expected local workspace file to be uploaded, got %v", uploaded)
+	}
+	for path := range uploaded {
+		if strings.Contains(path, "/.snapshots/") {
+			t.Fatalf("snapshot path %q was uploaded during cloud replacement", path)
+		}
 	}
 }
 
@@ -613,6 +744,90 @@ func TestManagerBatchesChangedFiles(t *testing.T) {
 		}
 	case <-time.After(time.Second):
 		t.Fatal("timed out waiting for batch push")
+	}
+}
+
+func TestManagerIgnoresSnapshotNotifications(t *testing.T) {
+	notifications := make(chan string, 2)
+	upsertCalled := make(chan struct{}, 1)
+	deleteCalled := make(chan struct{}, 1)
+	client := &fakeCloudClient{
+		upsertFn: func(map[string][]byte) error {
+			upsertCalled <- struct{}{}
+			return nil
+		},
+		deleteFileFn: func(string) error {
+			deleteCalled <- struct{}{}
+			return nil
+		},
+	}
+	manager, fs, auth := newManager(t, client, notifications, pinflowsync.ManagerDeps{
+		DebounceEvery: time.Millisecond,
+	})
+	fs.SetSyncEnabled(true)
+	auth.Set(pinflowsync.AuthState{AccessToken: "access-token", UserID: "user-1"})
+	snapshotsDir := writeSnapshotFixture(t, fs, 1)
+	rel, err := filepath.Rel(fs.BasePath(), filepath.Join(snapshotsDir, "index.json"))
+	if err != nil {
+		t.Fatalf("relative snapshot path: %v", err)
+	}
+	rel = filepath.ToSlash(rel)
+
+	done := make(chan struct{})
+	go manager.Run(done)
+	t.Cleanup(func() { close(done) })
+	notifications <- rel
+	notifications <- "delete:" + rel
+
+	deadline := time.Now().Add(time.Second)
+	for manager.Status().LastSyncAt == nil && time.Now().Before(deadline) {
+		time.Sleep(time.Millisecond)
+	}
+	if manager.Status().LastSyncAt == nil {
+		t.Fatal("timed out waiting for snapshot notifications to be consumed")
+	}
+	select {
+	case <-upsertCalled:
+		t.Fatal("snapshot notification unexpectedly called UpsertFiles")
+	default:
+	}
+	select {
+	case <-deleteCalled:
+		t.Fatal("snapshot notification unexpectedly called DeleteFile")
+	default:
+	}
+}
+
+func TestManagerFullSyncSkipsSnapshotSubtree(t *testing.T) {
+	uploaded := make(chan map[string][]byte, 1)
+	client := &fakeCloudClient{upsertFn: func(files map[string][]byte) error {
+		uploaded <- files
+		return nil
+	}}
+	manager, fs, auth := newManager(t, client, nil, pinflowsync.ManagerDeps{})
+	fs.SetSyncEnabled(true)
+	auth.Set(pinflowsync.AuthState{AccessToken: "access-token", UserID: "user-1"})
+	regularPath := filepath.Join(fs.BasePath(), "boards", "regular.json")
+	if err := os.WriteFile(regularPath, []byte(`{"regular":true}`), 0644); err != nil {
+		t.Fatalf("write regular JSON: %v", err)
+	}
+	writeSnapshotFixture(t, fs, 1)
+
+	if !manager.Trigger() {
+		t.Fatal("expected full sync to start")
+	}
+	select {
+	case files := <-uploaded:
+		if _, ok := files["boards/regular.json"]; !ok {
+			t.Fatalf("expected regular JSON in full sync, got %v", files)
+		}
+		for path := range files {
+			if strings.Contains(path, "/.snapshots/") {
+				t.Fatalf("snapshot path %q was included in full sync", path)
+			}
+		}
+	case <-time.After(time.Second):
+		t.Fatal("timed out waiting for full sync upload")
 	}
 }
 

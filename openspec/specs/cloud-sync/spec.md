@@ -98,24 +98,24 @@ The sync manager SHALL only push when:
 - **THEN** the notification is consumed but no Supabase request is made
 
 ### Requirement: Full sync trigger
-The sync manager SHALL support a manual full sync that reads all JSON files in the workspace and upserts every one to Supabase. This SHALL be triggered via `POST /api/v1/sync/trigger`.
+The sync manager SHALL support a manual full sync that reads all syncable JSON files in the workspace and upserts every one to Supabase. JSON files under a `.snapshots` directory SHALL NOT be syncable. This SHALL be triggered via `POST /api/v1/sync/trigger`.
 
 #### Scenario: Manual full sync
 - **WHEN** user triggers `POST /api/v1/sync/trigger`
-- **THEN** sync manager scans the entire workspace directory, reads every `.json` file, and upserts all to Supabase
+- **THEN** sync manager scans the workspace, skips every `.snapshots` subtree, and upserts all other `.json` files to Supabase
 
 #### Scenario: Manual full sync while source decision is pending
 - **WHEN** user triggers `POST /api/v1/sync/trigger` before resolving the workspace source
 - **THEN** no files are uploaded and the API reports that a source decision is required
 
 ### Requirement: Periodic reconciliation sync
-The sync manager SHALL run a full reconciliation sync every 3 minutes while the user is authenticated and sync is enabled. The periodic sync SHALL run in the Go backend independently of renderer visibility and SHALL supplement, not replace, the 500 ms debounced push flow. Only one full sync SHALL run at a time.
+The sync manager SHALL run a full reconciliation sync every 3 minutes while the user is authenticated and sync is enabled. The periodic sync SHALL run in the Go backend independently of renderer visibility and SHALL supplement, not replace, the 500 ms debounced push flow. Only one full sync SHALL run at a time. Snapshot JSON files under `.snapshots` directories SHALL be excluded from reconciliation.
 
 The operating system MAY suspend all application processes during sleep. After resume, Electron SHALL renew an expired or near-expiry auth session and request a reconciliation sync. A transient failure SHALL not disable local usage, and a later scheduled or resume-triggered attempt SHALL be able to recover after authentication and connectivity return.
 
 #### Scenario: Periodic full sync
 - **WHEN** the user is authenticated, sync is enabled, and 3 minutes have elapsed since the previous reconciliation interval
-- **THEN** sync manager scans all workspace JSON files and upserts them to Supabase
+- **THEN** sync manager scans syncable workspace JSON files, skips every `.snapshots` subtree, and upserts the remaining files to Supabase
 
 #### Scenario: Renderer is hidden or minimized
 - **WHEN** the application remains running with all renderer windows hidden, minimized, or in the system tray
@@ -150,24 +150,24 @@ The operating system MAY suspend all application processes during sleep. After r
 - **THEN** sync status becomes `offline` or `error` and a later interval or resume recovery may retry without blocking local app usage
 
 ### Requirement: Pull sync from cloud
-The sync manager SHALL support replacing the local workspace with all workspace files from Supabase after the authenticated user explicitly selects cloud data as the source.
+The sync manager SHALL support replacing the local workspace with syncable workspace files from Supabase after the authenticated user explicitly selects cloud data as the source. Snapshot rows SHALL be excluded before local materialization.
 
-The manager SHALL fetch the complete cloud file set successfully before removing local managed JSON data. After replacement completes, `FileStore.ReloadAll()` SHALL reload all data into memory.
+The manager SHALL fetch and decode the complete cloud file set successfully before removing local managed JSON data. After syncable JSON replacement succeeds, all local `.snapshots` directories SHALL be removed regardless of workspace identity. Cloud fetch, JSON decoding, or workspace JSON replacement failure SHALL leave local snapshots unchanged. After replacement completes, `FileStore.ReloadAll()` SHALL reload all data into memory.
 
 #### Scenario: Use cloud workspace
-- **WHEN** an authenticated user with existing cloud data selects "Use cloud data"
-- **THEN** the sync manager fetches the complete cloud workspace, replaces local managed JSON data, and reloads the store
+- **WHEN** an authenticated user selects "Use cloud data"
+- **THEN** the sync manager replaces syncable local JSON, removes all local snapshots after replacement succeeds, and reloads the store
 
 #### Scenario: Cloud fetch fails before replacement
-- **WHEN** the complete cloud workspace cannot be fetched
-- **THEN** local workspace data remains unchanged and the source decision remains pending
+- **WHEN** the complete cloud workspace cannot be fetched or decoded
+- **THEN** local workspace data and local snapshots remain unchanged and the source decision remains pending
 
 ### Requirement: Replace cloud from local workspace
-The sync manager SHALL support replacing all cloud workspace rows belonging to the authenticated user with the current local workspace after the user explicitly selects local data as the source.
+The sync manager SHALL support replacing all cloud workspace rows belonging to the authenticated user with the current syncable local workspace after the user explicitly selects local data as the source. Local files under `.snapshots` directories SHALL NOT be uploaded.
 
 #### Scenario: Use this device workspace
 - **WHEN** an authenticated user selects "Use this device's data"
-- **THEN** the sync manager deletes that user's existing cloud workspace rows and uploads every managed local JSON file
+- **THEN** the sync manager deletes that user's existing cloud workspace rows and uploads every managed local JSON file except files under `.snapshots` directories
 
 #### Scenario: User data isolation during cloud replacement
 - **WHEN** the cloud workspace is replaced from local data

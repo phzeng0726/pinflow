@@ -124,9 +124,14 @@ func (c *Client) ListFiles() ([]WorkspaceFile, error) {
 }
 
 func (c *Client) GetLatestUpdatedAt() (*time.Time, error) {
+	query := url.Values{}
+	query.Set("select", "updated_at")
+	query.Set("and", "(path.not.like..snapshots/*,path.not.like.*/.snapshots/*)")
+	query.Set("order", "updated_at.desc")
+	query.Set("limit", "1")
 	resp, err := c.request(
 		http.MethodGet,
-		"/rest/v1/workspace_files?select=updated_at&order=updated_at.desc&limit=1",
+		"/rest/v1/workspace_files?"+query.Encode(),
 		nil,
 		nil,
 	)

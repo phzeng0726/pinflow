@@ -109,6 +109,9 @@ func TestGetLatestUpdatedAtQueriesNewestCloudTimestamp(t *testing.T) {
 		if got := r.URL.Query().Get("select"); got != "updated_at" {
 			t.Errorf("unexpected select query: %q", got)
 		}
+		if got := r.URL.Query().Get("and"); got != "(path.not.like..snapshots/*,path.not.like.*/.snapshots/*)" {
+			t.Errorf("unexpected snapshot exclusion query: %q", got)
+		}
 		if got := r.URL.Query().Get("order"); got != "updated_at.desc" {
 			t.Errorf("unexpected order query: %q", got)
 		}

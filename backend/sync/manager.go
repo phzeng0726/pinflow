@@ -130,6 +130,7 @@ func (m *Manager) initFirstTimeSource(state AuthState) error {
 	m.mu.Unlock()
 
 	files, err := m.client.ListFiles()
+	files = syncableWorkspaceFiles(files)
 	m.mu.Lock()
 	if m.sourceUserID != state.UserID {
 		m.mu.Unlock()
@@ -301,8 +302,12 @@ func (m *Manager) push(paths map[string]bool) map[string]bool {
 	var syncErr error
 	syncState := "error"
 	for raw := range paths {
+		syncPath := strings.TrimPrefix(raw, "delete:")
+		if isSnapshotPath(syncPath) {
+			continue
+		}
 		if strings.HasPrefix(raw, "delete:") {
-			if err := m.client.DeleteFile(strings.TrimPrefix(raw, "delete:")); err != nil {
+			if err := m.client.DeleteFile(syncPath); err != nil {
 				syncErr = err
 				if isRetryableSyncError(err) {
 					if isNetworkError(err) {
@@ -336,14 +341,16 @@ func (m *Manager) push(paths map[string]bool) map[string]bool {
 		upserts[rel] = data
 		upsertNotifications[rel] = raw
 	}
-	if err := m.client.UpsertFiles(upserts); err != nil {
-		syncErr = err
-		if isRetryableSyncError(err) {
-			if isNetworkError(err) {
-				syncState = "offline"
-			}
-			for rel := range upserts {
-				failed[upsertNotifications[rel]] = true
+	if len(upserts) > 0 {
+		if err := m.client.UpsertFiles(upserts); err != nil {
+			syncErr = err
+			if isRetryableSyncError(err) {
+				if isNetworkError(err) {
+					syncState = "offline"
+				}
+				for rel := range upserts {
+					failed[upsertNotifications[rel]] = true
+				}
 			}
 		}
 	}
@@ -376,7 +383,17 @@ func (m *Manager) Trigger() bool {
 func (m *Manager) performFullSync() {
 	paths := map[string]bool{}
 	_ = filepath.Walk(m.store.BasePath(), func(path string, info os.FileInfo, err error) error {
-		if err == nil && !info.IsDir() && filepath.Ext(path) == ".json" {
+		if err != nil {
+			return nil
+		}
+		rel, relErr := filepath.Rel(m.store.BasePath(), path)
+		if relErr != nil {
+			return nil
+		}
+		if info.IsDir() && isSnapshotPath(rel) {
+			return filepath.SkipDir
+		}
+		if !info.IsDir() && filepath.Ext(path) == ".json" {
 			paths[path] = true
 		}
 		return nil
@@ -411,6 +428,7 @@ func (m *Manager) replaceLocalFromCloud(userID string, requireDecision bool) err
 		m.setStatus("error", err.Error())
 		return err
 	}
+	files = syncableWorkspaceFiles(files)
 	if len(files) == 0 {
 		err = fmt.Errorf("cloud workspace is empty")
 		m.setStatus("error", err.Error())
@@ -423,9 +441,14 @@ func (m *Manager) replaceLocalFromCloud(userID string, requireDecision bool) err
 			m.setStatus("error", err.Error())
 			return err
 		}
-		localFiles[file.Path] = append(data, '\n')
+		rel := filepath.ToSlash(filepath.Clean(filepath.FromSlash(file.Path)))
+		localFiles[rel] = append(data, '\n')
 	}
 	if err = m.store.ReplaceJSONFiles(localFiles); err != nil {
+		m.setStatus("error", err.Error())
+		return err
+	}
+	if err = removeSnapshotDirs(m.store.BasePath()); err != nil {
 		m.setStatus("error", err.Error())
 		return err
 	}
@@ -464,7 +487,10 @@ func (m *Manager) ReplaceCloudFromLocal() error {
 	}
 	upserts := make(map[string][]byte, len(files))
 	for path, data := range files {
-		upserts[filepath.ToSlash(path)] = data
+		rel := filepath.ToSlash(path)
+		if !isSnapshotPath(rel) {
+			upserts[rel] = data
+		}
 	}
 	if err = m.client.UpsertFiles(upserts); err != nil {
 		m.setStatus("error", err.Error())
@@ -474,7 +500,7 @@ func (m *Manager) ReplaceCloudFromLocal() error {
 	m.completeSourceDecision(m.auth.Get().UserID)
 	m.mu.Lock()
 	m.source.Pending = false
-	m.source.CloudHasData = len(files) > 0
+	m.source.CloudHasData = len(upserts) > 0
 	m.source.Error = ""
 	m.mu.Unlock()
 	if m.store.GetSettings().SyncEnabled {
@@ -487,7 +513,7 @@ func (m *Manager) ReplaceCloudFromLocal() error {
 
 func (m *Manager) HasCloudData() (bool, error) {
 	files, err := m.client.ListFiles()
-	return len(files) > 0, err
+	return len(syncableWorkspaceFiles(files)) > 0, err
 }
 
 func isNetworkError(err error) bool {

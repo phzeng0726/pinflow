@@ -659,3 +659,53 @@ func TestManagerRetainsOfflinePathsAndRetries(t *testing.T) {
 		t.Fatalf("expected idle status after retry, got %#v", status)
 	}
 }
+
+func TestManagerRetainsPathsUntilSessionIsRenewed(t *testing.T) {
+	notifications := make(chan string, 1)
+	attempts := 0
+	client := &fakeCloudClient{upsertFn: func(map[string][]byte) error {
+		attempts++
+		if attempts == 1 {
+			return pinflowsync.ErrSessionRenewalRequired
+		}
+		return nil
+	}}
+	manager, fs, auth := newManager(t, client, notifications, pinflowsync.ManagerDeps{
+		DebounceEvery: time.Millisecond,
+		RetryAfter:    5 * time.Millisecond,
+	})
+	fs.SetSyncEnabled(true)
+	auth.Set(pinflowsync.AuthState{AccessToken: "expired-token", UserID: "user-1"})
+	rel := "boards/renew.json"
+	if err := os.WriteFile(
+		filepath.Join(fs.BasePath(), filepath.FromSlash(rel)),
+		[]byte(`{"renew":true}`),
+		0644,
+	); err != nil {
+		t.Fatalf("write renewal test file: %v", err)
+	}
+	done := make(chan struct{})
+	go manager.Run(done)
+	t.Cleanup(func() { close(done) })
+	notifications <- rel
+
+	deadline := time.Now().Add(time.Second)
+	for attempts < 1 && time.Now().Before(deadline) {
+		time.Sleep(time.Millisecond)
+	}
+	if attempts != 1 {
+		t.Fatalf("expected initial sync attempt, got %d", attempts)
+	}
+	auth.RequireRenewal()
+	time.Sleep(20 * time.Millisecond)
+	if attempts != 1 {
+		t.Fatalf("expected path to wait while renewal is required, got %d attempts", attempts)
+	}
+	auth.Set(pinflowsync.AuthState{AccessToken: "renewed-token", UserID: "user-1"})
+	for attempts < 2 && time.Now().Before(deadline) {
+		time.Sleep(time.Millisecond)
+	}
+	if attempts != 2 {
+		t.Fatalf("expected retained path to retry after renewal, got %d attempts", attempts)
+	}
+}

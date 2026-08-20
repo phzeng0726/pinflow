@@ -1,7 +1,5 @@
-## Purpose
+## MODIFIED Requirements
 
-定義 PinFlow 使用 Supabase Auth 建立可選式雲端身分驗證的行為，包括後端 session 與 token refresh、Electron OAuth 與安全儲存、IPC、前端 auth state 及登出流程。
-## Requirements
 ### Requirement: Backend auth session endpoints
 The backend SHALL expose auth session management endpoints under `/api/v1/auth/`.
 
@@ -95,17 +93,7 @@ Electron SHALL listen for operating-system resume. After resume, it SHALL renew 
 - **WHEN** user triggers logout
 - **THEN** Electron cancels renewal work, deletes `{userData}/auth.dat`, calls `DELETE /api/v1/auth/session`, emits `auth:changed`, and app shows unauthenticated state
 
-### Requirement: Electron auth IPC
-The preload script SHALL expose auth-related IPC methods via `window.electronAPI`:
-
-- `startAuth()` — triggers OAuth flow, returns a promise that resolves when complete
-- `getAuthStatus()` — returns current auth state from backend
-- `logout()` — triggers logout flow
-- `onAuthChanged(callback)` — listens for auth state changes
-
-#### Scenario: Preload API available
-- **WHEN** app runs in Electron
-- **THEN** `window.electronAPI.startAuth`, `getAuthStatus`, `logout`, and `onAuthChanged` are available
+## ADDED Requirements
 
 ### Requirement: Runtime authentication state propagation
 Terminal authentication changes SHALL propagate from the Electron main process to every renderer window. The React auth store SHALL re-read backend auth status after `auth:changed` and SHALL not continue to present an authenticated sync state after the backend session becomes unauthenticated.
@@ -121,42 +109,3 @@ Terminal authentication changes SHALL propagate from the Electron main process t
 #### Scenario: Renderer window is hidden
 - **WHEN** an auth transition occurs while a renderer window is hidden or minimized
 - **THEN** Electron main still processes the transition and the renderer reflects the authoritative state when active
-
-### Requirement: Frontend auth store
-A Zustand store SHALL manage auth state with: `isAuthenticated`, `userId`, `email`, `expiresAt`, `renewalRequired`, `isLoading`.
-
-The store SHALL provide:
-- `login()` — calls `window.electronAPI.startAuth()` in Electron mode
-- `logout()` — calls `window.electronAPI.logout()` and clears state
-- `checkStatus()` — calls `GET /api/v1/auth/session` and hydrates state
-
-#### Scenario: Auth state hydration on boot
-- **WHEN** app starts
-- **THEN** root route calls `authStore.checkStatus()` to load current auth state from backend
-
-#### Scenario: Login from frontend
-- **WHEN** user clicks login button in SyncStatusIndicator
-- **THEN** `authStore.login()` triggers Electron OAuth flow and updates state on completion
-
-### Requirement: User-facing logout action
-The authenticated sync dropdown in the app header SHALL display the current account email and provide a localized logout action.
-
-#### Scenario: Logout from sync dropdown
-- **WHEN** an authenticated user selects "Logout" from the sync dropdown
-- **THEN** the frontend calls `authStore.logout()`, Electron deletes `{userData}/auth.dat`, the backend auth session is cleared, and the header immediately returns to the unauthenticated login state
-
-#### Scenario: Logout does not remove local data
-- **WHEN** the user logs out
-- **THEN** local workspace data remains available and all non-cloud app functionality continues to work
-
-### Requirement: Auth is optional
-Auth SHALL NOT block any existing app functionality. The app SHALL work 100% offline without authentication. Auth is only required for cloud sync features.
-
-#### Scenario: App usage without login
-- **WHEN** user opens app and does not log in
-- **THEN** all board, card, column, tag, checklist, comment, dependency, and snapshot operations work normally
-
-#### Scenario: No auth guard on routes
-- **WHEN** user navigates to any route without being authenticated
-- **THEN** the route loads normally without redirect or blocking
-

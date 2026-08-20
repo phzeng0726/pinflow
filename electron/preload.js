@@ -18,7 +18,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   startAuth: () => ipcRenderer.invoke('auth:start'),
   getAuthStatus: () => ipcRenderer.invoke('auth:status'),
   logout: () => ipcRenderer.invoke('auth:logout'),
-  onAuthChanged: (callback) => ipcRenderer.on('auth:changed', () => callback()),
+  onAuthChanged: (callback) => {
+    const listener = () => callback()
+    ipcRenderer.on('auth:changed', listener)
+    return () => ipcRenderer.removeListener('auth:changed', listener)
+  },
 
   onUpdateAvailable: (callback) => ipcRenderer.on('updater:available', (_e, info) => callback(info)),
   onUpdateProgress: (callback) => ipcRenderer.on('updater:progress', (_e, data) => callback(data)), // data: { percent, total }

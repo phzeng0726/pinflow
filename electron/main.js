@@ -9,6 +9,7 @@ const {
   dialog,
   shell,
   safeStorage,
+  powerMonitor,
 } = require("electron");
 const path = require("path");
 const { pathToFileURL } = require("url");
@@ -16,6 +17,7 @@ const { spawn, execSync } = require("child_process");
 const http = require("http");
 const { autoUpdater } = require("electron-updater");
 const log = require("electron-log");
+const { createAuthSessionCoordinator } = require("./auth-session");
 
 autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = "info";
@@ -42,6 +44,15 @@ function backendRequest(method, pathname, body) {
 
 function notifyAuthChanged() { BrowserWindow.getAllWindows().forEach((win) => win.webContents.send("auth:changed")); }
 
+const authSession = createAuthSessionCoordinator({
+  authFilePath,
+  backendRequest,
+  safeStorage,
+  fs: require("fs"),
+  log,
+  notifyAuthChanged,
+});
+
 async function startAuthFlow() {
   const configResponse = await backendRequest("GET", "/api/v1/auth/config");
   const baseUrl = configResponse.data.supabaseUrl;
@@ -58,8 +69,7 @@ async function startAuthFlow() {
             const tokens = JSON.parse(raw);
             const session = await backendRequest("POST", "/api/v1/auth/session", { accessToken: tokens.access_token, refreshToken: tokens.refresh_token });
             if (session.status !== 200) throw new Error(session.data.error || "Authentication failed");
-            if (safeStorage.isEncryptionAvailable()) require("fs").writeFileSync(authFilePath(), safeStorage.encryptString(session.data.refreshToken || tokens.refresh_token));
-            notifyAuthChanged();
+            await authSession.acceptSession(session.data, tokens.refresh_token);
             res.writeHead(200, { "Content-Type": "application/json" });
             res.end(JSON.stringify({ ok: true }), () => finish());
           } catch (error) {
@@ -102,48 +112,10 @@ async function startAuthFlow() {
 }
 
 async function loadSavedAuth() {
-  const fs = require("fs");
-  if (!fs.existsSync(authFilePath()) || !safeStorage.isEncryptionAvailable()) return;
-
-  let refreshToken;
-  try {
-    refreshToken = safeStorage.decryptString(fs.readFileSync(authFilePath()));
-  } catch (error) {
-    log.error("[auth] Failed to decrypt saved session:", error);
-    fs.rmSync(authFilePath(), { force: true });
-    return;
-  }
-
-  try {
-    const response = await backendRequest("POST", "/api/v1/auth/session", {
-      accessToken: "",
-      refreshToken,
-    });
-    if (response.status !== 200) {
-      const message = response.data.error || "Failed to restore saved session";
-      const isAuthError =
-        response.status === 401 ||
-        response.status === 403 ||
-        /(expired|revoked|invalid.*token|refresh token|unauthorized)/i.test(message);
-      log.error(`[auth] Saved session restore failed (${response.status}): ${message}`);
-      if (isAuthError) {
-        fs.rmSync(authFilePath(), { force: true });
-      }
-      return;
-    }
-    if (response.data.refreshToken) {
-      fs.writeFileSync(
-        authFilePath(),
-        safeStorage.encryptString(response.data.refreshToken),
-      );
-    }
-    notifyAuthChanged();
-  } catch (error) {
-    log.error("[auth] Saved session restore deferred after transient error:", error);
-  }
+  await authSession.restore();
 }
 
-async function clearAuth() { require("fs").rmSync(authFilePath(), { force: true }); await backendRequest("DELETE", "/api/v1/auth/session"); notifyAuthChanged(); }
+async function clearAuth() { await authSession.logout(); }
 
 // ── Backend ──────────────────────────────────────────────────────────────────
 
@@ -488,6 +460,8 @@ if (!gotLock) {
     createMainWindow();
     createTray();
     await loadSavedAuth();
+    authSession.startMonitoring();
+    powerMonitor.on("resume", () => void authSession.handleResume());
     if (!isDev) setupAutoUpdater();
   });
 
@@ -500,6 +474,7 @@ if (!gotLock) {
   });
 
   app.on("will-quit", () => {
+    authSession.stop();
     if (backendProcess) {
       const pid = backendProcess.pid;
       try {

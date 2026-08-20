@@ -1,4 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query'
+import type { AuthStatus } from '@/types'
 
 // Electron API 型別
 interface ElectronAPI {
@@ -12,9 +13,9 @@ interface ElectronAPI {
   minimizeWindow?: () => void
   isElectron?: boolean
   startAuth?: () => Promise<void>
-  getAuthStatus?: () => Promise<unknown>
+  getAuthStatus?: () => Promise<AuthStatus>
   logout?: () => Promise<void>
-  onAuthChanged?: (callback: () => void) => void
+  onAuthChanged?: (callback: () => void) => (() => void) | void
   onUpdateAvailable?: (cb: (info: { version: string }) => void) => void
   onUpdateProgress?: (cb: (data: { percent: number; total: number }) => void) => void
   onUpdateDownloaded?: (cb: () => void) => void

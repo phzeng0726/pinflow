@@ -5,7 +5,7 @@ import { useLocaleStore } from '@/stores/localeStore'
 import { useThemeStore } from '@/stores/themeStore'
 import { getSettings } from '@/lib/api'
 import { UpdateDialog } from '@/components/common/UpdateDialog'
-import { useAuthStore } from '@/stores/authStore'
+import { setupAuthStateSync } from '@/stores/authStore'
 import { WorkspaceSourceDialog } from '@/components/common/WorkspaceSourceDialog'
 
 function Root() {
@@ -15,10 +15,7 @@ function Root() {
   const locale = useLocaleStore((s) => s.locale)
 
   useEffect(() => {
-    void useAuthStore.getState().checkStatus()
-    window.electronAPI?.onAuthChanged?.(
-      () => void useAuthStore.getState().checkStatus(),
-    )
+    const removeAuthListener = setupAuthStateSync()
     getSettings()
       .then((settings) => {
         useThemeStore.setState({ theme: settings.theme as 'light' | 'dark' })
@@ -29,6 +26,7 @@ function Root() {
         useLocaleStore.getState().apply()
       })
       .catch(() => {})
+    return removeAuthListener
   }, [])
 
   useEffect(() => {

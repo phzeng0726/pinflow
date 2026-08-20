@@ -7,6 +7,7 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "node scripts/patch-rcedit.js",
+    "test:electron": "node --test electron/*.test.js",
     "electron:dev": "cross-env ELECTRON_DEV=1 electron .",
     "electron:build:frontend": "cross-env ELECTRON_BUILD=1 pnpm --filter frontend build",
     "electron:package": "scripts\\build.bat"

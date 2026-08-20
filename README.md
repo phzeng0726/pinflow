@@ -126,6 +126,48 @@ PINFLOW_SUPABASE_ANON_KEY=<publishable-key>
 
 選定來源後，可透過工具列的同步狀態按鈕啟用、停用或立即同步。
 
+### 同步機制
+
+同步由 `backend/sync/` 管理，核心元件：
+
+| 元件 | 職責 |
+| --- | --- |
+| `Manager` | 協調所有同步流程：debounce push、週期 reconciliation、cloud pull/replace |
+| `Client` | 透過 PostgREST 操作 Supabase `workspace_files` 資料表 |
+| `AuthManager` | 持有 access/refresh token 與 renewal 狀態 |
+
+**Push 流程**
+
+1. `FileStore` 寫入 JSON 後發送路徑通知至 notification channel
+2. `Manager.Run()` 收集通知，等待 500ms debounce 後批次 upsert 至 Supabase
+3. 網路失敗的路徑會保留並在 5 秒後重試；token 過期則等待 Electron 主流程 renewal 後重試
+
+**週期 Reconciliation**
+
+每 3 分鐘執行一次完整掃描，將 workspace 內所有 syncable JSON 上傳至 Supabase，確保 debounce push 漏掉的變更也能補齊。同一時間只允許一個完整同步在執行。
+
+**Returning Session 自動判斷**
+
+回歸使用者（`sourceDecisionMade=true` 且 `lastSyncedUserId` 符合）會比較本機 `lastSyncedAt` 與雲端 `updated_at`：
+
+- 雲端較新（超過 2 秒差距）→ 自動 pull
+- 本機較新 → 自動 push
+- 差距在 2 秒內 → 直接啟用同步
+- 查詢失敗 → 降級為本機設定，不阻擋啟動
+
+**Session Renewal**
+
+Supabase REST client 遇到 401 時不會自行 refresh token，而是標記 `RenewalRequired` 並回傳錯誤。Electron 主流程偵測到此狀態後透過 IPC 呼叫 Supabase SDK 刷新 session，再將新 token 寫回 backend。
+
+**Snapshot 排除**
+
+Snapshots（`.snapshots/` 目錄）屬於裝置本機復原歷史，不參與雲端同步：
+
+- 增量 push、完整掃描、本機取代雲端上傳時，路徑含 `.snapshots` segment 的檔案一律跳過
+- `GetLatestUpdatedAt()` 的 PostgREST query 排除 `.snapshots` 路徑，避免既有 snapshot rows 影響時間比較
+- 來源判斷的 `ListFiles()` 結果過濾掉 snapshot rows，snapshot-only 的雲端視為無資料
+- Cloud-to-local replacement 成功後清除本機所有 `.snapshots` 目錄；fetch、decode 或 replacement 失敗時不動本機 snapshots
+
 ### Supabase Migration
 
 Schema 與 RLS policy 位於：

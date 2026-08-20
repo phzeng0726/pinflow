@@ -285,6 +285,11 @@ func (m *Manager) Run(done <-chan struct{}) {
 	}
 }
 func (m *Manager) push(paths map[string]bool) map[string]bool {
+	authState := m.auth.Get()
+	if authState.AccessToken != "" && authState.RenewalRequired {
+		m.setStatus("error", ErrSessionRenewalRequired.Error())
+		return paths
+	}
 	if !m.auth.Authenticated() || !m.store.GetSettings().SyncEnabled || m.sourceDecisionPending() {
 		m.setStatus("disabled", "")
 		return map[string]bool{}
@@ -299,8 +304,10 @@ func (m *Manager) push(paths map[string]bool) map[string]bool {
 		if strings.HasPrefix(raw, "delete:") {
 			if err := m.client.DeleteFile(strings.TrimPrefix(raw, "delete:")); err != nil {
 				syncErr = err
-				if isNetworkError(err) {
-					syncState = "offline"
+				if isRetryableSyncError(err) {
+					if isNetworkError(err) {
+						syncState = "offline"
+					}
 					failed[raw] = true
 				}
 			}
@@ -331,8 +338,10 @@ func (m *Manager) push(paths map[string]bool) map[string]bool {
 	}
 	if err := m.client.UpsertFiles(upserts); err != nil {
 		syncErr = err
-		if isNetworkError(err) {
-			syncState = "offline"
+		if isRetryableSyncError(err) {
+			if isNetworkError(err) {
+				syncState = "offline"
+			}
 			for rel := range upserts {
 				failed[upsertNotifications[rel]] = true
 			}
@@ -484,4 +493,8 @@ func (m *Manager) HasCloudData() (bool, error) {
 func isNetworkError(err error) bool {
 	var networkError net.Error
 	return errors.As(err, &networkError)
+}
+
+func isRetryableSyncError(err error) bool {
+	return isNetworkError(err) || errors.Is(err, ErrSessionRenewalRequired)
 }

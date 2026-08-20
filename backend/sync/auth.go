@@ -2,10 +2,12 @@ package sync
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type authUserResponse struct {
@@ -36,7 +38,12 @@ func ValidateToken(client *http.Client, accessToken string) (AuthState, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
 		return AuthState{}, err
 	}
-	return AuthState{AccessToken: accessToken, UserID: user.ID, Email: user.Email}, nil
+	return AuthState{
+		AccessToken: accessToken,
+		UserID:      user.ID,
+		Email:       user.Email,
+		ExpiresAt:   accessTokenExpiry(accessToken),
+	}, nil
 }
 
 // RefreshToken exchanges a stored refresh token for a new authenticated session.
@@ -67,5 +74,30 @@ func RefreshToken(client *http.Client, refreshToken string) (AuthState, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&tokens); err != nil {
 		return AuthState{}, err
 	}
-	return AuthState{AccessToken: tokens.AccessToken, RefreshToken: tokens.RefreshToken, UserID: tokens.User.ID, Email: tokens.User.Email}, nil
+	return AuthState{
+		AccessToken:  tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
+		UserID:       tokens.User.ID,
+		Email:        tokens.User.Email,
+		ExpiresAt:    accessTokenExpiry(tokens.AccessToken),
+	}, nil
+}
+
+func accessTokenExpiry(accessToken string) *time.Time {
+	parts := strings.Split(accessToken, ".")
+	if len(parts) != 3 {
+		return nil
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil
+	}
+	var claims struct {
+		ExpiresAt int64 `json:"exp"`
+	}
+	if err := json.Unmarshal(payload, &claims); err != nil || claims.ExpiresAt <= 0 {
+		return nil
+	}
+	expiresAt := time.Unix(claims.ExpiresAt, 0).UTC()
+	return &expiresAt
 }

@@ -138,6 +138,8 @@ export interface AuthStatus {
   authenticated: boolean
   userId?: string
   email?: string
+  expiresAt?: string
+  renewalRequired?: boolean
 }
 export interface SyncStatus {
   state: 'idle' | 'syncing' | 'error' | 'offline' | 'disabled'

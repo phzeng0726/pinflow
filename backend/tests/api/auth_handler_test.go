@@ -2,10 +2,12 @@ package api_test
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"pinflow/api"
 	pinflowsync "pinflow/sync"
@@ -17,6 +19,8 @@ import (
 func TestCreateSessionPersistsRotatedRefreshToken(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
+	expiresAt := time.Now().UTC().Add(time.Hour).Truncate(time.Second)
+	accessToken := testAccessToken(t, expiresAt)
 	testutil.NewSupabaseMock(t, func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/auth/v1/user":
@@ -27,7 +31,7 @@ func TestCreateSessionPersistsRotatedRefreshToken(t *testing.T) {
 			}
 			w.Header().Set("Content-Type", "application/json")
 			_ = json.NewEncoder(w).Encode(map[string]any{
-				"access_token":  "new-access-token",
+				"access_token":  accessToken,
 				"refresh_token": "rotated-refresh-token",
 				"user": map[string]string{
 					"id":    "user-1",
@@ -60,6 +64,7 @@ func TestCreateSessionPersistsRotatedRefreshToken(t *testing.T) {
 	var body struct {
 		Authenticated bool   `json:"authenticated"`
 		RefreshToken  string `json:"refreshToken"`
+		ExpiresAt     string `json:"expiresAt"`
 	}
 	if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
 		t.Fatalf("decode response: %v", err)
@@ -70,14 +75,61 @@ func TestCreateSessionPersistsRotatedRefreshToken(t *testing.T) {
 	if body.RefreshToken != "rotated-refresh-token" {
 		t.Fatalf("expected rotated refresh token, got %q", body.RefreshToken)
 	}
+	gotExpiry, err := time.Parse(time.RFC3339, body.ExpiresAt)
+	if err != nil || !gotExpiry.Equal(expiresAt) {
+		t.Fatalf("expected expiry %v, got %q", expiresAt, body.ExpiresAt)
+	}
 
 	state := auth.Get()
-	if state.AccessToken != "new-access-token" {
+	if state.AccessToken != accessToken {
 		t.Fatalf("expected refreshed access token, got %q", state.AccessToken)
 	}
 	if state.RefreshToken != "rotated-refresh-token" {
 		t.Fatalf("expected rotated refresh token in auth state, got %q", state.RefreshToken)
 	}
+}
+
+func TestGetSessionIncludesExpiryAndRenewalStateWithoutRefreshToken(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	expiresAt := time.Now().UTC().Add(time.Hour).Truncate(time.Second)
+	auth := &pinflowsync.AuthManager{}
+	auth.Set(pinflowsync.AuthState{
+		AccessToken:     "access-token",
+		RefreshToken:    "secret-refresh-token",
+		UserID:          "user-1",
+		Email:           "user@example.com",
+		ExpiresAt:       &expiresAt,
+		RenewalRequired: true,
+	})
+	handler := api.NewAuthHandler(auth, nil)
+	router := gin.New()
+	router.GET("/api/v1/auth/session", handler.GetSession)
+
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/v1/auth/session", nil))
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", response.Code)
+	}
+	var body map[string]any
+	if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if body["renewalRequired"] != true || body["expiresAt"] != expiresAt.Format(time.RFC3339) {
+		t.Fatalf("unexpected session metadata: %#v", body)
+	}
+	if _, exposed := body["refreshToken"]; exposed {
+		t.Fatal("GET session must not expose refresh token")
+	}
+}
+
+func testAccessToken(t *testing.T, expiresAt time.Time) string {
+	t.Helper()
+	header := base64.RawURLEncoding.EncodeToString([]byte(`{"alg":"none"}`))
+	payload, err := json.Marshal(map[string]int64{"exp": expiresAt.Unix()})
+	if err != nil {
+		t.Fatalf("marshal JWT payload: %v", err)
+	}
+	return header + "." + base64.RawURLEncoding.EncodeToString(payload) + ".signature"
 }
 
 func TestAuthSessionInitializesAndClearsWorkspaceSourceDecision(t *testing.T) {

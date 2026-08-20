@@ -38,14 +38,8 @@ func (c *Client) request(method, endpoint string, body any, headers map[string]s
 		return resp, err
 	}
 	resp.Body.Close()
-
-	refreshed, refreshErr := RefreshToken(c.http, state.RefreshToken)
-	if refreshErr != nil {
-		c.auth.Clear()
-		return nil, refreshErr
-	}
-	c.auth.Set(refreshed)
-	return c.requestOnce(refreshed.AccessToken, method, endpoint, body, headers)
+	c.auth.RequireRenewal()
+	return nil, ErrSessionRenewalRequired
 }
 
 func (c *Client) requestOnce(accessToken, method, endpoint string, body any, headers map[string]string) (*http.Response, error) {

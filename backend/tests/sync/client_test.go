@@ -2,6 +2,7 @@ package sync_test
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"testing"
 	"time"
@@ -145,7 +146,7 @@ func TestGetLatestUpdatedAtReturnsNilForEmptyCloud(t *testing.T) {
 	}
 }
 
-func TestClientRetriesUnauthorizedRequestOnlyOnce(t *testing.T) {
+func TestClientMarksUnauthorizedSessionForRenewalWithoutRefreshing(t *testing.T) {
 	restRequests := 0
 	refreshRequests := 0
 	testutil.NewSupabaseMock(t, func(w http.ResponseWriter, r *http.Request) {
@@ -175,36 +176,55 @@ func TestClientRetriesUnauthorizedRequestOnlyOnce(t *testing.T) {
 		RefreshToken: "refresh-token",
 		UserID:       "user-1",
 	})
-	if _, err := pinflowsync.NewClient(auth).ListFiles(); err == nil {
-		t.Fatal("expected the retried unauthorized request to fail")
+	if _, err := pinflowsync.NewClient(auth).ListFiles(); !errors.Is(err, pinflowsync.ErrSessionRenewalRequired) {
+		t.Fatalf("expected renewal-required error, got %v", err)
 	}
-	if restRequests != 2 {
-		t.Fatalf("expected exactly two REST attempts, got %d", restRequests)
+	if restRequests != 1 {
+		t.Fatalf("expected exactly one REST attempt, got %d", restRequests)
 	}
-	if refreshRequests != 1 {
-		t.Fatalf("expected exactly one token refresh, got %d", refreshRequests)
+	if refreshRequests != 0 {
+		t.Fatalf("expected no hidden token refresh, got %d", refreshRequests)
+	}
+	state := auth.Get()
+	if !state.RenewalRequired || state.AccessToken == "" {
+		t.Fatalf("expected existing session to require renewal, got %#v", state)
 	}
 }
 
-func TestClientClearsAuthWhenRefreshFails(t *testing.T) {
+func TestClientUsesRenewedSessionAfterUnauthorizedResponse(t *testing.T) {
+	restRequests := 0
 	testutil.NewSupabaseMock(t, func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/rest/v1/workspace_files" {
+		if r.URL.Path != "/rest/v1/workspace_files" {
+			http.NotFound(w, r)
+			return
+		}
+		restRequests++
+		if r.Header.Get("Authorization") == "Bearer expired-access-token" {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
-		http.Error(w, "expired refresh token", http.StatusUnauthorized)
+		_ = json.NewEncoder(w).Encode([]map[string]any{})
 	})
 
 	auth := &pinflowsync.AuthManager{}
 	auth.Set(pinflowsync.AuthState{
 		AccessToken:  "expired-access-token",
-		RefreshToken: "expired-refresh-token",
+		RefreshToken: "refresh-token",
 		UserID:       "user-1",
 	})
-	if _, err := pinflowsync.NewClient(auth).ListFiles(); err == nil {
-		t.Fatal("expected refresh failure")
+	client := pinflowsync.NewClient(auth)
+	if _, err := client.ListFiles(); !errors.Is(err, pinflowsync.ErrSessionRenewalRequired) {
+		t.Fatalf("expected renewal-required error, got %v", err)
 	}
-	if auth.Authenticated() {
-		t.Fatal("expected failed refresh to clear auth state")
+	auth.Set(pinflowsync.AuthState{
+		AccessToken:  "renewed-access-token",
+		RefreshToken: "rotated-refresh-token",
+		UserID:       "user-1",
+	})
+	if _, err := client.ListFiles(); err != nil {
+		t.Fatalf("expected request after renewal to succeed: %v", err)
+	}
+	if restRequests != 2 {
+		t.Fatalf("expected one request before and after renewal, got %d", restRequests)
 	}
 }

@@ -51,6 +51,7 @@ func (h *AuthHandler) CreateSession(c *gin.Context) {
 		"userId":        state.UserID,
 		"email":         state.Email,
 		"refreshToken":  state.RefreshToken,
+		"expiresAt":     state.ExpiresAt,
 	})
 }
 
@@ -60,7 +61,13 @@ func (h *AuthHandler) GetSession(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"authenticated": false})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"authenticated": true, "userId": state.UserID, "email": state.Email})
+	c.JSON(http.StatusOK, gin.H{
+		"authenticated":   true,
+		"userId":          state.UserID,
+		"email":           state.Email,
+		"expiresAt":       state.ExpiresAt,
+		"renewalRequired": state.RenewalRequired,
+	})
 }
 
 func (h *AuthHandler) GetConfig(c *gin.Context) {

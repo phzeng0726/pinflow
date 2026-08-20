@@ -8,6 +8,7 @@ import (
 
 var ErrSourceDecisionRequired = errors.New("workspace source decision is required")
 var ErrSourceResolutionInProgress = errors.New("workspace source resolution is already in progress")
+var ErrSessionRenewalRequired = errors.New("authentication session renewal is required")
 
 type SyncStatus struct {
 	State      string     `json:"state"`
@@ -28,10 +29,12 @@ type WorkspaceFile struct {
 }
 
 type AuthState struct {
-	AccessToken  string
-	RefreshToken string
-	UserID       string
-	Email        string
+	AccessToken     string
+	RefreshToken    string
+	UserID          string
+	Email           string
+	ExpiresAt       *time.Time
+	RenewalRequired bool
 }
 
 type AuthManager struct {
@@ -55,4 +58,15 @@ func (m *AuthManager) Clear() {
 	m.Set(AuthState{})
 }
 
-func (m *AuthManager) Authenticated() bool { return m.Get().AccessToken != "" }
+func (m *AuthManager) RequireRenewal() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.state.AccessToken != "" {
+		m.state.RenewalRequired = true
+	}
+}
+
+func (m *AuthManager) Authenticated() bool {
+	state := m.Get()
+	return state.AccessToken != "" && !state.RenewalRequired
+}
